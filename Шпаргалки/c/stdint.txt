@@ -1,0 +1,193 @@
+	--- ОСНОВНЫЕ КОМАНДЫ STDDEF.H / STDINT.H / INTYPES.H ---
+
+ = Подключение заголовочных файлов:
+
+#include <stddef.h>			# стандартные определения (size_t, NULL, ptrdiff_t, offsetof)
+#include <stdint.h>			# целочисленные типы с фиксированной шириной (C99)
+#include <inttypes.h>		# макросы для форматированного ввода/вывода (C99)
+
+
+ = Основные типы из <stddef.h>:
+
+size_t					# беззнаковый тип для размеров объектов (результат sizeof)
+ptrdiff_t				# знаковый тип для разности указателей
+NULL					# нулевой указатель
+offsetof(type, member)	# смещение поля в структуре (байт)
+
+
+
+	--- ПОЛНАЯ ШПАРГАЛКА ПО <STDINT.H> И <INTTYPES.H> ---
+
+ = Точные типы (Exact-width types) — гарантированно ровно N бит:
+
+- Знаковые:
+
+int8_t					# ровно 8 бит
+int16_t					# ровно 16 бит
+int32_t					# ровно 32 бита
+int64_t					# ровно 64 бита
+
+- Беззнаковые:
+
+uint8_t					# ровно 8 бит
+uint16_t				# ровно 16 бит
+uint32_t				# ровно 32 бита
+uint64_t				# ровно 64 бита
+
+Эти типы определены только если платформа поддерживает их напрямую.
+На практике uint8_t почти всегда — это unsigned char, а uint32_t — unsigned int или unsigned long.
+
+
+ = Минимальные типы (Minimum-width types) — как минимум N бит:
+
+- Знаковые:
+
+int_least8_t
+int_least16_t
+int_least32_t
+int_least64_t
+
+- Беззнаковые:
+
+uint_least8_t
+uint_least16_t
+uint_least32_t
+uint_least64_t
+
+Используйте их, если точный размер не критичен, но нужно гарантировать минимум.
+
+
+ = Быстрые типы (Fastest minimum-width types) — самые быстрые, как минимум N бит:
+
+- Знаковые:
+
+int_fast8_t
+int_fast16_t
+int_fast32_t
+int_fast64_t
+
+- Беззнаковые:
+
+uint_fast8_t
+uint_fast16_t
+uint_fast32_t
+uint_fast64_t
+
+Используйте для индексов в циклах, где скорость важнее размера.
+
+
+ = Типы для указателей:
+
+intptr_t				# знаковый, способный хранить указатель
+uintptr_t				# беззнаковый, способный хранить указатель
+
+Используйте для арифметики с указателями как с числами.
+
+
+ = Тип для разности указателей (из <stddef.h>):
+
+ptrdiff_t				# знаковый, результат вычитания двух указателей
+
+
+ = Макросы пределов (из <stdint.h>):
+
+- Минимальные и максимальные значения для точных типов:
+
+INT8_MIN, INT8_MAX, UINT8_MAX
+INT16_MIN, INT16_MAX, UINT16_MAX
+INT32_MIN, INT32_MAX, UINT32_MAX
+INT64_MIN, INT64_MAX, UINT64_MAX
+
+- Аналоги для минимальных и быстрых типов (INT_LEAST8_MIN, INT_FAST8_MAX и т.д.)
+
+
+ = Форматированный вывод (printf) через <inttypes.h>:
+
+Типы из `<stdint.h>` — это `typedef`, и напрямую использовать `%d` или `%u` **небезопасно** (например, `uint8_t` — это `unsigned char`, и `printf` увидит не число, а символ).
+
+Для переносимой печати используйте макросы из `<inttypes.h>`:
+
+- Для знаковых типов (PRIiN / PRIdN):
+
+printf("%" PRId8 "\n", int8_var);		# десятичный вывод int8_t
+printf("%" PRIi16 "\n", int16_var);		# десятичный вывод int16_t
+printf("%" PRIi32 "\n", int32_var);
+printf("%" PRIi64 "\n", int64_var);
+
+
+- Для беззнаковых типов (PRIuN / PRIxN / PRIXN):
+
+printf("%" PRIu8 "\n", uint8_var);		# десятичный вывод uint8_t
+printf("%" PRIx8 "\n", uint8_var);		# шестнадцатеричный (строчные буквы)
+printf("%" PRIX16 "\n", uint16_var);	# шестнадцатеричный (ЗАГЛАВНЫЕ буквы)
+printf("%" PRIu32 "\n", uint32_var);
+printf("%" PRIu64 "\n", uint64_var);
+
+
+- Другие спецификаторы для <inttypes.h>:
+
+PRIo8					# восьмеричный для uint8_t
+PRIu16					# десятичный для uint16_t
+PRIx32					# шестнадцатеричный для uint32_t
+
+
+ = Форматированный ввод (scanf) через <inttypes.h>:
+
+- Для знаковых:
+
+scanf("%" SCNd8, &int8_var);
+scanf("%" SCNi16, &int16_var);
+scanf("%" SCNd32, &int32_var);
+
+
+- Для беззнаковых:
+
+scanf("%" SCNu8, &uint8_var);
+scanf("%" SCNx16, &uint16_var);
+scanf("%" SCNu32, &uint32_var);
+scanf("%" SCNu64, &uint64_var);
+
+
+ = Примеры:
+
+- Пример с uint8_t:
+
+#include <stdio.h>
+#include <stdint.h>
+#include <inttypes.h>
+
+int main() {
+    uint8_t val = 255;
+    printf("uint8_t: %" PRIu8 "\n", val);	# напечатает "255"
+    return 0;
+}
+
+
+- Пример с int64_t:
+
+#include <stdio.h>
+#include <stdint.h>
+#include <inttypes.h>
+
+int main() {
+    int64_t big = 123456789012345LL;
+    printf("int64_t: %" PRId64 "\n", big);
+    return 0;
+}
+
+
+ = Особенности:
+
+- `uint8_t` — это `unsigned char`, поэтому без макросов `printf` может напечатать символ, а не число.
+- Для C++ используйте заголовок `<cstdint>`.
+- Все макросы для `printf`/`scanf` определены в `<inttypes.h>`.
+- На 32-битных системах `int64_t` может быть `long long`, на 64-битных — `long`. Макросы скрывают эту разницу.
+
+
+ = Советы:
+
+- Всегда используйте `<inttypes.h>` для печати типов из `<stdint.h>`.
+- Для хранения размера объектов всегда используйте `size_t` (из `<stddef.h>` или `<stdio.h>`).
+- Для арифметики с указателями используйте `intptr_t` / `uintptr_t`.
+- Если точный размер не важен, используйте `int` / `unsigned int` — они оптимальны для платформы.
+- Для эмбедред-систем `uint8_t` и `int8_t` особенно полезны для работы с байтами и регистрами.

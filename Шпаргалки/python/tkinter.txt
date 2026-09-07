@@ -1,0 +1,423 @@
+	--- ОСНОВНЫЕ КОМАНДЫ TKINTER ---
+
+ = Импорт и создание окна:
+
+- Импортировать библиотеку:
+
+import tkinter as tk
+
+
+- Создать главное окно:
+
+root = tk.Tk()
+
+
+- Запустить главный цикл событий:
+
+root.mainloop()
+
+
+ = Основные виджеты:
+
+- Текстовая метка:
+
+tk.Label(parent, text="Текст")
+
+
+- Кнопка:
+
+tk.Button(parent, text="Кнопка", command=func)
+
+
+- Однострочное поле ввода:
+
+tk.Entry(parent, width=20)
+
+
+- Многострочное поле ввода:
+
+tk.Text(parent, height=10, width=40)
+
+
+- Флажок (Checkbutton):
+
+tk.Checkbutton(parent, text="Опция", variable=var)
+
+
+- Радиокнопка:
+
+tk.Radiobutton(parent, text="Опция", variable=var, value=1)
+
+
+ = Размещение виджетов:
+
+- Блочное размещение (pack):
+
+widget.pack(side="top", fill="x", padx=5, pady=5)
+
+
+- Табличное размещение (grid):
+
+widget.grid(row=0, column=0, sticky="w", padx=5, pady=5)
+
+
+- Точное позиционирование (place):
+
+widget.place(x=50, y=100, width=200, height=30)
+
+
+ = Обработка событий:
+
+- Привязать событие к виджету:
+
+widget.bind("<Button-1>", handler)			# клик мышью
+widget.bind("<Key-Return>", handler)		# нажатие Enter
+
+
+ = Диалоговые окна:
+
+- Информационное сообщение:
+
+messagebox.showinfo("Заголовок", "Текст")
+
+
+- Запрос подтверждения (Да/Нет):
+
+messagebox.askyesno("Заголовок", "Вопрос?")
+
+
+- Выбор файла:
+
+filedialog.askopenfilename(title="Выберите файл")
+
+
+
+	--- ПОЛНАЯ ШПАРГАЛКА ПО TKINTER ---
+
+ = Импорт и базовое окно:
+
+- Стандартный импорт:
+
+import tkinter as tk
+
+
+- Создание окна:
+
+root = tk.Tk()
+root.title("Заголовок окна")
+root.geometry("400x300")					# ширина x высота
+root.resizable(True, True)					# изменяемый по ширине и высоте
+
+
+- Запуск приложения:
+
+root.mainloop()
+
+
+- Завершение приложения:
+
+root.quit()									# завершает mainloop
+root.destroy()								# уничтожает окно
+
+
+ = Основные виджеты (подробно):
+
+- Label (метка) — отображает текст или изображение:
+
+tk.Label(parent, text="Текст", font=("Arial", 14), fg="blue", bg="white")
+
+
+- Button (кнопка) — выполняет действие при нажатии:
+
+tk.Button(parent, text="Нажми", command=callback_func)
+
+
+- Entry (однострочное поле ввода) — для короткого текста:
+
+tk.Entry(parent, width=30, show="*")		# show="*" для пароля
+
+
+- Text (многострочное поле ввода) — для длинного текста:
+
+tk.Text(parent, height=10, width=40, wrap="word")
+
+
+- Checkbutton (флажок) — выбор одного или нескольких значений:
+
+var = tk.IntVar(value=0)
+tk.Checkbutton(parent, text="Опция", variable=var)
+
+
+- Radiobutton (радиокнопка) — выбор одного из группы:
+
+var = tk.IntVar(value=0)
+tk.Radiobutton(parent, text="Вариант 1", variable=var, value=1)
+tk.Radiobutton(parent, text="Вариант 2", variable=var, value=2)
+
+
+- Listbox (список) — выбор из списка строк:
+
+listbox = tk.Listbox(parent, selectmode="single")  # single, browse, multiple, extended
+listbox.insert(tk.END, "Элемент 1")				# вставка в конец
+listbox.insert(0, "Элемент 0")					# вставка по индексу
+selection = listbox.curselection()				# кортеж индексов выбранных элементов
+value = listbox.get(0)							# получить элемент по индексу
+listbox.delete(0)								# удалить элемент по индексу
+
+
+- Scale (ползунок) — выбор числового значения:
+
+tk.Scale(parent, from_=0, to=100, orient="horizontal", command=callback)
+
+
+- Spinbox (счётчик) — выбор значения со стрелками:
+
+tk.Spinbox(parent, from_=1, to=10, width=5)
+
+
+- Frame (рамка) — контейнер для группировки виджетов:
+
+frame = tk.Frame(parent, bg="lightgray", bd=2, relief="groove")
+frame.pack(padx=10, pady=10)
+
+
+- Canvas (холст) — для рисования графики:
+
+canvas = tk.Canvas(parent, width=400, height=300, bg="white")
+canvas.create_line(10, 10, 100, 100, fill="red", width=2)			# линия
+canvas.create_rectangle(50, 50, 150, 150, fill="blue")				# прямоугольник
+canvas.create_oval(200, 50, 300, 150, fill="green")					# эллипс
+canvas.create_polygon(100, 200, 150, 250, 50, 250, fill="yellow")	# многоугольник
+canvas.create_text(200, 50, text="Привет", font=("Arial", 20))		# текст
+canvas.delete("all")												# удалить всё
+
+
+ = Общие параметры виджетов:
+
+- text — отображаемый текст.
+- width, height — ширина и высота.
+- bg / background — цвет фона.
+- fg / foreground — цвет текста.
+- font — шрифт (например, ("Arial", 12, "bold")).
+- padx, pady — внутренние отступы.
+- state — состояние ("normal", "disabled", "readonly").
+- command — функция-обработчик (для Button).
+- anchor — привязка содержимого ("n", "s", "e", "w", "center" и т.д.).
+- justify — выравнивание текста ("left", "center", "right").
+- relief — тип рамки ("flat", "raised", "sunken", "groove", "ridge").
+- borderwidth / bd — толщина рамки.
+
+
+ = Управление расположением (Layout Managers):
+
+- pack() — блочное размещение:
+
+widget.pack(side="top")					# top, bottom, left, right
+widget.pack(fill="x")					# x, y, both
+widget.pack(expand=True)				# расширение при изменении размера
+widget.pack(padx=5, pady=5)				# внешние отступы
+
+
+- grid() — табличное размещение:
+
+widget.grid(row=0, column=0)			# строка и столбец
+widget.grid(rowspan=2, columnspan=2)	# объединение ячеек
+widget.grid(sticky="w")					# привязка: n, s, e, w, ne, nw, se, sw
+widget.grid(padx=5, pady=5)				# внешние отступы
+
+
+- place() — точное позиционирование:
+
+widget.place(x=50, y=100)							# координаты
+widget.place(relx=0.5, rely=0.5, anchor="center")	# относительные координаты
+widget.place(width=200, height=30)					# размер
+
+
+- ВАЖНО: Не использовать pack() и grid() для виджетов с одним родителем!
+
+
+ = Обработка событий:
+
+- Привязка события через bind():
+
+widget.bind("<Button-1>", handler)				# левая кнопка мыши
+widget.bind("<Button-3>", handler)				# правая кнопка мыши
+widget.bind("<Double-Button-1>", handler)		# двойной клик
+widget.bind("<Key>", handler)					# любая клавиша
+widget.bind("<Key-Return>", handler)			# Enter
+widget.bind("<Key-Tab>", handler)				# Tab
+widget.bind("<q>", handler)						# клавиша 'q'
+
+
+- Отвязать событие:
+
+widget.unbind("<Button-1>")						# отвязать конкретное событие
+
+
+- Событие передаёт объект event с атрибутами:
+
+def handler(event):
+    print(event.x, event.y)						# координаты мыши
+    print(event.widget)							# виджет, вызвавший событие
+    print(event.keysym)							# нажатая клавиша
+
+
+ = Переменные Tkinter (для связи с виджетами):
+
+- Создание переменной:
+
+var_str = tk.StringVar(value="текст")
+var_int = tk.IntVar(value=0)
+var_bool = tk.BooleanVar(value=True)
+
+
+- Использование с виджетами:
+
+entry = tk.Entry(parent, textvariable=var_str)	# связать с переменной
+label = tk.Label(parent, textvariable=var_str)	# автоматическое обновление
+
+
+- Получение/установка значения:
+
+value = var_str.get()							# получить
+var_str.set("новое значение")					# установить
+
+
+ = Работа с окнами:
+
+- Toplevel — дополнительное окно:
+
+new_window = tk.Toplevel(root)
+new_window.title("Новое окно")
+new_window.geometry("300x200")
+
+
+- Сделать окно модальным (поверх родительского):
+
+new_window.focus_set()
+new_window.grab_set()
+
+
+- Закрыть окно:
+
+new_window.destroy()
+
+
+ = Меню (Menu):
+
+- Создание строки меню:
+
+menu_bar = tk.Menu(root)
+root.config(menu=menu_bar)
+
+
+- Добавление выпадающего меню:
+
+file_menu = tk.Menu(menu_bar, tearoff=0)		# tearoff=0 убирает отрыв
+menu_bar.add_cascade(label="Файл", menu=file_menu)
+
+
+- Добавление пунктов меню:
+
+file_menu.add_command(label="Открыть", command=open_func)
+file_menu.add_separator()						# разделитель
+file_menu.add_command(label="Выход", command=root.quit)
+
+
+- Добавление подменю:
+
+sub_menu = tk.Menu(file_menu, tearoff=0)
+file_menu.add_cascade(label="Недавние", menu=sub_menu)
+sub_menu.add_command(label="Файл 1", command=func1)
+
+
+- Checkbutton в меню:
+
+file_menu.add_checkbutton(label="Опция", variable=var)
+
+
+- Radiobutton в меню:
+
+file_menu.add_radiobutton(label="Режим 1", variable=var, value=1)
+file_menu.add_radiobutton(label="Режим 2", variable=var, value=2)
+
+
+ = Диалоговые окна:
+
+- Импорт:
+
+from tkinter import messagebox, filedialog, colorchooser, simpledialog
+
+
+- messagebox — информационные окна:
+
+messagebox.showinfo("Заголовок", "Информационное сообщение")
+messagebox.showwarning("Заголовок", "Предупреждение")
+messagebox.showerror("Заголовок", "Сообщение об ошибке")
+messagebox.askyesno("Заголовок", "Вы уверены?")			# возвращает True/False
+messagebox.askokcancel("Заголовок", "Продолжить?")		# возвращает True/False
+messagebox.askretrycancel("Заголовок", "Повторить?")	# возвращает True/False
+
+
+- filedialog — выбор файлов и папок:
+
+file_path = filedialog.askopenfilename(title="Выберите файл")		# выбрать файл
+file_path = filedialog.asksaveasfilename(title="Сохранить как")		# сохранить как
+dir_path = filedialog.askdirectory(title="Выберите папку")			# выбрать папку
+
+
+- colorchooser — выбор цвета:
+
+color = colorchooser.askcolor(title="Выберите цвет")	# возвращает ((r,g,b), "#rrggbb")
+
+
+- simpledialog — простые запросы ввода:
+
+value = simpledialog.askstring("Заголовок", "Введите текст:")
+value = simpledialog.askinteger("Заголовок", "Введите число:")
+value = simpledialog.askfloat("Заголовок", "Введите число:")
+
+
+ = Прочее:
+
+- Изменить параметры виджета после создания:
+
+widget.config(text="Новый текст")				# изменить один параметр
+widget.configure(bg="red", font=("Arial", 16))	# изменить несколько
+
+
+- Получить текущее значение параметра:
+
+value = widget.cget("text")						# получить значение параметра
+
+
+- Установить фокус на виджет:
+
+widget.focus_set()
+
+
+- Запретить изменение размера окна:
+
+root.resizable(False, False)
+
+
+- Установить иконку окна (только .ico):
+
+root.iconbitmap("icon.ico")
+
+
+- Задать цветовую схему для всех виджетов:
+
+root.tk_setPalette(background="lightgray", foreground="black")
+
+
+- Таймер (выполнить функцию через N мс):
+
+root.after(1000, callback_func)					# через 1000 мс (1 секунда)
+
+
+- Циклический таймер:
+
+def repeat():
+    # действие
+    root.after(1000, repeat)					# повтор через 1 секунду

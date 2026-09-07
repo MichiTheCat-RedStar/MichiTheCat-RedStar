@@ -1,0 +1,248 @@
+	--- ОСНОВНЫЕ КОМАНДЫ PYENV (DEBIAN) ---
+
+ = Установка pyenv (Debian/Ubuntu):
+
+- Установить зависимости для сборки Python:
+
+sudo apt update
+sudo apt install -y make build-essential libssl-dev zlib1g-dev \
+libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm \
+libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev \
+liblzma-dev
+
+
+- Установить pyenv через автоматический установщик:
+
+curl -fsSL https://pyenv.run | bash
+
+
+- Или вручную через git:
+
+git clone https://github.com/pyenv/pyenv.git ~/.pyenv
+
+
+- Добавить в ~/.bashrc (или ~/.zshrc, если используется zsh):
+
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init - bash)"					# для bash
+# eval "$(pyenv init - zsh)"				# для zsh
+
+
+- Перезагрузить конфигурацию shell:
+
+exec $SHELL									# или source ~/.bashrc
+
+
+ = Проверка установки:
+
+- Проверить версию pyenv:
+
+pyenv --version
+
+
+- Показать доступные команды:
+
+pyenv commands
+
+
+
+	--- ПОЛНАЯ ШПАРГАЛКА ПО PYENV (DEBIAN) ---
+
+ = Управление версиями Python:
+
+- Показать все доступные для установки версии:
+
+pyenv install --list
+
+
+- Установить конкретную версию Python:
+
+pyenv install 3.12.0
+
+
+- Установить с передачей опций configure (например, --enable-shared):
+
+CONFIGURE_OPTS="--enable-shared" pyenv install 3.12.0
+
+
+- Показать все установленные версии:
+
+pyenv versions
+
+
+- Показать текущую активную версию и источник (global/local/shell):
+
+pyenv version
+
+
+- Показать путь к текущему интерпретатору:
+
+pyenv which python
+
+
+- Удалить установленную версию:
+
+pyenv uninstall 3.9.0
+
+
+- Принудительно удалить версию:
+
+pyenv uninstall -f 3.9.0
+
+
+ = Переключение между версиями:
+
+- Установить глобальную версию (для всего пользователя):
+
+pyenv global 3.12.0							# запись в ~/.pyenv/version
+
+
+- Установить локальную версию (для текущей папки/проекта):
+
+pyenv local 3.11.0							# создаёт .python-version
+
+
+- Удалить локальную привязку (перестать привязывать версию к папке):
+
+pyenv local --unset							# удалить .python-version
+
+
+- Установить версию для текущего сеанса shell (временная):
+
+pyenv shell 3.10.0							# только для этого терминала
+
+
+- Снять привязку для текущего shell:
+
+pyenv shell --unset
+
+
+- Использовать несколько версий одновременно (поиск по порядку):
+
+pyenv global 3.11 3.12						# сначала ищет в 3.11, потом в 3.12
+
+
+ = Работа с виртуальными окружениями (через плагин pyenv-virtualenv):
+
+- Установить плагин pyenv-virtualenv:
+
+git clone https://github.com/pyenv/pyenv-virtualenv.git $(pyenv root)/plugins/pyenv-virtualenv
+
+
+- Добавить инициализацию плагина в ~/.bashrc:
+
+eval "$(pyenv virtualenv-init -)"
+
+
+- Перезагрузить shell:
+
+exec $SHELL
+
+
+- Создать виртуальное окружение с указанием версии Python:
+
+pyenv virtualenv 3.11.0 myproject
+
+
+- Создать виртуальное окружение с текущей активной версией:
+
+pyenv virtualenv myproject
+
+
+- Показать все виртуальные окружения:
+
+pyenv virtualenvs
+
+
+- Активировать виртуальное окружение:
+
+pyenv activate myproject
+
+
+- Деактивировать виртуальное окружение:
+
+pyenv deactivate
+
+
+- Удалить виртуальное окружение:
+
+pyenv virtualenv-delete myproject
+
+
+- Привязать виртуальное окружение к папке (автоактивация при входе):
+
+pyenv local myproject						# создаёт .python-version с именем venv
+
+
+ = Работа с shims (прокси):
+
+- Обновить shims после установки пакетов с исполняемыми файлами:
+
+pyenv rehash
+
+
+- Показать все shims:
+
+pyenv shims
+
+
+- Показать, какой shim будет вызван для команды:
+
+pyenv which python
+
+
+- Найти все установленные версии, содержащие указанную команду:
+
+pyenv whence python
+
+
+ = Информационные и вспомогательные команды:
+
+- Показать справку по конкретной команде:
+
+pyenv help install
+
+
+- Показать корневую папку pyenv:
+
+pyenv root
+
+
+- Показать путь к установленной версии:
+
+pyenv prefix 3.12.0
+
+
+- Показать последнюю установленную версию по префиксу:
+
+pyenv latest 3.11							# например, последняя 3.11.x
+
+
+ = Полное удаление pyenv:
+
+- Удалить папку pyenv:
+
+rm -rf ~/.pyenv
+
+
+- Удалить строки с pyenv из ~/.bashrc (или ~/.zshrc):
+
+# удалить строки: export PYENV_ROOT=..., export PATH=..., eval "$(pyenv init - ...)"
+# и перезапустить shell
+
+
+ = Структура файлов и особенности:
+
+~/.pyenv/									# корневая папка pyenv
+~/.pyenv/versions/							# установленные версии Python
+~/.pyenv/version							# глобальная версия (устанавливается pyenv global)
+.python-version								# локальная версия в папке проекта
+
+
+- После установки новой версии Python обязательно выполните:
+
+pyenv rehash								# для обновления shims
+
+
+- При сборке Python могут понадобиться дополнительные библиотеки (см. вывод ошибок).

@@ -1,0 +1,328 @@
+	--- ОСНОВНЫЕ КОМАНДЫ PYTHON + SQLITE ---
+
+ = Подключение к БД:
+
+- Импортировать модуль sqlite3:
+
+import sqlite3
+
+
+- Создать/открыть базу данных (файл или :memory:):
+
+conn = sqlite3.connect('database.db')	# файл
+conn = sqlite3.connect(':memory:')		# в оперативной памяти
+
+
+- Создать курсор для выполнения запросов:
+
+cursor = conn.cursor()
+
+
+- Выполнить SQL-запрос (без возврата данных):
+
+cursor.execute('CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)')
+
+
+- Сохранить изменения (COMMIT):
+
+conn.commit()
+
+
+- Закрыть соединение:
+
+conn.close()
+
+
+ = Работа с параметрами (безопасно):
+
+- Использовать параметры в запросе (знак ?):
+
+cursor.execute('INSERT INTO users (name) VALUES (?)', ('Alice',))
+
+
+- Множественная вставка (executemany):
+
+users = [('Bob',), ('Charlie',)]
+cursor.executemany('INSERT INTO users (name) VALUES (?)', users)
+
+
+ = Получение данных:
+
+- Получить одну строку:
+
+row = cursor.fetchone()
+
+
+- Получить все строки:
+
+rows = cursor.fetchall()
+
+
+- Получить несколько строк (fetchmany):
+
+rows = cursor.fetchmany(5)
+
+
+
+	--- ПОЛНАЯ ШПАРГАЛКА ПО SQLITE В PYTHON ---
+
+ = Подключение и настройка соединения:
+
+- Открыть базу с дополнительными параметрами:
+
+conn = sqlite3.connect('db.sqlite', 
+                       timeout=5.0,	# таймаут на ожидание блокировки (сек)
+                       detect_types=sqlite3.PARSE_DECLTYPES,	# автоматическое преобразование типов
+                       isolation_level=None)	# автокоммит (режим AUTOCOMMIT)
+
+
+- Включить поддержку внешних ключей (по умолчанию выключена):
+
+conn.execute('PRAGMA foreign_keys = ON')
+
+
+- Установить row_factory для получения строк в виде словарей:
+
+conn.row_factory = sqlite3.Row			# доступ по имени столбца
+
+
+- Создать курсор с определённым row_factory:
+
+conn.row_factory = sqlite3.Row
+cursor = conn.cursor()
+
+
+ = Выполнение SQL-запросов:
+
+- Выполнить один запрос (без параметров или с параметрами):
+
+cursor.execute('SELECT * FROM users WHERE id = ?', (user_id,))
+
+
+- Выполнить несколько одинаковых запросов с разными параметрами:
+
+cursor.executemany('INSERT INTO users (name) VALUES (?)', [('John',), ('Jane',)])
+
+
+- Выполнить скрипт (несколько запросов, разделённых ;):
+
+cursor.executescript('''
+    CREATE TABLE test (id INTEGER);
+    INSERT INTO test VALUES (1);
+''')
+
+
+ = Получение данных (fetch методы):
+
+- fetchone(): возвращает одну строку или None
+
+row = cursor.fetchone()
+
+
+- fetchall(): возвращает список всех строк (пустой список, если нет)
+
+rows = cursor.fetchall()
+
+
+- fetchmany(size): возвращает список до size строк
+
+rows = cursor.fetchmany(10)
+
+
+- Итерация по курсору (удобно для больших результатов):
+
+for row in cursor.execute('SELECT * FROM users'):
+    print(row)
+
+
+ = Параметризация запросов (безопасность):
+
+- Использовать ? (знак вопроса) для подстановки:
+
+cursor.execute('SELECT * FROM users WHERE name = ?', (name,))
+
+
+- Именованные параметры (используйте :имя):
+
+cursor.execute('SELECT * FROM users WHERE name = :name', {'name': 'Alice'})
+
+
+ = Типы данных и преобразования:
+
+- SQLite поддерживает: NULL, INTEGER, REAL, TEXT, BLOB
+- При включённом detect_types=sqlite3.PARSE_DECLTYPES даты преобразуются в datetime:
+
+import datetime
+conn = sqlite3.connect('db.sqlite', detect_types=sqlite3.PARSE_DECLTYPES)
+cursor.execute('CREATE TABLE events (date DATE)')
+cursor.execute('INSERT INTO events VALUES (?)', (datetime.date(2023,1,1),))
+row = cursor.fetchone()					# вернёт datetime.date
+
+
+- Можно зарегистрировать свои адаптеры и конвертеры:
+
+# адаптер (Python -> SQLite)
+def adapt_datetime(dt):
+    return dt.isoformat()
+sqlite3.register_adapter(datetime.datetime, adapt_datetime)
+
+# конвертер (SQLite -> Python)
+def convert_datetime(val):
+    return datetime.datetime.fromisoformat(val.decode())
+sqlite3.register_converter('datetime', convert_datetime)
+
+
+ = Транзакции и управление блокировками:
+
+- По умолчанию SQLite работает в режиме автокоммита (isolation_level=None) — каждый запрос фиксируется автоматически.
+- Чтобы управлять транзакциями вручную, установите isolation_level='DEFERRED' (или '').
+
+conn = sqlite3.connect('db.sqlite', isolation_level='DEFERRED')
+cursor = conn.cursor()
+cursor.execute('BEGIN TRANSACTION')		# или conn.execute('BEGIN')
+# выполняем несколько запросов
+conn.commit()							# фиксируем
+conn.rollback()							# откат
+
+
+- Использование контекстного менеджера (автоматический коммит/откат):
+
+with conn:								# при выходе из блока commit, при исключении rollback
+    cursor.execute('INSERT INTO users (name) VALUES (?)', ('Alice',))
+    cursor.execute('UPDATE users SET name="Bob" WHERE id=1')
+
+
+ = Обработка ошибок:
+
+- Ловить исключение sqlite3.Error:
+
+try:
+    cursor.execute('SELECT * FROM non_existent')
+except sqlite3.OperationalError as e:
+    print('Ошибка:', e)
+
+
+- Основные исключения: sqlite3.Error, sqlite3.IntegrityError (нарушение UNIQUE, FOREIGN KEY и т.д.)
+
+
+ = Работа с BLOB (бинарные данные):
+
+- Вставлять как bytes:
+
+data = b'\x89PNG...'
+cursor.execute('INSERT INTO files (data) VALUES (?)', (data,))
+
+
+- Читать:
+
+row = cursor.fetchone()
+binary = row[0]							# bytes
+
+
+ = Расширенные возможности:
+
+- Получить ID последней вставленной записи:
+
+last_id = cursor.lastrowid
+
+
+- Количество изменённых строк (для UPDATE/DELETE):
+
+affected = cursor.rowcount
+
+
+- Создать пользовательскую функцию (SQLite из Python):
+
+def add(a, b):
+    return a + b
+
+conn.create_function('my_add', 2, add)	# имя, количество аргументов, функция
+cursor.execute('SELECT my_add(3, 5)')	# вернёт 8
+
+
+- Создать пользовательскую агрегатную функцию:
+
+class Average:
+    def __init__(self):
+        self.total = 0
+        self.count = 0
+    def step(self, value):
+        self.total += value
+        self.count += 1
+    def finalize(self):
+        return self.total / self.count if self.count else None
+
+conn.create_aggregate('my_avg', 1, Average)
+
+
+ = Использование row_factory для получения словарей (или именованных кортежей):
+
+- sqlite3.Row (доступ по индексу и по имени столбца):
+
+conn.row_factory = sqlite3.Row
+cursor = conn.cursor()
+cursor.execute('SELECT id, name FROM users')
+row = cursor.fetchone()
+print(row['id'], row['name'])			# доступ по имени
+
+
+- Свой row_factory (например, dict):
+
+def dict_factory(cursor, row):
+    return {col[0]: row[i] for i, col in enumerate(cursor.description)}
+
+conn.row_factory = dict_factory
+
+
+ = Закрытие и очистка:
+
+- Всегда закрывайте соединение после работы:
+
+conn.close()
+
+
+- Использование with для автоматического закрытия (контекстный менеджер для соединения появился в Python 3.11+):
+
+with sqlite3.connect('db.sqlite') as conn:
+    cursor = conn.cursor()
+    # работа
+
+
+- Для старых версий используйте try/finally:
+
+conn = sqlite3.connect('db.sqlite')
+try:
+    # работа
+finally:
+    conn.close()
+
+
+ = Прочие полезные методы:
+
+- Просмотр всех таблиц (команда .tables через execute):
+
+cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+tables = cursor.fetchall()
+
+
+- Получить структуру таблицы (PRAGMA):
+
+cursor.execute('PRAGMA table_info(users)')
+columns = cursor.fetchall()
+
+
+- Оптимизация (VACUUM) — перестроить БД, уменьшить размер:
+
+conn.execute('VACUUM')
+
+
+ = Советы:
+
+- Всегда используйте параметризованные запросы вместо конкатенации строк для защиты от SQL-инъекций.
+- Для больших объёмов данных используйте executemany вместо множественных execute.
+- Включайте поддержку внешних ключей (PRAGMA foreign_keys = ON) при создании соединения.
+- Для отладки можно установить trace (вывод всех запросов):
+
+def trace_callback(sql):
+    print('SQL:', sql)
+conn.set_trace_callback(trace_callback)

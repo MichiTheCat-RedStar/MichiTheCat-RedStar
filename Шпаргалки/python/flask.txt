@@ -1,0 +1,552 @@
+	--- ОСНОВНЫЕ КОМАНДЫ FLASK ---
+
+ = Установка и запуск:
+
+- Установить Flask:
+
+pip install flask
+
+
+- Минимальное приложение:
+
+from flask import Flask
+app = Flask(__name__)
+
+@app.route('/')
+def hello():
+    return 'Hello, World!'
+
+if __name__ == '__main__':
+    app.run()
+
+
+- Запустить сервер (разработка):
+
+flask run						# требует переменную FLASK_APP
+python app.py					# если используется app.run()
+
+
+ = Маршруты и методы:
+
+- Определить маршрут:
+
+@app.route('/path')
+
+
+- Маршрут с методами:
+
+@app.route('/path', methods=['GET', 'POST'])
+
+
+- Динамический URL:
+
+@app.route('/user/<username>')
+@app.route('/post/<int:post_id>')
+
+
+ = Переменные окружения (перед запуском):
+
+- Указать файл приложения:
+
+export FLASK_APP=app.py			# Linux/Mac
+set FLASK_APP=app.py			# Windows (cmd)
+$env:FLASK_APP = "app.py"		# Windows (PowerShell)
+
+
+- Режим отладки (автоперезагрузка):
+
+export FLASK_DEBUG=1			# или set FLASK_DEBUG=1
+
+
+
+	--- ПОЛНАЯ ШПАРГАЛКА ПО FLASK ---
+
+ = Инициализация приложения:
+
+- Базовое создание:
+
+app = Flask(__name__)
+
+
+- С указанием папки с шаблонами и статикой:
+
+app = Flask(__name__,
+            template_folder='templates',
+            static_folder='static',
+            static_url_path='/static')
+
+
+ = Маршруты и декораторы:
+
+- Простой маршрут:
+
+@app.route('/')
+def index():
+    return 'Главная страница'
+
+
+- Маршрут с переменной (строка по умолчанию):
+
+@app.route('/user/<username>')
+def profile(username):
+    return f'Пользователь: {username}'
+
+
+- Ограничение типа (int, float, path):
+
+@app.route('/post/<int:post_id>')
+def post(post_id):
+    return f'Пост №{post_id}'
+
+
+- Несколько методов (GET, POST, PUT, DELETE и т.д.):
+
+@app.route('/form', methods=['GET', 'POST'])
+def handle_form():
+    if request.method == 'POST':
+        return 'Это POST'
+    return 'Это GET'
+
+
+- Маршрут с одним методом (сокращённо):
+
+@app.get('/only-get')
+def only_get():
+    return 'Только GET'
+
+
+- Декоратор для обработки ошибок:
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return 'Страница не найдена', 404
+
+
+- Обработчик ошибки для всех исключений:
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    return 'Ошибка сервера', 500
+
+
+ = Получение данных запроса (request):
+
+- Импорт request:
+
+from flask import request
+
+
+- GET-параметры (query string):
+
+arg = request.args.get('key')		# значение или None
+arg = request.args.get('key', default='default')
+
+
+- POST-данные (форма):
+
+value = request.form.get('field')	# для application/x-www-form-urlencoded
+value = request.form['field']		# если ключ обязателен
+
+
+- JSON-тело запроса:
+
+data = request.get_json()			# возвращает dict или None
+data = request.json					# аналогично (если Content-Type: application/json)
+
+
+- Файлы (загрузка):
+
+file = request.files['file']		# объект FileStorage
+filename = file.filename
+file.save('uploads/' + filename)	# сохранить
+
+
+- Доступ к заголовкам:
+
+user_agent = request.headers.get('User-Agent')
+
+
+- Доступ к методу и пути:
+
+method = request.method
+path = request.path
+full_url = request.url
+
+
+ = Ответы (return):
+
+- Простой текст:
+
+return 'Текст'
+
+
+- HTML-шаблон (с рендерингом):
+
+from flask import render_template
+return render_template('index.html', name='Alice')		# передача переменных
+
+
+- JSON-ответ:
+
+from flask import jsonify
+return jsonify({'status': 'ok', 'data': [1,2,3]})
+
+
+- Изменение статуса и заголовков:
+
+return 'Создано', 201
+return 'Ошибка', 400, {'X-Custom': 'value'}
+
+
+- Ответ как объект Response:
+
+from flask import make_response
+resp = make_response('Текст', 200)
+resp.headers['X-Something'] = 'value'
+return resp
+
+
+- Перенаправление (redirect):
+
+from flask import redirect, url_for
+return redirect('/new-path')
+return redirect(url_for('profile', username='john'))	# по имени функции
+
+
+- Отправка файла (скачивание):
+
+from flask import send_file
+return send_file('path/to/file.pdf', as_attachment=True)
+
+
+- Отправка статического файла (без скачивания):
+
+return send_from_directory('static', 'style.css')
+
+
+ = Работа с сессиями:
+
+- Импорт session:
+
+from flask import session
+
+
+- Установка секретного ключа:
+
+app.secret_key = 'your-secret-key-here'				# обязательно для сессий
+
+
+- Запись в сессию:
+
+session['user_id'] = 123
+
+
+- Чтение из сессии:
+
+user_id = session.get('user_id', None)
+
+
+- Удаление ключа:
+
+session.pop('user_id', None)
+
+
+- Очистка всей сессии:
+
+session.clear()
+
+
+ = Куки (cookies):
+
+- Установка cookie:
+
+resp = make_response('Установлена кука')
+resp.set_cookie('username', 'john', max_age=3600)	# срок в секундах
+
+
+- Чтение cookie:
+
+username = request.cookies.get('username')
+
+
+- Удаление cookie:
+
+resp.set_cookie('username', '', expires=0)			# или max_age=0
+
+
+ = Шаблоны Jinja2:
+
+- Базовая структура шаблона (templates/base.html):
+
+<!DOCTYPE html>
+<html>
+<head><title>{% block title %}Мой сайт{% endblock %}</title></head>
+<body>
+    {% block content %}{% endblock %}
+</body>
+</html>
+
+
+- Наследование (templates/index.html):
+
+{% extends "base.html" %}
+{% block title %}Главная{% endblock %}
+{% block content %}
+    <h1>Привет, {{ name }}!</h1>
+{% endblock %}
+
+
+- Фильтры в шаблонах:
+
+{{ text|upper }}				# в верхний регистр
+{{ text|lower }}
+{{ text|safe }}					# не экранировать HTML
+{{ value|default('нет') }}
+
+
+- Условные конструкции и циклы:
+
+{% if user %}
+    Привет, {{ user }}!
+{% else %}
+    Гость
+{% endif %}
+
+<ul>
+{% for item in items %}
+    <li>{{ item }}</li>
+{% endfor %}
+</ul>
+
+
+ = Обработка форм (WTF):
+
+- Установка Flask-WTF:
+
+pip install flask-wtf
+
+
+- Импорт для формы:
+
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField, SubmitField
+from wtforms.validators import DataRequired, Email, Length
+
+
+- Определение класса формы:
+
+class LoginForm(FlaskForm):
+    username = StringField('Имя пользователя', validators=[DataRequired()])
+    password = PasswordField('Пароль', validators=[DataRequired(), Length(min=6)])
+    submit = SubmitField('Войти')
+
+
+- В представлении:
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()
+    if form.validate_on_submit():
+        # обработать данные
+        return redirect(url_for('success'))
+    return render_template('login.html', form=form)
+
+
+- В шаблоне login.html:
+
+<form method="post">
+    {{ form.hidden_tag() }}
+    {{ form.username.label }} {{ form.username() }}
+    {{ form.password.label }} {{ form.password() }}
+    {{ form.submit() }}
+</form>
+
+
+ = Управление контекстом:
+
+- Контекст приложения (для доступа извне запроса):
+
+with app.app_context():
+	# работа с настройками, БД и т.п.
+
+
+- Контекст запроса (внутри представления доступны request, session, g):
+
+g — глобальный объект для временного хранения данных в рамках запроса:
+from flask import g
+g.user = current_user    # например
+
+
+- Декоратор before_request (выполняется до каждого запроса):
+
+@app.before_request
+def before_request():
+    g.user = load_user()   # или что-то ещё
+
+
+- after_request (после запроса, до отправки ответа):
+
+@app.after_request
+def after_request(response):
+    response.headers['X-Frame-Options'] = 'DENY'
+    return response
+
+
+- teardown_request (после отправки, даже при ошибке):
+
+@app.teardown_request
+def teardown(exc=None):
+	# закрыть соединения с БД и т.п.
+
+
+ = Статические файлы:
+
+- Путь по умолчанию: /static/<filename> (из папки static)
+
+- В шаблоне ссылка на CSS:
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+
+ = Расширения (популярные):
+
+- Flask-SQLAlchemy (ORM):
+
+pip install flask-sqlalchemy
+from flask_sqlalchemy import SQLAlchemy
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
+db = SQLAlchemy(app)
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80))
+
+db.create_all()		# создать таблицы
+
+
+- Flask-Migrate (миграции БД):
+
+pip install flask-migrate
+from flask_migrate import Migrate
+migrate = Migrate(app, db)
+
+# Команды:
+flask db init
+flask db migrate -m "сообщение"
+flask db upgrade
+
+
+- Flask-Login (аутентификация):
+
+pip install flask-login
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+@app.route('/protected')
+@login_required
+def protected():
+    return f'Привет, {current_user.name}'
+
+
+- Flask-Mail (отправка писем):
+
+pip install flask-mail
+from flask_mail import Mail, Message
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+mail = Mail(app)
+
+msg = Message('Тема', recipients=['to@example.com'])
+msg.body = 'Тело письма'
+mail.send(msg)
+
+
+ = Настройки приложения (config):
+
+- Настройка через объект:
+
+app.config['DEBUG'] = True
+app.config['SECRET_KEY'] = 'secret'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+
+
+- Использование класса конфигурации:
+
+class Config:
+    DEBUG = False
+    SECRET_KEY = 'secret'
+
+class DevelopmentConfig(Config):
+    DEBUG = True
+
+app.config.from_object(DevelopmentConfig)
+
+
+- Загрузка из файла (config.py или .env):
+
+app.config.from_pyfile('config.py')
+app.config.from_envvar('APP_SETTINGS')	# загрузка из переменной окружения
+
+
+ = Обработка ошибок и отладка:
+
+- Включение режима отладки (перезагрузка при изменениях):
+
+app.run(debug=True)						# или export FLASK_DEBUG=1
+
+
+- Печать ошибок в консоль:
+
+app.logger.debug('Отладочное сообщение')
+app.logger.info('Информация')
+app.logger.warning('Предупреждение')
+app.logger.error('Ошибка')
+
+
+ = Команды Flask CLI (дополнительные):
+
+- Создать пользовательскую команду:
+
+import click
+@app.cli.command('hello')
+def hello_command():
+    click.echo('Hello, world!')
+
+# Запуск: flask hello
+
+
+ = Развёртывание (production):
+
+- Использовать WSGI-сервер (например, Gunicorn):
+
+pip install gunicorn
+gunicorn -w 4 -b 0.0.0.0:5000 app:app
+
+
+- Для Windows можно использовать waitress:
+
+pip install waitress
+waitress-serve --port=5000 app:app
+
+
+- Отключить отладку, установить секретный ключ и использовать переменные окружения.
+
+
+ = Прочее:
+
+- Абсолютный URL для маршрута (url_for):
+
+url_for('index')						# '/'
+url_for('profile', username='alice')	# '/user/alice'
+url_for('static', filename='style.css')	# '/static/style.css'
+
+
+- Завершение запроса с ошибкой (abort):
+
+from flask import abort
+abort(404) # вызывает ошибку 404, можно передать описание

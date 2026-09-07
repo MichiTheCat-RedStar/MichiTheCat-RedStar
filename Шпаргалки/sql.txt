@@ -1,0 +1,386 @@
+	--- ОСНОВНЫЕ КОМАНДЫ SQL ---
+
+ = Чтение данных (SELECT):
+
+- Выбрать все столбцы из таблицы:
+
+SELECT * FROM table_name;
+
+
+- Выбрать конкретные столбцы:
+
+SELECT column1, column2 FROM table_name;
+
+
+- Выбрать с условием (WHERE):
+
+SELECT * FROM table_name WHERE condition;
+
+
+- Выбрать с сортировкой (ORDER BY):
+
+SELECT * FROM table_name ORDER BY column ASC;		# ASC — по возрастанию (по умолчанию)
+SELECT * FROM table_name ORDER BY column DESC;		# DESC — по убыванию
+
+
+- Выбрать с ограничением количества строк (LIMIT):
+
+SELECT * FROM table_name LIMIT 10;
+
+
+- Выбрать уникальные значения (DISTINCT):
+
+SELECT DISTINCT column FROM table_name;
+
+
+ = Вставка данных (INSERT):
+
+- Вставить одну запись:
+
+INSERT INTO table_name (col1, col2) VALUES (val1, val2);
+
+
+- Вставить несколько записей:
+
+INSERT INTO table_name (col1, col2) VALUES (v1, v2), (v3, v4);
+
+
+- Вставить данные из другой таблицы:
+
+INSERT INTO table1 (col1, col2) SELECT colA, colB FROM table2;
+
+
+ = Обновление данных (UPDATE):
+
+- Обновить записи по условию:
+
+UPDATE table_name SET column = new_value WHERE condition;
+
+
+ = Удаление данных (DELETE):
+
+- Удалить записи по условию:
+
+DELETE FROM table_name WHERE condition;
+
+
+- Удалить все записи (но сохранить структуру):
+
+DELETE FROM table_name;								# или TRUNCATE TABLE (быстрее)
+
+
+ = Создание и изменение таблиц (DDL):
+
+- Создать таблицу:
+
+CREATE TABLE table_name (
+    id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL,
+    age INTEGER
+);
+
+
+- Удалить таблицу:
+
+DROP TABLE table_name;
+
+
+- Добавить столбец:
+
+ALTER TABLE table_name ADD COLUMN new_column TYPE;
+
+
+- Удалить столбец:
+
+ALTER TABLE table_name DROP COLUMN column_name;
+
+
+
+	--- ПОЛНАЯ ШПАРГАЛКА ПО SQL (Стандарт SQL) ---
+
+ = Типы данных (основные):
+
+- INTEGER / INT			# целые числа
+- REAL / FLOAT			# числа с плавающей точкой
+- TEXT / VARCHAR(n)		# строки (VARCHAR с ограничением длины)
+- CHAR(n)				# фиксированная длина строки
+- BOOLEAN / BOOL		# TRUE / FALSE
+- DATE					# дата (без времени)
+- TIME					# время
+- DATETIME / TIMESTAMP	# дата и время
+- BLOB					# бинарные данные
+
+
+ = Ограничения (Constraints):
+
+- NOT NULL				# не может быть NULL
+- UNIQUE				# уникальное значение
+- PRIMARY KEY			# первичный ключ (уникальный + NOT NULL)
+- FOREIGN KEY			# внешний ключ (ссылка на другую таблицу)
+- CHECK					# проверка условия (CHECK (age > 0))
+- DEFAULT				# значение по умолчанию (DEFAULT 0)
+
+
+ = Условия и операторы WHERE:
+
+- Сравнение: =, !=, <>, >, <, >=, <=
+- Логические: AND, OR, NOT
+- BETWEEN: column BETWEEN value1 AND value2
+- IN: column IN (value1, value2, ...)
+- LIKE: column LIKE 'pattern'		# % — любое количество, _ — один символ
+- IS NULL / IS NOT NULL
+- EXISTS / NOT EXISTS				# проверка наличия в подзапросе
+
+
+ = Агрегатные функции (группировка):
+
+- COUNT(*)				# количество строк
+- COUNT(column)			# количество не NULL значений
+- SUM(column)			# сумма
+- AVG(column)			# среднее
+- MAX(column)			# максимум
+- MIN(column)			# минимум
+
+
+- Группировка (GROUP BY):
+
+SELECT department, COUNT(*) FROM employees GROUP BY department;
+
+
+- Фильтрация групп (HAVING, используется после GROUP BY):
+
+SELECT department, AVG(salary) FROM employees GROUP BY department HAVING AVG(salary) > 50000;
+
+
+ = JOIN (объединение таблиц):
+
+- INNER JOIN (только совпадающие записи):
+
+SELECT * FROM table1 INNER JOIN table2 ON table1.id = table2.foreign_id;
+
+
+- LEFT JOIN (все записи из левой таблицы + совпадения из правой):
+
+SELECT * FROM table1 LEFT JOIN table2 ON table1.id = table2.foreign_id;
+
+
+- RIGHT JOIN (все записи из правой таблицы + совпадения из левой):
+
+SELECT * FROM table1 RIGHT JOIN table2 ON table1.id = table2.foreign_id;
+
+
+- FULL OUTER JOIN (все записи из обеих таблиц, где есть совпадения; не поддерживается в MySQL):
+
+SELECT * FROM table1 FULL OUTER JOIN table2 ON table1.id = table2.foreign_id;
+
+
+- CROSS JOIN (декартово произведение, все комбинации):
+
+SELECT * FROM table1 CROSS JOIN table2;
+
+
+- Самообъединение (таблица объединяется сама с собой):
+
+SELECT a.*, b.* FROM table a JOIN table b ON a.parent_id = b.id;
+
+
+ = Подзапросы (Subqueries):
+
+- Подзапрос в WHERE:
+
+SELECT * FROM table WHERE column IN (SELECT column FROM other_table WHERE condition);
+
+
+- Подзапрос в SELECT (скалярный подзапрос, возвращает одно значение):
+
+SELECT name, (SELECT MAX(salary) FROM employees) AS max_salary FROM employees;
+
+
+- Подзапрос в FROM (производная таблица):
+
+SELECT * FROM (SELECT * FROM table WHERE condition) AS subquery;
+
+
+- EXISTS (проверка существования):
+
+SELECT * FROM table1 WHERE EXISTS (SELECT 1 FROM table2 WHERE table1.id = table2.foreign_id);
+
+
+ = Объединение результатов (UNION, INTERSECT, EXCEPT):
+
+- UNION (объединение уникальных строк):
+
+SELECT column FROM table1 UNION SELECT column FROM table2;
+
+
+- UNION ALL (объединение всех строк, включая дубликаты):
+
+SELECT column FROM table1 UNION ALL SELECT column FROM table2;
+
+
+- INTERSECT (пересечение, общие строки, не во всех СУБД):
+
+SELECT column FROM table1 INTERSECT SELECT column FROM table2;
+
+
+- EXCEPT (разность, строки из первого запроса, отсутствующие во втором, не во всех СУБД):
+
+SELECT column FROM table1 EXCEPT SELECT column FROM table2;
+
+
+ = Сортировка и пагинация:
+
+- ORDER BY с несколькими столбцами:
+
+SELECT * FROM table ORDER BY col1 ASC, col2 DESC;
+
+
+- LIMIT с OFFSET (пропустить N записей):
+
+SELECT * FROM table LIMIT 10 OFFSET 20;		# записи с 21 по 30
+
+
+ = Индексы:
+
+- Создать индекс:
+
+CREATE INDEX index_name ON table_name (column1, column2);
+
+
+- Удалить индекс:
+
+DROP INDEX index_name;
+
+
+- Создать уникальный индекс (как UNIQUE constraint):
+
+CREATE UNIQUE INDEX index_name ON table_name (column);
+
+
+ = Транзакции (ACID):
+
+- Начать транзакцию:
+
+BEGIN TRANSACTION;							# или START TRANSACTION;
+
+
+- Зафиксировать изменения:
+
+COMMIT;
+
+
+- Откатить изменения (отменить все изменения с начала транзакции):
+
+ROLLBACK;
+
+
+- Создать точку сохранения (savepoint):
+
+SAVEPOINT sp1;
+
+
+- Откатиться к сохранённой точке:
+
+ROLLBACK TO SAVEPOINT sp1;
+
+
+ = Работа с представлениями (VIEW):
+
+- Создать представление (виртуальная таблица):
+
+CREATE VIEW view_name AS SELECT columns FROM table WHERE condition;
+
+
+- Удалить представление:
+
+DROP VIEW view_name;
+
+
+ = Работа с пользователями и привилегиями (в разных СУБД синтаксис отличается, общий подход):
+
+- Создать пользователя (пример для PostgreSQL):
+
+CREATE USER username WITH PASSWORD 'password';
+
+
+- Дать права на все таблицы в базе:
+
+GRANT ALL PRIVILEGES ON DATABASE dbname TO username;
+
+
+- Отозвать права:
+
+REVOKE ALL PRIVILEGES ON DATABASE dbname FROM username;
+
+
+ = Специфические функции (часто используемые):
+
+- COALESCE (возвращает первое не NULL значение):
+
+SELECT COALESCE(column, 'default') FROM table;
+
+
+- NULLIF (возвращает NULL, если два аргумента равны):
+
+SELECT NULLIF(column, 0) FROM table;
+
+
+- CASE (условный оператор, как IF-THEN-ELSE):
+
+SELECT CASE WHEN condition THEN result1 ELSE result2 END FROM table;
+
+
+- CAST (приведение типа):
+
+SELECT CAST(column AS INTEGER) FROM table;
+
+
+ = Работа с датами и временем (примеры для SQLite/PostgreSQL, адаптируйте):
+
+- Текущая дата и время:
+
+SELECT CURRENT_DATE;		# дата
+SELECT CURRENT_TIME;		# время
+SELECT CURRENT_TIMESTAMP;	# дата и время
+
+
+- Извлечение части даты:
+
+SELECT EXTRACT(YEAR FROM date_column) FROM table;	# год, месяц, день и т.д.
+SELECT DATE_PART('year', date_column) FROM table;	# в PostgreSQL
+
+
+- Интервалы и арифметика:
+
+SELECT date_column + INTERVAL '1 day' FROM table;	# прибавить день
+SELECT date_column - INTERVAL '1 month' FROM table;	# отнять месяц
+
+
+ = Работа со строками (примеры):
+
+- Конкатенация (|| в SQLite/PostgreSQL, CONCAT в MySQL):
+
+SELECT first_name || ' ' || last_name AS full_name FROM table;
+
+
+- Длина строки:
+
+SELECT LENGTH(column) FROM table;
+
+
+- Преобразование в верхний/нижний регистр:
+
+SELECT UPPER(column), LOWER(column) FROM table;
+
+
+- Удаление пробелов:
+
+SELECT TRIM(column) FROM table;			# обрезает пробелы с обеих сторон
+
+
+ = Советы:
+
+- Используйте параметризованные запросы для защиты от SQL-инъекций.
+- Для больших таблиц создавайте индексы по часто используемым столбцам в WHERE и JOIN.
+- EXPLAIN (или EXPLAIN ANALYZE) показывает план выполнения запроса для оптимизации.
+- Всегда явно указывайте столбцы в INSERT и SELECT (избегайте SELECT * в production).

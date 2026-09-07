@@ -1,0 +1,232 @@
+	--- ОСНОВНЫЕ КОМАНДЫ JSON + PYTHON ---
+
+ = Импорт модуля:
+
+import json
+
+
+ = Сериализация (Python → JSON):
+
+- Преобразовать объект Python в JSON-строку (dumps):
+
+json_str = json.dumps(python_obj)
+
+
+- Сохранить JSON в файл (dump):
+
+with open('data.json', 'w') as f:
+    json.dump(python_obj, f)
+
+
+ = Десериализация (JSON → Python):
+
+- Преобразовать JSON-строку в объект Python (loads):
+
+python_obj = json.loads(json_str)
+
+
+- Загрузить JSON из файла (load):
+
+with open('data.json', 'r') as f:
+    python_obj = json.load(f)
+
+
+ = Параметры (форматирование):
+
+- С отступами (indent) для читаемости:
+
+json.dumps(obj, indent=4)				# 4 пробела, можно '\t'
+
+
+- Сортировка ключей (sort_keys):
+
+json.dumps(obj, sort_keys=True)
+
+
+- Отключить экранирование Unicode (ensure_ascii=False):
+
+json.dumps(obj, ensure_ascii=False)		# поддержка кириллицы и спецсимволов
+
+
+
+	--- ПОЛНАЯ ШПАРГАЛКА ПО JSON В PYTHON ---
+
+ = Импорт:
+
+import json
+
+
+ = Функции сериализации (dump / dumps):
+
+- json.dumps(obj, *, skipkeys=False, ensure_ascii=True, check_circular=True, allow_nan=True, cls=None, indent=None, separators=None, default=None, sort_keys=False, **kw)
+
+- json.dump(obj, fp, *, skipkeys=False, ensure_ascii=True, check_circular=True, allow_nan=True, cls=None, indent=None, separators=None, default=None, sort_keys=False, **kw)
+
+
+ = Функции десериализации (load / loads):
+
+- json.loads(s, *, cls=None, object_hook=None, parse_float=None, parse_int=None, parse_constant=None, object_pairs_hook=None, **kw)
+
+- json.load(fp, *, cls=None, object_hook=None, parse_float=None, parse_int=None, parse_constant=None, object_pairs_hook=None, **kw)
+
+
+ = Основные параметры:
+
+- indent – отступы для форматирования (int – количество пробелов, str – строка-отступ, например '\t').
+- sort_keys – сортировка ключей словаря по алфавиту (bool).
+- ensure_ascii – если True, все не-ASCII символы экранируются (\uXXXX); если False – сохраняются как есть.
+- separators – кортеж (item_separator, key_separator), например (',', ': ') для компактности.
+- skipkeys – если True, пропускать ключи, не являющиеся строками (иначе TypeError).
+- default – функция, преобразующая неподдерживаемые типы; вызывается для объектов, не сериализуемых стандартно.
+- object_hook – функция, вызываемая для каждого словаря при загрузке; позволяет преобразовывать dict в объект другого типа.
+- object_pairs_hook – аналогично object_hook, но получает список пар (ключ, значение) в порядке исходного JSON.
+- parse_float – функция для преобразования чисел с плавающей точкой (по умолчанию float).
+- parse_int – функция для преобразования целых чисел (по умолчанию int).
+- parse_constant – функция для обработки констант NaN, Infinity, -Infinity (по умолчанию None).
+
+
+ = Примеры использования:
+
+- Базовый объект:
+
+data = {'name': 'Алексей', 'age': 30, 'hobbies': ['чтение', 'программирование']}
+json_str = json.dumps(data, ensure_ascii=False, indent=4)
+
+
+- Чтение из файла:
+
+with open('config.json', 'r', encoding='utf-8') as f:
+    config = json.load(f)
+
+
+- Запись в файл с отступами:
+
+with open('output.json', 'w', encoding='utf-8') as f:
+    json.dump(data, f, ensure_ascii=False, indent=2, sort_keys=True)
+
+
+ = Работа с пользовательскими типами (default и object_hook):
+
+- Сериализация datetime (через default):
+
+from datetime import datetime
+
+def json_serializer(obj):
+    if isinstance(obj, datetime):
+        return obj.isoformat()
+    raise TypeError(f'Type {type(obj)} not serializable')
+
+json_str = json.dumps({'created': datetime.now()}, default=json_serializer)
+
+
+- Десериализация строки в datetime (через object_hook):
+
+def json_deserializer(dct):
+    for key, value in dct.items():
+        if key == 'created' and isinstance(value, str):
+            dct[key] = datetime.fromisoformat(value)
+    return dct
+
+data = json.loads(json_str, object_hook=json_deserializer)
+
+
+ = Кастомные Encoder и Decoder (классы):
+
+- Создать свой Encoder (наследуя json.JSONEncoder):
+
+class CustomEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        return super().default(obj)
+
+json_str = json.dumps(data, cls=CustomEncoder)
+
+
+- Создать свой Decoder (наследуя json.JSONDecoder):
+
+class CustomDecoder(json.JSONDecoder):
+    def __init__(self, *args, **kwargs):
+        super().__init__(object_hook=self.object_hook, *args, **kwargs)
+
+    def object_hook(self, dct):
+        for key, value in dct.items():
+            if key == 'created' and isinstance(value, str):
+                dct[key] = datetime.fromisoformat(value)
+        return dct
+
+data = json.loads(json_str, cls=CustomDecoder)
+
+
+ = Обработка ошибок:
+
+- json.JSONDecodeError – возникает при некорректном JSON.
+
+try:
+    data = json.loads('{invalid json}')
+except json.JSONDecodeError as e:
+    print('Ошибка парсинга:', e)
+
+
+- TypeError – возникает при попытке сериализовать неподдерживаемый тип без default.
+
+try:
+    json.dumps(set([1,2,3]))			# set не поддерживается
+except TypeError as e:
+    print('Ошибка сериализации:', e)
+
+
+ = Поддержка разных кодировок:
+
+- При работе с файлами всегда указывайте encoding='utf-8' (или другую).
+- json.dumps возвращает str (Unicode), json.loads принимает str или bytes.
+- Для bytes с кодировкой отличной от UTF-8 можно использовать:
+
+json.loads(b'{"key": "value"}'.decode('cp1251'))
+
+
+ = Преобразование типов (соответствие):
+
+- Python → JSON:
+  dict -> object
+  list, tuple -> array
+  str -> string
+  int, float -> number
+  True -> true
+  False -> false
+  None -> null
+
+- JSON → Python:
+  object -> dict
+  array -> list
+  string -> str
+  number (int) -> int
+  number (real) -> float
+  true -> True
+  false -> False
+  null -> None
+
+
+ = Компактная запись (без пробелов и переносов):
+
+json_str = json.dumps(data, separators=(',', ':'))	# уменьшает размер
+
+
+ = Потоковая работа с большими файлами (использование ijson или ручной парсинг):
+
+- Для очень больших файлов используйте сторонние библиотеки (ijson) или построчный парсинг.
+- Встроенный json.load читает весь файл в память, что не подходит для гигабайтных данных.
+
+
+ = Работа с JSON-строками, содержащими управляющие символы:
+
+- ensure_ascii=False оставляет Unicode-символы как есть.
+- При записи в файл с ensure_ascii=False убедитесь, что файл открыт с соответствующей кодировкой (utf-8).
+
+
+ = Советы:
+
+- Всегда используйте ensure_ascii=False, если работаете с русским языком.
+- Для отладки используйте indent=2 или indent=4.
+- Для парсинга конфигураций применяйте object_hook для создания объектов-конфигов.
+- Избегайте сериализации больших бинарных данных – лучше использовать base64 или отдельные файлы.

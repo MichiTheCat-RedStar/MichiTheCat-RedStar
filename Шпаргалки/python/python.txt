@@ -1,0 +1,866 @@
+	--- ОСНОВНЫЕ КОМАНДЫ PYTHON ---
+
+ = Типы данных:
+
+- Числа: int, float, complex
+- Строки: str
+- Списки: list
+- Кортежи: tuple
+- Словари: dict
+- Множества: set, frozenset
+- Булевы: bool (True / False)
+- NoneType: None
+
+
+ = Базовый ввод/вывод:
+
+- Вывод в консоль:
+
+print("Hello, world!")
+
+
+- Ввод с клавиатуры:
+
+name = input("Введите имя: ")
+
+
+ = Условные операторы:
+
+if condition:
+    # код
+elif other_condition:
+    # код
+else:
+    # код
+
+
+ = Циклы:
+
+- for:
+
+for item in iterable:
+    # код
+
+
+- while:
+
+while condition:
+    # код
+
+
+ = Функции:
+
+def function_name(param1, param2):
+    # код
+    return result
+
+
+ = Классы:
+
+class MyClass:
+    def __init__(self, param):
+        self.param = param
+
+    def method(self):
+        return self.param
+
+
+ = Импорт модулей:
+
+import module_name
+from module_name import function_name
+import module_name as alias
+
+
+
+	--- ПОЛНАЯ ШПАРГАЛКА ПО PYTHON ---
+
+ = Синтаксис и базовые конструкции:
+
+- Комментарии:
+
+# Однострочный комментарий
+""" Многострочный
+    комментарий """
+
+
+- Точка с запятой (необязательна, не рекомендуется):
+
+x = 5; y = 10		# допустимо, но нежелательно
+
+
+- Перенос строки (обратный слэш):
+
+total = 1 + 2 + \
+        3 + 4
+
+
+- Несколько инструкций в одной строке (не рекомендуется):
+
+x = 1; y = 2; z = 3
+
+
+ = Типы данных (подробно):
+
+- Числа:
+
+int: 42, -10, 0
+float: 3.14, -0.001, 2.0
+complex: 3+4j, 1-2j
+
+
+- Строки:
+
+'одинарные кавычки'
+"двойные кавычки"
+'''многострочная
+   строка'''
+"""тоже многострочная"""
+
+# Экранирование:
+\n		# новая строка
+\t		# табуляция
+\\		# обратный слэш
+\'		# одинарная кавычка
+\"		# двойная кавычка
+\r		# возврат каретки
+\b		# забой (backspace)
+\f		# подача страницы
+\v		# вертикальная табуляция
+\ooo	# восьмеричный код
+\xhh	# шестнадцатеричный код
+
+
+- Списки (изменяемые, упорядоченные):
+
+my_list = [1, 2, 3, 'a', 'b']
+my_list.append(4)			# добавить в конец
+my_list.insert(0, 'start')	# вставить по индексу
+my_list.pop()				# удалить последний
+my_list.pop(2)				# удалить по индексу
+my_list.remove('a')			# удалить по значению
+my_list[0]					# доступ по индексу
+my_list[-1]					# последний элемент
+my_list[1:3]				# срез (индексы 1 и 2)
+my_list[::-1]				# разворот списка
+len(my_list)				# длина
+
+
+- Кортежи (неизменяемые, упорядоченные):
+
+my_tuple = (1, 2, 3, 'a')
+my_tuple[0]				# доступ по индексу
+my_tuple[1:3]			# срез
+
+
+- Словари (изменяемые, неупорядоченные, ключ-значение):
+
+my_dict = {'key1': 'value1', 'key2': 'value2'}
+my_dict['key1']						# доступ по ключу
+my_dict['new_key'] = 'new_value'	# добавление/изменение
+del my_dict['key1']					# удаление по ключу
+my_dict.get('key1', 'default')		# безопасное получение
+my_dict.keys()						# все ключи
+my_dict.values()					# все значения
+my_dict.items()						# пары (ключ, значение)
+
+
+- Множества (изменяемые, неупорядоченные, уникальные):
+
+my_set = {1, 2, 3, 3}			# {1, 2, 3}
+my_set.add(4)					# добавление
+my_set.remove(2)				# удаление (ошибка, если нет)
+my_set.discard(5)				# удаление (без ошибки)
+my_set.union(other_set)			# объединение
+my_set.intersection(other_set)	# пересечение
+my_set.difference(other_set)	# разность
+
+
+- Булевы:
+
+True, False
+bool(0)					# False
+bool(1)					# True
+bool([])				# False
+bool('')				# False
+bool(None)				# False
+
+
+- None:
+
+x = None
+if x is None:			# проверка на None (не ==)
+    pass
+
+
+ = Строковые методы:
+
+s = "Hello, World!"
+s.upper()					# "HELLO, WORLD!"
+s.lower()					# "hello, world!"
+s.capitalize()				# "Hello, world!"
+s.title()					# "Hello, World!"
+s.strip()					# удаляет пробелы по краям
+s.lstrip()					# слева
+s.rstrip()					# справа
+s.replace('World', 'Python')# "Hello, Python!"
+s.split(',')				# ['Hello', ' World!']
+s.join(['a', 'b', 'c'])		# "a,b,c"
+s.startswith('Hello')		# True
+s.endswith('!')				# True
+s.find('World')				# 7 (индекс, -1 если нет)
+s.index('World')			# 7 (ошибка, если нет)
+s.count('l')				# 3
+len(s)						# 13
+s[0]						# 'H'
+s[-1]						# '!'
+s[0:5]						# 'Hello'
+
+
+ = Форматирование строк:
+
+- f-строки (Python 3.6+):
+
+name = "Alex"
+age = 30
+print(f"Name: {name}, Age: {age}")
+print(f"{age:04d}")			# 0030 (4 символа с ведущими нулями)
+print(f"{3.14159:.2f}")		# 3.14 (2 знака после запятой)
+
+
+- format():
+
+print("Name: {}, Age: {}".format(name, age))
+print("Name: {0}, Age: {1}".format(name, age))
+print("Name: {n}, Age: {a}".format(n=name, a=age))
+
+
+- % (старый стиль):
+
+print("Name: %s, Age: %d" % (name, age))
+
+
+ = Условные операторы (подробно):
+
+- if/elif/else:
+
+if x > 0:
+    print("Positive")
+elif x < 0:
+    print("Negative")
+else:
+    print("Zero")
+
+
+- Тернарный оператор:
+
+result = "Even" if x % 2 == 0 else "Odd"
+
+
+- match/case (Python 3.10+):
+
+match value:
+    case 1:
+        print("One")
+    case 2:
+        print("Two")
+    case _:
+        print("Other")
+
+
+ = Циклы (подробно):
+
+- for по диапазону:
+
+for i in range(10):				# 0..9
+for i in range(5, 10):			# 5..9
+for i in range(0, 10, 2):		# 0, 2, 4, 6, 8
+
+
+- for по коллекциям:
+
+for item in [1, 2, 3]:
+    print(item)
+
+for key, value in dict.items():
+    print(key, value)
+
+for index, value in enumerate(['a', 'b', 'c']):
+    print(index, value)			# 0 a, 1 b, 2 c
+
+
+- while:
+
+i = 0
+while i < 5:
+    print(i)
+    i += 1
+
+
+- break / continue / else (в циклах):
+
+for i in range(10):
+    if i == 5:
+        break			# выход из цикла
+    if i % 2 == 0:
+        continue		# переход к следующей итерации
+    print(i)
+else:					# выполняется, если не было break
+    print("Loop completed")
+
+
+ = Функции (подробно):
+
+- Определение и вызов:
+
+def func(param1, param2):
+    return param1 + param2
+
+result = func(3, 5)
+
+
+- Значения по умолчанию:
+
+def func(param1, param2=10):
+    return param1 + param2
+
+
+- Именованные аргументы:
+
+func(param2=5, param1=3)
+
+
+- *args (произвольное количество позиционных аргументов):
+
+def func(*args):
+    for arg in args:
+        print(arg)
+
+
+- **kwargs (произвольное количество именованных аргументов):
+
+def func(**kwargs):
+    for key, value in kwargs.items():
+        print(f"{key}: {value}")
+
+
+- Комбинирование:
+
+def func(a, b=10, *args, **kwargs):
+    pass
+
+
+- Аннотации типов:
+
+def func(a: int, b: str) -> bool:
+    return True
+
+
+- Лямбда-функции (анонимные):
+
+square = lambda x: x ** 2
+result = square(5)			# 25
+
+
+- Документация (docstring):
+
+def func():
+    """Это описание функции"""
+    pass
+
+help(func)						# выведет описание
+
+
+ = Классы и ООП (подробно):
+
+- Определение класса:
+
+class MyClass:
+    class_var = "class value"	# переменная класса
+
+    def __init__(self, param):
+        self.param = param		# переменная экземпляра
+
+    def method(self):
+        return self.param
+
+    @classmethod
+    def class_method(cls):
+        return cls.class_var
+
+    @staticmethod
+    def static_method():
+        return "static"
+
+
+- Создание экземпляра:
+
+obj = MyClass("value")
+print(obj.param)
+print(obj.method())
+
+
+- Наследование:
+
+class ChildClass(MyClass):
+    def __init__(self, param, extra):
+        super().__init__(param)		# вызов родительского __init__
+        self.extra = extra
+
+
+- Магические методы (dunder):
+
+__init__(self, ...)				# конструктор
+__str__(self)					# str(obj)
+__repr__(self)					# repr(obj)
+__len__(self)					# len(obj)
+__getitem__(self, key)			# obj[key]
+__setitem__(self, key, value)	# obj[key] = value
+__delitem__(self, key)			# del obj[key]
+__iter__(self)					# итератор
+__next__(self)					# следующий элемент
+__call__(self, ...)				# obj()
+__add__(self, other)			# obj + other
+__sub__(self, other)			# obj - other
+__eq__(self, other)				# obj == other
+__lt__(self, other)				# obj < other
+__enter__(self)					# контекстный менеджер (with)
+__exit__(self, ...)				# контекстный менеджер (выход)
+
+
+- Свойства (property):
+
+class MyClass:
+    def __init__(self):
+        self._value = 0
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, new_value):
+        self._value = new_value
+
+
+- Приватные атрибуты (по соглашению, не строго):
+
+_private		# "защищённый" (по соглашению)
+__private		# name mangling (_ClassName__private)
+
+
+ = Работа с файлами:
+
+- Открытие файла (рекомендуемый способ с with):
+
+with open('file.txt', 'r', encoding='utf-8') as f:
+    content = f.read()			# чтение всего файла
+
+
+- Режимы открытия:
+
+'r'	# чтение (по умолчанию)
+'w'	# запись (перезапись)
+'a'	# добавление в конец
+'x'	# создание (ошибка, если файл существует)
+'b'	# бинарный режим (rb, wb, ab)
+'t'	# текстовый режим (по умолчанию)
+'+'	# чтение и запись (r+, w+, a+)
+
+
+- Методы работы с файлами:
+
+f.read()							# чтение всего файла
+f.read(10)							# чтение 10 байт/символов
+f.readline()						# чтение одной строки
+f.readlines()						# чтение всех строк в список
+f.write("text")						# запись строки
+f.writelines(['line1\n', 'line2\n'])# запись списка строк
+f.tell()							# текущая позиция в файле
+f.seek(0)							# переместиться в начало
+f.close()							# закрыть файл
+
+
+ = Обработка исключений:
+
+- try/except/else/finally:
+
+try:
+    x = int(input("Enter number: "))
+    result = 10 / x
+except ValueError as e:
+    print("Not a number:", e)
+except ZeroDivisionError:
+    print("Division by zero!")
+except Exception as e:		# все остальные исключения
+    print("Unexpected error:", e)
+else:						# выполняется, если не было исключений
+    print("Success:", result)
+finally:					# выполняется всегда (даже при return)
+    print("Cleanup")
+
+
+- Создание своих исключений:
+
+class MyError(Exception):
+    pass
+
+raise MyError("Something went wrong")
+
+
+- Проверка типа исключения:
+
+try:
+    # код
+except (ValueError, TypeError) as e:
+    print("Value or Type error:", e)
+
+
+ = Работа с модулями и пакетами:
+
+- Импорт:
+
+import math				# импорт всего модуля
+from math import sqrt	# импорт конкретной функции
+from math import *		# импорт всего (не рекомендуется)
+import math as m		# с псевдонимом
+
+
+- Создание пакета (папка с __init__.py):
+
+my_package/
+    __init__.py
+    module1.py
+    module2.py
+
+
+- Условный импорт (для совместимости):
+
+try:
+    import module
+except ImportError:
+    import fallback_module as module
+
+
+- if __name__ == "__main__" (точка входа):
+
+if __name__ == "__main__":
+    # код, выполняемый только при запуске файла напрямую
+
+
+ = Работа с датами и временем (datetime):
+
+from datetime import datetime, date, time, timedelta
+
+now = datetime.now()								# текущие дата и время
+today = date.today()								# текущая дата
+
+dt = datetime(2024, 12, 31, 23, 59, 59)
+dt.year, dt.month, dt.day							# доступ к компонентам
+dt.strftime("%Y-%m-%d %H:%M:%S")					# форматирование
+parsed = datetime.strptime("2024-12-31", "%Y-%m-%d")# парсинг
+
+delta = timedelta(days=1, hours=2)
+new_dt = dt + delta									# сложение
+
+
+- Форматы strftime:
+
+%Y	# год (4 цифры)
+%y	# год (2 цифры)
+%m	# месяц (01-12)
+%d	# день (01-31)
+%H	# час (00-23)
+%I	# час (01-12)
+%M	# минуты (00-59)
+%S	# секунды (00-59)
+%f	# микросекунды (000000-999999)
+%a	# сокращённое название дня недели
+%A	# полное название дня недели
+%b	# сокращённое название месяца
+%B	# полное название месяца
+%w	# день недели (0-6, воскресенье=0)
+%j	# день года (001-366)
+%p	# AM/PM
+%z	# часовой пояс (+HHMM)
+%Z	# название часового пояса
+
+
+ = Работа с генераторами и итераторами:
+
+- Генератор (yield):
+
+def countdown(n):
+    while n > 0:
+        yield n
+        n -= 1
+
+for i in countdown(5):
+    print(i)				# 5, 4, 3, 2, 1
+
+
+- Генераторное выражение:
+
+squares = (x**2 for x in range(10))
+for sq in squares:
+    print(sq)
+
+
+- List comprehension (списковое включение):
+
+squares = [x**2 for x in range(10)]
+even_squares = [x**2 for x in range(10) if x % 2 == 0]
+
+
+- Dict comprehension:
+
+square_dict = {x: x**2 for x in range(5)}	# {0: 0, 1: 1, 2: 4, 3: 9, 4: 16}
+
+
+- Set comprehension:
+
+square_set = {x**2 for x in range(5)}		# {0, 1, 4, 9, 16}
+
+
+ = Декораторы:
+
+- Простой декоратор (без параметров):
+
+def decorator(func):
+    def wrapper(*args, **kwargs):
+        print("Before")
+        result = func(*args, **kwargs)
+        print("After")
+        return result
+    return wrapper
+
+@decorator
+def my_function():
+    print("Inside")
+
+
+- Декоратор с параметрами:
+
+def repeat(n):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            for _ in range(n):
+                result = func(*args, **kwargs)
+            return result
+        return wrapper
+    return decorator
+
+@repeat(3)
+def hello():
+    print("Hello")
+
+
+- Сохранение метаданных (functools.wraps):
+
+from functools import wraps
+
+def decorator(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        return func(*args, **kwargs)
+    return wrapper
+
+
+ = Контекстные менеджеры (with):
+
+- Создание своего контекстного менеджера (через класс):
+
+class MyContext:
+    def __enter__(self):
+        print("Enter")
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        print("Exit")
+        return False		# True — подавить исключение
+
+with MyContext() as ctx:
+    print("Inside")
+
+
+- Через contextlib (декоратор):
+
+from contextlib import contextmanager
+
+@contextmanager
+def my_context():
+    print("Enter")
+    try:
+        yield
+    finally:
+        print("Exit")
+
+with my_context():
+    print("Inside")
+
+
+ = Стандартная библиотека (полезные модули):
+
+- os — работа с операционной системой:
+
+import os
+os.getcwd()							# текущая папка
+os.listdir('.')						# содержимое папки
+os.path.join('folder', 'file.txt')	# склеить путь
+os.path.exists('file.txt')			# существует?
+os.path.isfile('file.txt')			# это файл?
+os.path.isdir('folder')				# это папка?
+os.mkdir('new_folder')				# создать папку
+os.remove('file.txt')				# удалить файл
+os.rename('old.txt', 'new.txt')		# переименовать
+os.environ.get('PATH')				# переменная окружения
+
+
+- sys — системные параметры и функции:
+
+import sys
+sys.argv				# аргументы командной строки
+sys.exit(0)				# выход из программы
+sys.path				# пути поиска модулей
+sys.platform			# платформа ('linux', 'win32' и т.д.)
+sys.version				# версия Python
+
+
+- math — математические функции:
+
+import math
+math.pi					# 3.14159...
+math.e					# 2.71828...
+math.sqrt(16)			# 4.0
+math.pow(2, 3)			# 8.0
+math.sin(math.pi/2)		# 1.0
+math.cos(0)				# 1.0
+math.ceil(3.14)			# 4
+math.floor(3.14)		# 3
+math.log(100, 10)		# 2.0 (логарифм по основанию 10)
+math.factorial(5)		# 120
+
+
+- random — генерация случайных чисел:
+
+import random
+random.randint(1, 10)			# случайное целое от 1 до 10
+random.random()					# случайное число 0.0 <= x < 1.0
+random.choice(['a', 'b', 'c'])	# случайный элемент
+random.shuffle(['a', 'b', 'c'])	# перемешивает список
+random.sample(range(100), 5)	# 5 уникальных элементов из диапазона
+random.seed(42)					# установить seed для воспроизводимости
+
+
+- json — работа с JSON (см. отдельную шпаргалку)
+- re — регулярные выражения (см. отдельную шпаргалку)
+- itertools — работа с итераторами:
+
+import itertools
+itertools.chain([1,2], [3,4])		# объединение итераторов
+itertools.cycle('ABC')				# бесконечный цикл A,B,C,A,B,C...
+itertools.repeat(10, 3)				# 10, 10, 10
+itertools.combinations([1,2,3], 2)	# (1,2), (1,3), (2,3)
+itertools.permutations([1,2,3], 2)	# (1,2), (1,3), (2,1), (2,3), (3,1), (3,2)
+itertools.product([1,2], ['a','b'])	# (1,'a'), (1,'b'), (2,'a'), (2,'b')
+
+
+- collections — полезные структуры данных:
+
+from collections import defaultdict, Counter, deque, namedtuple
+
+d = defaultdict(int)				# словарь с значением по умолчанию
+d['key'] += 1						# не требует проверки наличия ключа
+
+counter = Counter(['a','b','a','c'])# {'a': 2, 'b': 1, 'c': 1}
+counter.most_common(2)				# [('a', 2), ('b', 1)]
+
+queue = deque([1,2,3])				# двусторонняя очередь
+queue.append(4)						# добавить справа
+queue.appendleft(0)					# добавить слева
+queue.popleft()						# удалить слева
+
+Point = namedtuple('Point', ['x', 'y'])	# именованный кортеж
+p = Point(1, 2)
+p.x, p.y							# 1, 2
+
+
+- functools — функциональные утилиты:
+
+from functools import reduce, partial, lru_cache
+
+reduce(lambda x,y: x+y, [1,2,3,4])	# 10 (сумма)
+
+def multiply(a, b): return a * b
+double = partial(multiply, 2)		# фиксируем первый аргумент
+double(5)				# 10
+
+@lru_cache(maxsize=128)				# кэширование результатов
+def fib(n):
+    if n < 2: return n
+    return fib(n-1) + fib(n-2)
+
+
+ = Аннотации типов (typing):
+
+from typing import List, Dict, Optional, Union, Any, Callable, Tuple
+
+def func(a: int, b: str) -> List[int]:
+    return [a, len(b)]
+
+def func2(param: Optional[int] = None) -> Union[int, str]:
+    if param is None:
+        return "None"
+    return param
+
+def func3(param: Any) -> None:
+    print(param)
+
+# Python 3.9+ можно использовать встроенные типы: list[int], dict[str, int]
+def func4(param: list[int]) -> dict[str, int]:
+    return {"value": param[0]}
+
+
+ = Менеджеры пакетов:
+
+- pip (установка пакетов):
+
+pip install package_name
+pip install package_name==1.2.3		# конкретная версия
+pip install package_name>=1.0.0		# минимальная версия
+pip uninstall package_name
+pip list							# список установленных
+pip freeze > requirements.txt		# сохранить зависимости
+pip install -r requirements.txt		# установить из файла
+
+
+- venv (виртуальное окружение):
+
+python -m venv venv					# создать
+source venv/bin/activate			# активировать (Linux/Mac)
+venv\Scripts\activate				# активировать (Windows)
+deactivate							# деактивировать
+
+
+ = Стиль кода (PEP 8):
+
+- Отступы: 4 пробела (не табуляция)
+- Максимальная длина строки: 79 символов (для документации 72)
+- Имена: snake_case для функций и переменных, CamelCase для классов, UPPER_CASE для констант
+- Пробелы вокруг операторов: x = 1 (не x=1)
+- Пробел после запятой: [1, 2, 3]
+- Две пустые строки между функциями/классами на верхнем уровне
+- Одна пустая строка между методами в классе
+- Кодировка: UTF-8
+
+
+ = Советы:
+
+- Используйте f-строки для форматирования (Python 3.6+).
+- Для работы с файлами всегда используйте with (контекстный менеджер).
+- Используйте list comprehension вместо циклов для создания списков.
+- Для проверки на None используйте is / is not (не ==).
+- При работе с большими данными используйте генераторы вместо списков.
+- Создавайте виртуальные окружения для каждого проекта.
+- Для отладки используйте print() или модуль logging.
+- Изучайте документацию через help() или dir().

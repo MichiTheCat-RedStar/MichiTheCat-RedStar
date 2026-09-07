@@ -1,0 +1,511 @@
+	--- ОСНОВНЫЕ КОМАНДЫ PYQT (PYQT5) ---
+
+ = Установка:
+
+- Установить PyQt5:
+
+pip install PyQt5
+
+
+- Установить PyQt6 (альтернатива):
+
+pip install PyQt6
+
+
+ = Импорт и создание приложения:
+
+- Импорт основных модулей:
+
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QVBoxLayout
+
+
+- Создать приложение (экземпляр QApplication):
+
+app = QApplication([])
+
+
+- Создать главное окно (виджет):
+
+window = QWidget()
+window.setWindowTitle('Моё приложение')
+window.resize(400, 300)
+
+
+- Показать окно:
+
+window.show()
+
+
+- Запустить главный цикл событий:
+
+app.exec_()					# в PyQt5
+# app.exec()				# в PyQt6
+
+
+ = Основные виджеты:
+
+- Метка (QLabel):
+
+label = QLabel('Текст')
+
+
+- Кнопка (QPushButton):
+
+button = QPushButton('Нажми меня')
+
+
+- Однострочное поле ввода (QLineEdit):
+
+line_edit = QLineEdit()
+line_edit.setPlaceholderText('Введите текст')
+
+
+- Многострочное поле (QTextEdit):
+
+text_edit = QTextEdit()
+
+
+- Флажок (QCheckBox):
+
+checkbox = QCheckBox('Опция')
+
+
+- Радиокнопка (QRadioButton):
+
+radio1 = QRadioButton('Вариант 1')
+radio2 = QRadioButton('Вариант 2')
+
+
+ = Макеты (Layouts):
+
+- Вертикальный макет (QVBoxLayout):
+
+layout = QVBoxLayout()
+layout.addWidget(label)
+layout.addWidget(button)
+window.setLayout(layout)
+
+
+- Горизонтальный макет (QHBoxLayout):
+
+from PyQt5.QtWidgets import QHBoxLayout
+h_layout = QHBoxLayout()
+
+
+- Сетка (QGridLayout):
+
+from PyQt5.QtWidgets import QGridLayout
+grid = QGridLayout()
+grid.addWidget(widget, row, column, rowspan, colspan)
+
+
+ = Сигналы и слоты (обработка событий):
+
+- Подключить сигнал clicked к функции:
+
+button.clicked.connect(on_button_click)
+
+
+- Определить функцию-обработчик:
+
+def on_button_click():
+    print('Кнопка нажата')
+
+
+- Сигнал textChanged для QLineEdit:
+
+line_edit.textChanged.connect(on_text_changed)
+
+
+- Сигнал currentIndexChanged для QComboBox:
+
+combo.currentIndexChanged.connect(on_combo_changed)
+
+
+ = Диалоговые окна:
+
+- Информационное сообщение:
+
+from PyQt5.QtWidgets import QMessageBox
+QMessageBox.information(window, 'Заголовок', 'Сообщение')
+
+
+- Предупреждение:
+
+QMessageBox.warning(window, 'Заголовок', 'Предупреждение')
+
+
+- Вопрос (Yes/No):
+
+reply = QMessageBox.question(window, 'Заголовок', 'Вопрос?', QMessageBox.Yes | QMessageBox.No)
+if reply == QMessageBox.Yes:
+    pass
+
+
+
+	--- ПОЛНАЯ ШПАРГАЛКА ПО PYQT (PYQT5) ---
+
+ = Импорты (часто используемые модули):
+
+from PyQt5.QtWidgets import *		# все виджеты
+from PyQt5.QtCore import *			# ядро (сигналы, слоты, таймеры, Qt)
+from PyQt5.QtGui import *			# графика (шрифты, цвета, иконки)
+from PyQt5.QtMultimedia import *	# мультимедиа
+from PyQt5.QtNetwork import *		# сеть
+
+
+ = Класс главного окна (наследование от QMainWindow):
+
+- Создать класс главного окна:
+
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle('Главное окно')
+        self.setGeometry(100, 100, 800, 600)	# x, y, width, height
+        self.initUI()
+
+    def initUI(self):
+        # создание виджетов и макетов
+        pass
+
+
+- Использование центрального виджета (обязательно для QMainWindow):
+
+central_widget = QWidget()
+self.setCentralWidget(central_widget)
+layout = QVBoxLayout()
+central_widget.setLayout(layout)
+
+
+- Добавление строки меню:
+
+menubar = self.menuBar()
+file_menu = menubar.addMenu('Файл')
+open_action = QAction('Открыть', self)
+open_action.triggered.connect(self.open_file)
+file_menu.addAction(open_action)
+
+
+- Добавление панели инструментов:
+
+toolbar = self.addToolBar('Инструменты')
+toolbar.addAction(open_action)
+
+
+- Добавление строки статуса:
+
+self.statusBar().showMessage('Готово')
+
+
+ = Виджеты (подробно):
+
+- QLabel — метка:
+
+label = QLabel('Текст')
+label.setAlignment(Qt.AlignCenter)			# выравнивание
+label.setPixmap(QPixmap('image.png'))		# изображение
+
+
+- QPushButton — кнопка:
+
+btn = QPushButton('Текст')
+btn.setIcon(QIcon('icon.png'))
+btn.setShortcut('Ctrl+O')					# горячая клавиша
+
+
+- QLineEdit — однострочное поле:
+
+line = QLineEdit()
+line.setText('начальное значение')
+line.setEchoMode(QLineEdit.Password)		# режим пароля
+text = line.text()							# получить текст
+
+
+- QTextEdit — многострочное поле:
+
+text_edit = QTextEdit()
+text_edit.setPlainText('Многострочный текст')
+html = text_edit.toHtml()
+plain = text_edit.toPlainText()
+
+
+- QComboBox — выпадающий список:
+
+combo = QComboBox()
+combo.addItems(['Пункт 1', 'Пункт 2'])
+combo.addItem('Пункт 3')
+index = combo.currentIndex()
+value = combo.currentText()
+
+
+- QCheckBox — флажок:
+
+check = QCheckBox('Опция')
+check.setChecked(True)
+state = check.isChecked()					# True/False
+check.stateChanged.connect(on_check)		# передаёт int (2 — включено, 0 — выключено)
+
+
+- QRadioButton — радиокнопка (группируются автоматически в одном родителе):
+
+radio1 = QRadioButton('Вариант 1')
+radio2 = QRadioButton('Вариант 2')
+radio1.toggled.connect(on_radio_toggled)	# передаёт bool
+
+
+- QSpinBox / QDoubleSpinBox — счётчики чисел:
+
+spin = QSpinBox()
+spin.setRange(0, 100)
+spin.setValue(50)
+value = spin.value()
+
+
+- QSlider — ползунок:
+
+slider = QSlider(Qt.Horizontal)
+slider.setRange(0, 100)
+slider.valueChanged.connect(on_slider)		# передаёт int
+
+
+- QProgressBar — индикатор прогресса:
+
+progress = QProgressBar()
+progress.setRange(0, 100)
+progress.setValue(50)
+
+
+- QListWidget — список:
+
+list_widget = QListWidget()
+list_widget.addItem('Элемент 1')
+list_widget.addItems(['Элемент 2', 'Элемент 3'])
+item = list_widget.currentItem()
+text = item.text() if item else ''
+
+
+- QTableWidget — таблица:
+
+table = QTableWidget(rows, cols)
+table.setHorizontalHeaderLabels(['Заголовок 1', 'Заголовок 2'])
+table.setItem(row, col, QTableWidgetItem('значение'))
+
+
+ = Макеты (Layouts):
+
+- QVBoxLayout — вертикальный (столбец):
+
+layout = QVBoxLayout()
+layout.addWidget(widget1)
+layout.addWidget(widget2)
+layout.addStretch()					# добавляет растягивающийся промежуток
+
+
+- QHBoxLayout — горизонтальный (строка):
+
+layout = QHBoxLayout()
+layout.addWidget(widget1)
+layout.addStretch()
+layout.addWidget(widget2)
+
+
+- QGridLayout — сетка:
+
+layout = QGridLayout()
+layout.addWidget(widget, row, col, rowspan, colspan)
+layout.setColumnStretch(0, 1)		# растягивание колонки
+
+
+- QFormLayout — форма (метка-поле):
+
+layout = QFormLayout()
+layout.addRow('Имя:', QLineEdit())
+layout.addRow('Возраст:', QSpinBox())
+
+
+ = Сигналы и слоты (подробно):
+
+- Подключение с передачей дополнительных данных через lambda:
+
+btn.clicked.connect(lambda: on_click('доп. текст'))
+
+
+- Использование декоратора pyqtSlot для улучшения производительности (в Qt5):
+
+@pyqtSlot()
+def on_button_clicked():
+    pass
+
+
+- Сигналы с параметрами:
+
+line.textChanged.connect(lambda text: print(text))	# передаёт строку
+spin.valueChanged.connect(lambda val: print(val))	# передаёт int
+
+
+ = Диалоговые окна (стандартные):
+
+- QMessageBox:
+
+QMessageBox.information(parent, title, text, buttons, defaultButton)
+QMessageBox.warning(parent, title, text)
+QMessageBox.critical(parent, title, text)
+QMessageBox.question(parent, title, text, QMessageBox.Yes | QMessageBox.No)
+
+
+- QFileDialog — выбор файлов и папок:
+
+from PyQt5.QtWidgets import QFileDialog
+file_path, _ = QFileDialog.getOpenFileName(self, 'Выберите файл', '', 'Все файлы (*)')
+file_paths, _ = QFileDialog.getOpenFileNames(self, 'Выберите файлы')
+dir_path = QFileDialog.getExistingDirectory(self, 'Выберите папку')
+save_path, _ = QFileDialog.getSaveFileName(self, 'Сохранить как', '', '(*.txt)')
+
+
+- QColorDialog — выбор цвета:
+
+from PyQt5.QtWidgets import QColorDialog
+color = QColorDialog.getColor(Qt.blue, self, 'Выберите цвет')
+
+
+- QFontDialog — выбор шрифта:
+
+from PyQt5.QtWidgets import QFontDialog
+font, ok = QFontDialog.getFont(self)
+
+
+- QInputDialog — простые запросы:
+
+from PyQt5.QtWidgets import QInputDialog
+text, ok = QInputDialog.getText(self, 'Заголовок', 'Введите текст:')
+number, ok = QInputDialog.getInt(self, 'Заголовок', 'Введите число:', min=0, max=100)
+
+
+ = События (переопределение методов):
+
+- Обработка закрытия окна:
+
+def closeEvent(self, event):
+    reply = QMessageBox.question(self, 'Выход', 'Вы уверены?', QMessageBox.Yes | QMessageBox.No)
+    if reply == QMessageBox.Yes:
+        event.accept()
+    else:
+        event.ignore()
+
+
+- Обработка нажатия клавиш:
+
+def keyPressEvent(self, event):
+    if event.key() == Qt.Key_Escape:
+        self.close()
+    elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_S:
+        self.save()
+
+
+ = Работа с таймерами:
+
+- Создать таймер и запустить:
+
+timer = QTimer()
+timer.timeout.connect(on_timeout)			# функция будет вызываться каждые N мс
+timer.start(1000)							# интервал в миллисекундах
+
+
+- Остановить таймер:
+
+timer.stop()
+
+
+ = Графика (QPainter, QPixmap, QIcon):
+
+- Загрузить изображение:
+
+pixmap = QPixmap('image.png')
+pixmap = pixmap.scaled(100, 100, Qt.KeepAspectRatio)	# масштабирование
+
+
+- Установить иконку для кнопки:
+
+btn.setIcon(QIcon('icon.png'))
+
+
+- Рисование на виджете (переопределить paintEvent):
+
+def paintEvent(self, event):
+    painter = QPainter(self)
+    painter.setPen(Qt.red)
+    painter.drawLine(0, 0, 100, 100)
+    painter.drawRect(10, 10, 50, 50)
+
+
+ = Работа с таблицами и моделями (Model-View):
+
+- QStandardItemModel для списка или таблицы:
+
+model = QStandardItemModel()
+model.setHorizontalHeaderLabels(['Имя', 'Возраст'])
+item = QStandardItem('Алексей')
+model.appendRow([item, QStandardItem('30')])
+list_view.setModel(model)
+
+
+- QListView, QTreeView, QTableView — для отображения данных из модели.
+
+
+ = Прочее:
+
+- Закрыть приложение:
+
+QApplication.quit()
+
+
+- Получить путь к исполняемому файлу:
+
+import sys
+sys.argv[0]
+
+
+- Установить стиль (QSS, как CSS):
+
+self.setStyleSheet("""
+    QPushButton {
+        background-color: #4CAF50;
+        color: white;
+        border-radius: 5px;
+    }
+    QPushButton:hover {
+        background-color: #45a049;
+    }
+""")
+
+
+- Использование QThread для многопоточности (не блокировать GUI):
+
+class Worker(QThread):
+    finished = pyqtSignal()
+    def run(self):
+        # долгая работа
+        self.finished.emit()
+
+worker = Worker()
+worker.finished.connect(on_finished)
+worker.start()
+
+
+ = Отличия PyQt5 и PyQt6:
+
+- exec_() → exec() (PyQt6 использует exec)
+- QVariant удалён (используйте стандартные типы Python)
+- Некоторые enum перемещены из Qt в соответствующие классы (например, Qt.AlignCenter → Qt.AlignmentFlag.AlignCenter)
+- Импорт: PyQt6.QtWidgets и т.д.
+
+По возможности используйте PyQt5 для стабильности, если не требуется новая функциональность.
+
+
+ = Советы:
+
+- Всегда используйте QApplication([]), даже если аргументы не нужны.
+- Для предотвращения зависания интерфейса используйте QThread или QTimer для фоновых задач.
+- В сложных проектах используйте Qt Designer для создания .ui файлов и загружайте их через uic.loadUi.
+- Используйте QSS для кастомизации внешнего вида без переопределения стилей в коде.

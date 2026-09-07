@@ -1,0 +1,33 @@
+.
+├── ReadMe.md
+├── Дерево.txt
+├── Мысли.txt
+├── Теория Всего
+│   ├── Other
+│   │   ├── РабочийСтол.md
+│   │   ├── Стандарты.md
+│   │   └── Шпаргалки.md
+│   ├── Python
+│   │   └── teaP0.md
+│   └── ReadMe.txt
+└── Шпаргалки
+    ├── c
+    │   ├── c.txt
+    │   └── stdint.txt
+    ├── docker.txt
+    ├── gcc.txt
+    ├── git.txt
+    ├── python
+    │   ├── flask.txt
+    │   ├── json.txt
+    │   ├── path.txt
+    │   ├── pyenv.txt
+    │   ├── pyqt.txt
+    │   ├── python.txt
+    │   ├── re.txt
+    │   ├── sqlite3.txt
+    │   └── tkinter.txt
+    ├── sql.txt
+    └── unix.txt
+
+6 directories, 24 files
