@@ -1,0 +1,285 @@
+	--- ОСНОВНЫЕ КОМАНДЫ GCC ---
+
+ = Базовый синтаксис:
+
+- Скомпилировать в исполняемый файл:
+
+gcc source.c -o program
+
+
+- Скомпилировать без линковки (только объектный файл):
+
+gcc -c source.c -o source.o
+
+
+- Только препроцессинг (без компиляции):
+
+gcc -E source.c -o source.i
+
+
+- Только ассемблирование:
+
+gcc -S source.c -o source.s
+
+
+ = Уровни оптимизации:
+
+- Без оптимизации (по умолчанию, для отладки):
+
+gcc -O0 source.c -o program
+
+
+- Базовая оптимизация (без trade-off):
+
+gcc -O1 source.c -o program				# или просто -O
+
+
+- Стандартная оптимизация (рекомендуемая):
+
+gcc -O2 source.c -o program
+
+
+- Максимальная оптимизация (может увеличить размер):
+
+gcc -O3 source.c -o program
+
+
+- Оптимизация по размеру кода:
+
+gcc -Os source.c -o program
+
+
+- Агрессивная оптимизация (может нарушить стандарт):
+
+gcc -Ofast source.c -o program
+
+
+- Оптимизация для отладки (сочетает -Og с -g):
+
+gcc -Og source.c -o program
+
+
+
+	--- ПОЛНАЯ ШПАРГАЛКА ПО GCC ---
+
+ = Стандарты языка и предупреждения:
+
+- Задать стандарт C (например, c99, c11, c17):
+
+gcc -std=c11 source.c -o program
+
+
+- Задать стандарт C++ (например, c++11, c++17, c++20):
+
+g++ -std=c++17 source.cpp -o program
+
+
+- Включить предупреждения (рекомендуемый минимум):
+
+gcc -Wall -Wextra source.c -o program
+
+
+- Строгий режим (запрет GNU-расширений):
+
+gcc -Wpedantic -pedantic-errors source.c -o program
+
+
+- Все предупреждения как ошибки:
+
+gcc -Werror source.c -o program
+
+
+- Дополнительные полезные предупреждения (безопасность):
+
+gcc -Wformat=2 -Wformat-security -Wnull-dereference -Wstack-protector \
+	-Walloca -Wvla -Warray-bounds=2 -Wcast-qual -Wconversion \
+	-Wshadow -Wundef -Wstrict-prototypes source.c -o program
+
+
+ = Отладка и санитайзеры:
+
+- Включить отладочную информацию (для GDB):
+
+gcc -g source.c -o program
+
+
+- Санитайзер адресов (ловит переполнения буфера, use-after-free):
+
+gcc -fsanitize=address -fno-omit-frame-pointer source.c -o program
+
+
+- Санитайзер неопределённого поведения:
+
+gcc -fsanitize=undefined source.c -o program
+
+
+- Санитайзер утечек памяти:
+
+gcc -fsanitize=leak source.c -o program
+
+
+- Санитайзер гонок данных (для многопоточных программ):
+
+gcc -fsanitize=thread source.c -o program
+
+
+ = Защита (безопасность бинарника):
+
+- Stack protector (сильная защита):
+
+gcc -fstack-protector-strong -fstack-clash-protection source.c -o program
+
+
+- Position Independent Executable (PIE):
+
+gcc -fPIE -pie source.c -o program
+
+
+- Защита от выполнения кода в стеке (linker флаги):
+
+gcc -Wl,-z,noexecstack -Wl,-z,relro -Wl,-z,now source.c -o program
+
+
+ = Пути и библиотеки:
+
+- Добавить директорию для заголовочных файлов:
+
+gcc -I/путь/к/include source.c -o program
+
+
+- Добавить директорию для библиотек:
+
+gcc -L/путь/к/lib source.c -o program -lmylib
+
+
+- Линковать библиотеку:
+
+gcc source.c -o program -lm			# математическая libm
+gcc source.c -o program -lpthread	# потоки POSIX
+
+
+- Статическая линковка:
+
+gcc -static source.c -o program
+
+
+- Статическая линковка libgcc:
+
+gcc -static-libgcc source.c -o program
+
+
+ = Определение макросов:
+
+- Определить макрос из командной строки:
+
+gcc -DDEBUG -DVERSION=3 source.c -o program
+
+
+- Удалить макрос:
+
+gcc -UDEBUG source.c -o program
+
+
+ = Работа с ассемблером и линковщиком:
+
+- Передать опцию ассемблеру:
+
+gcc -Wa,option source.c -o program
+
+
+- Передать опцию линковщику:
+
+gcc -Wl,-Map=output.map source.c -o program
+
+
+
+	--- КРОСС-КОМПИЛЯЦИЯ ИЗ LINUX ---
+
+ = Установка тулчейнов:
+
+# Для Windows (MinGW-w64):
+sudo apt install gcc-mingw-w64-x86-64		# 64-bit
+sudo apt install gcc-mingw-w64-i686			# 32-bit
+
+# Для ARM (например, Raspberry Pi):
+sudo apt install gcc-arm-linux-gnueabihf	# ARM 32-bit
+sudo apt install gcc-aarch64-linux-gnu		# ARM 64-bit
+
+
+ = Кросскомпиляция в Windows (x86_64):
+
+- Базовая команда (заменить gcc на тулчейн):
+
+x86_64-w64-mingw32-gcc source.c -o program.exe
+
+
+- С флагами оптимизации и стандартом:
+
+x86_64-w64-mingw32-gcc -O2 -std=c11 source.c -o program.exe
+
+
+- Статическая линковка для Windows (переносимый бинарник):
+
+x86_64-w64-mingw32-gcc -static source.c -o program.exe
+
+
+- С GUI-приложением (без консольного окна):
+
+x86_64-w64-mingw32-gcc source.c -mwindows -o program.exe
+
+
+ = Кросскомпиляция в Windows (i386):
+
+- 32-битная сборка:
+
+i686-w64-mingw32-gcc source.c -o program.exe
+
+
+ = Кросскомпиляция в ARM (32-bit):
+
+- Для Raspberry Pi / ARMv7:
+
+arm-linux-gnueabihf-gcc -O2 source.c -o program_arm
+
+
+- С указанием архитектуры и CPU:
+
+arm-linux-gnueabihf-gcc -march=armv7-a -mcpu=cortex-a7 source.c -o program_arm
+
+
+ = Кросскомпиляция в ARM (64-bit / AArch64):
+
+aarch64-linux-gnu-gcc -O2 source.c -o program_arm64
+
+
+ = Универсальный подход с CROSS_COMPILE:
+
+- Задать префикс тулчейна и использовать обычный gcc:
+
+export CROSS_COMPILE=x86_64-w64-mingw32-
+${CROSS_COMPILE}gcc source.c -o program.exe
+
+
+# Для ARM:
+export CROSS_COMPILE=arm-linux-gnueabihf-
+${CROSS_COMPILE}gcc source.c -o program_arm
+
+
+ = Важные флаги для кросскомпиляции:
+
+- Явно указать sysroot (корневую FS целевой системы):
+
+gcc --sysroot=/путь/к/sysroot source.c -o program
+
+
+- Линковка с конкретной C-библиотекой (для Linux):
+
+gcc -mglibc source.c -o program				# GNU libc
+gcc -mmusl source.c -o program				# musl libc
+
+
+- Специфичные для архитектуры флаги (примеры):
+
+gcc -march=native -mtune=native source.c -o program	# оптимизация под текущий CPU
+gcc -m32 source.c -o program				# 32-битный бинарник на 64-битной системе
+gcc -m64 source.c -o program				# 64-битный бинарник (обычно по умолчанию)
