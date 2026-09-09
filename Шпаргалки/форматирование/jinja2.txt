@@ -1,0 +1,443 @@
+	--- ОСНОВНЫЕ КОНСТРУКЦИИ JINJA2 ---
+
+ = Переменные и вывод:
+
+- Вывод переменной:
+
+{{ variable }}
+
+
+- Вывод с фильтром:
+
+{{ variable|filter }}
+
+
+- Вывод с параметрами фильтра:
+
+{{ variable|filter(param) }}
+
+
+ = Теги (управляющие конструкции):
+
+- Условный оператор if:
+
+{% if condition %}
+    ...
+{% elif other %}
+    ...
+{% else %}
+    ...
+{% endif %}
+
+
+- Цикл for:
+
+{% for item in iterable %}
+    {{ item }}
+{% endfor %}
+
+
+- Цикл с else (если итерация пуста):
+
+{% for item in iterable %}
+    {{ item }}
+{% else %}
+    Нет элементов
+{% endfor %}
+
+
+- Доступ к специальным переменным внутри цикла:
+
+{{ loop.index }}					# текущий индекс (с 1)
+{{ loop.index0 }}					# индекс с 0
+{{ loop.first }}					# True для первой итерации
+{{ loop.last }}						# True для последней
+{{ loop.length }}					# общее количество элементов
+{{ loop.cycle('odd', 'even') }}		# циклический перебор значений
+
+
+ = Комментарии:
+
+{# комментарий (не выводится) #}
+
+
+ = Наследование шаблонов:
+
+- Базовый шаблон (layout.html):
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}Заголовок по умолчанию{% endblock %}</title>
+</head>
+<body>
+    <header>Шапка</header>
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    <footer>Подвал</footer>
+</body>
+</html>
+
+
+- Дочерний шаблон:
+
+{% extends "layout.html" %}
+
+{% block title %}Новый заголовок{% endblock %}
+
+{% block content %}
+    <p>Содержимое страницы</p>
+{% endblock %}
+
+
+ = Включение (include):
+
+{% include "header.html" %}
+
+
+ = Макросы (аналог функций):
+
+- Определение макроса:
+
+{% macro input(name, value='', type='text') %}
+    <input type="{{ type }}" name="{{ name }}" value="{{ value }}">
+{% endmacro %}
+
+
+- Вызов макроса:
+
+{{ input('username', 'John') }}
+
+
+ = Фильтры (встроенные):
+
+- Строковые:
+
+{{ "hello"|upper }}					# HELLO
+{{ "HELLO"|lower }}					# hello
+{{ "hello"|capitalize }}			# Hello
+{{ "hello world"|title }}			# Hello World
+{{ "  text  "|trim }}				# text (удаляет пробелы)
+{{ "hello"|reverse }}				# olleh
+{{ "hello"|replace("e", "a") }}		# hallo
+
+
+- Числовые и форматирование:
+
+{{ 3.1415|round(2) }}				# 3.14
+{{ 3.1415|round(0, 'ceil') }}		# 4 (округление вверх)
+{{ 1234567|filesizeformat }}		# 1.2 MB
+{{ 0.25|percent }}					# 25%
+
+
+- Списки:
+
+{{ [1,2,3]|join(', ') }}			# 1, 2, 3
+{{ [1,2,3]|first }}					# 1
+{{ [1,2,3]|last }}					# 3
+{{ [1,2,3]|length }}				# 3
+{{ [1,2,3]|reverse }}				# [3,2,1]
+{{ [1,2,3]|sort }}					# сортировка
+{{ [1,2,3,2]|unique }}				# [1,2,3] (уникальные)
+
+
+- Словари:
+
+{{ dict|items }}					# список пар (ключ, значение)
+
+
+- Фильтры дат (требуют установки библиотеки, например, через filter):
+
+{{ date|date("Y-m-d") }}			# форматирование (если определён фильтр)
+{{ date|datetimeformat }}			# если определён кастомный
+
+
+- Прочие полезные:
+
+{{ variable|default('значение по умолчанию') }}
+{{ variable|default('', true) }}	# заменяет только если переменная не определена
+{{ variable|escape }}				# экранирование HTML (по умолчанию autoescape)
+{{ variable|safe }}					# отключает экранирование (опасно!)
+{{ variable|striptags }}			# удаляет HTML-теги
+{{ variable|wordcount }}			# количество слов
+{{ variable|truncate(10) }}			# обрезает до 10 символов, добавляет ...
+{{ variable|truncate(10, true) }}	# обрезает по словам
+
+
+
+	--- ПОЛНАЯ ШПАРГАЛКА ПО JINJA2 ---
+
+ = Переменные и выражения:
+
+- Доступ к атрибутам объектов:
+  - {{ object.attribute }}
+  - {{ object['attribute'] }}
+  - {{ object.method() }}   (вызов метода без параметров)
+
+- Арифметические операции:
+  {{ 1 + 2 }}   # 3
+  {{ 10 / 3 }}  # 3.3333... (деление с плавающей)
+  {{ 10 // 3 }} # 3 (целочисленное)
+  {{ 10 % 3 }}  # 1 (остаток)
+  {{ 2 ** 3 }}  # 8 (степень)
+
+- Сравнения и логика:
+  ==, !=, >, >=, <, <=, and, or, not, in, is, is not
+
+- Проверка на undefined:
+  {% if variable is defined %} ... {% endif %}
+  {% if variable is not defined %} ... {% endif %}
+
+- Проверка типа (is):
+  {{ variable is string }}
+  {{ variable is number }}
+  {{ variable is iterable }}
+  {{ variable is mapping }}			# словарь
+  {{ variable is callable }}		# функция/макрос
+
+- Тест на none:
+  {% if variable is none %} ... {% endif %}
+
+
+ = Теги управления:
+
+- Фильтр как блок (apply фильтр к содержимому):
+
+{% filter upper %}
+    этот текст станет заглавными
+{% endfilter %}
+
+
+- Цикл по словарю:
+
+{% for key, value in dict.items() %}
+    {{ key }}: {{ value }}
+{% endfor %}
+
+
+- Доступ к родительскому блоку (при наследовании):
+
+{% block content %}
+    {{ super() }}   <!-- выводит содержимое родительского блока -->
+    Дополнительный текст
+{% endblock %}
+
+
+- Установка переменной:
+
+{% set variable = value %}
+{% set list = [1,2,3] %}
+{% set dict = {'key': 'val'} %}
+
+
+- Использование оператора with (для ограничения области видимости):
+
+{% with var = 42 %}
+    {{ var }}
+{% endwith %}
+
+
+- Do – выполнение выражения без вывода (например, изменение глобального состояния, не рекомендуется):
+
+{% do variable.append(4) %}			# требует расширения "do"
+
+
+- Ignore missing – при include/import не вызывать ошибку, если файл отсутствует:
+
+{% include "optional.html" ignore missing %}
+
+
+ = Наследование и включение (расширенно):
+
+- Импорт макросов из другого файла:
+
+{% import "forms.html" as forms %}
+{{ forms.input('name') }}
+
+
+- Импорт с сохранением контекста:
+
+{% from "forms.html" import input %}
+{{ input('name') }}
+
+
+- Включение с передачей переменных:
+
+{% include "header.html" with context %}	# передаёт текущий контекст (по умолчанию)
+{% include "footer.html" without context %}	# не передаёт контекст
+
+
+- Использование динамического имени шаблона:
+
+{% include template_name %}
+
+
+ = Макросы (расширенно):
+
+- Макрос с переменным числом аргументов:
+
+{% macro list_items(*items) %}
+    <ul>
+    {% for item in items %}
+        <li>{{ item }}</li>
+    {% endfor %}
+    </ul>
+{% endmacro %}
+
+{{ list_items('a', 'b', 'c') }}
+
+
+- Макрос с именованными аргументами (kwargs):
+
+{% macro example(**kwargs) %}
+    {% for key, value in kwargs.items() %}
+        {{ key }}: {{ value }}
+    {% endfor %}
+{% endmacro %}
+
+{{ example(foo='bar', baz=42) }}
+
+
+- Макрос с вызовом внутреннего содержимого (caller):
+
+{% macro wrap() %}
+    <div class="wrapper">
+        {{ caller() }}
+    </div>
+{% endmacro %}
+
+{% call wrap() %}
+    Содержимое внутри обёртки
+{% endcall %}
+
+
+- Передача параметров в caller:
+
+{% macro with_params() %}
+    {{ caller('value') }}
+{% endmacro %}
+
+{% call with_params() %}
+    Получено: {{ 0 }}						# 0 - переданный параметр
+{% endcall %}
+
+
+ = Фильтры (дополнительные):
+
+- Фильтр map (применяет фильтр к каждому элементу списка):
+
+{{ list|map('upper')|join(', ') }}
+
+
+- Фильтр select/reject (фильтрация по условию):
+
+{{ list|select('greaterthan', 5)|list }}	# элементы > 5
+{{ list|reject('equalto', 3)|list }}		# элементы != 3
+
+
+- Фильтр groupby (группировка по атрибуту):
+
+{{ list|groupby('category') }}				# возвращает список пар (ключ, список)
+
+
+- Фильтр batch (разбивает список на части):
+
+{{ list|batch(3) }}							# [[1,2,3], [4,5,6], ...]
+
+
+- Фильтр slice (аналогично batch, но с выравниванием):
+
+{{ list|slice(3) }}							# примерно одинаковые части
+
+
+ = Безопасность и экранирование:
+
+- По умолчанию autoescape включен (в Flask – включён для HTML-шаблонов).
+- Отключить экранирование для блока:
+
+{% autoescape false %}
+    {{ dangerous_content }}
+{% endautoescape %}
+
+
+- Включить принудительно:
+
+{% autoescape true %}
+    {{ content }}
+{% endautoescape %}
+
+
+- Маркировка строки как безопасной:
+
+{% set safe_html = '<b>жирный</b>'|safe %}
+{{ safe_html }}
+
+
+- Использование фильтра escape для явного экранирования:
+
+{{ user_input|escape }}
+
+
+ = Глобальные функции и переменные:
+
+- В Jinja2 доступны глобальные объекты:
+  - range() – как в Python
+  - lipsum() – генерация случайного текста
+  - dict() – создание словаря
+  - cycler() – циклический итератор (используется в loop.cycle)
+  - joiner() – для вставки разделителей между элементами
+
+- Пример с joiner:
+
+{% set comma = joiner(', ') %}
+{% for item in items %}
+    {{ comma() }}{{ item }}
+{% endfor %}
+# выведет: item1, item2, item3 (без лишней запятой)
+
+
+ = Отладка:
+
+- Вывод переменной в виде JSON (если определён фильтр tojson):
+
+{{ variable|tojson }}
+
+
+- Включение отладочной информации (вывод всех переменных):
+
+{% debug %}									# требует расширения 'debug'
+
+
+ = Пользовательские фильтры и теги (кратко):
+
+- Регистрация фильтра в Python (Flask):
+
+@app.template_filter('reverse')
+def reverse_filter(s):
+    return s[::-1]
+
+# В шаблоне: {{ 'hello'|reverse }}
+
+
+- Регистрация тега (более сложно, через расширения).
+
+
+ = Советы:
+
+- Имена переменных и блоков чувствительны к регистру.
+- Используйте пробелы для читаемости, но помните, что лишние пробелы могут влиять на вывод (можно использовать {%- и -%} для управления пробелами).
+- Управление пробелами:
+  - {%- ... %} – удаляет пробелы слева
+  - {% ... -%} – удаляет пробелы справа
+  - {%- ... -%} – удаляет пробелы с обеих сторон
+
+- Пример удаления лишних отступов:
+
+{% for item in items -%}
+    {{ item }}
+{%- endfor %}
+
+
+- Для работы с датами и временем используйте фильтры, например, через библиотеку arrow или пользовательские фильтры.
+- В Flask в контексте доступны request, session, g, url_for, get_flashed_messages и т.д.

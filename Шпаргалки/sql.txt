@@ -66,7 +66,7 @@ DELETE FROM table_name WHERE condition;
 
 - Удалить все записи (но сохранить структуру):
 
-DELETE FROM table_name;								# или TRUNCATE TABLE (быстрее)
+DELETE FROM table_name;	# или TRUNCATE TABLE (быстрее)
 
 
  = Создание и изменение таблиц (DDL):
@@ -339,9 +339,9 @@ SELECT CAST(column AS INTEGER) FROM table;
 
 - Текущая дата и время:
 
-SELECT CURRENT_DATE;		# дата
-SELECT CURRENT_TIME;		# время
-SELECT CURRENT_TIMESTAMP;	# дата и время
+SELECT CURRENT_DATE;								# дата
+SELECT CURRENT_TIME;								# время
+SELECT CURRENT_TIMESTAMP;							# дата и время
 
 
 - Извлечение части даты:
@@ -375,7 +375,7 @@ SELECT UPPER(column), LOWER(column) FROM table;
 
 - Удаление пробелов:
 
-SELECT TRIM(column) FROM table;			# обрезает пробелы с обеих сторон
+SELECT TRIM(column) FROM table;		# обрезает пробелы с обеих сторон
 
 
  = Советы:

@@ -1,0 +1,376 @@
+	--- ОСНОВНЫЕ ТЕГИ HTML ---
+
+ = Структура документа:
+
+- DOCTYPE и корневой элемент:
+
+<!DOCTYPE html>                 <!-- объявление HTML5 -->
+<html lang="ru">                <!-- атрибут lang (язык) -->
+
+
+- Заголовок (head):
+
+<head>
+    <meta charset="UTF-8">						<!-- кодировка -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">   <!-- адаптив -->
+    <title>Заголовок вкладки</title>
+    <link rel="stylesheet" href="style.css">	<!-- подключение CSS -->
+    <script src="script.js" defer></script>		<!-- JS с отложенным выполнением -->
+</head>
+
+
+- Тело (body):
+
+<body>
+	<!-- видимое содержимое -->
+</body>
+
+
+ = Текстовые элементы:
+
+- Заголовки:
+
+<h1>Заголовок 1</h1>	<!-- самый крупный -->
+<h2>Заголовок 2</h2>
+<h3>Заголовок 3</h3>
+<h4>Заголовок 4</h4>
+<h5>Заголовок 5</h5>
+<h6>Заголовок 6</h6>	<!-- самый мелкий -->
+
+
+- Параграф и перенос:
+
+<p>Текст абзаца</p>
+<br>					<!-- перенос строки (самозакрывающийся) -->
+<hr>					<!-- горизонтальная линия (разделитель) -->
+
+
+- Выделение текста:
+
+<strong>жирный (смысловой)</strong>
+<b>жирный (просто)</b>
+<em>курсив (смысловой)</em>
+<i>курсив (просто)</i>
+<u>подчёркнутый</u>
+<s>зачёркнутый</s>
+<mark>выделенный (маркер)</mark>
+<small>мелкий текст</small>
+<sup>верхний индекс</sup>
+<sub>нижний индекс</sub>
+<code>код (моноширинный)</code>
+<pre>предварительно
+форматированный текст</pre>
+
+
+- Цитаты и адрес:
+
+<blockquote>длинная цитата (блок)</blockquote>
+<q>короткая цитата (в строке)</q>
+<address>контактная информация</address>
+
+
+ = Списки:
+
+- Ненумерованный (маркированный):
+
+<ul>
+    <li>пункт 1</li>
+    <li>пункт 2
+        <ul>
+            <li>вложенный пункт</li>
+        </ul>
+    </li>
+</ul>
+
+
+- Нумерованный:
+
+<ol>
+    <li>первый</li>
+    <li>второй</li>
+</ol>
+
+<!-- атрибуты для ol: -->
+<ol type="A" start="5" reversed>	<!-- заглавные буквы, начать с 5, в обратном порядке -->
+    <li>пункт</li>
+</ol>
+
+
+- Список определений:
+
+<dl>
+    <dt>Термин</dt>
+    <dd>Определение</dd>
+</dl>
+
+
+ = Ссылки и изображения:
+
+- Гиперссылка:
+
+<a href="https://example.com" target="_blank" title="подсказка">Текст</a>
+<!-- target="_blank" – открыть в новой вкладке -->
+
+
+- Якорь внутри страницы:
+
+<a href="#section">Перейти к разделу</a>
+...
+<h2 id="section">Раздел</h2>	<!-- или name у старых браузеров -->
+
+
+- Изображение:
+
+<img src="image.jpg" alt="описание" width="200" height="100" loading="lazy">
+<!-- alt – обязательно для доступности, loading="lazy" – отложенная загрузка -->
+
+
+ = Таблицы:
+
+- Базовая структура:
+
+<table>
+    <caption>Заголовок таблицы</caption>
+    <thead>
+        <tr>
+            <th>Заголовок 1</th>
+            <th>Заголовок 2</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Ячейка 1</td>
+            <td>Ячейка 2</td>
+        </tr>
+    </tbody>
+    <tfoot>
+        <tr>
+            <td>Итог</td>
+            <td>Значение</td>
+        </tr>
+    </tfoot>
+</table>
+
+
+- Атрибуты ячеек:
+
+<td colspan="2">объединение столбцов</td>
+<td rowspan="2">объединение строк</td>
+<th scope="col">заголовок столбца</th>		<!-- для доступности -->
+<th scope="row">заголовок строки</th>
+
+
+ = Формы:
+
+- Контейнер формы:
+
+<form action="/submit" method="POST" enctype="multipart/form-data">
+    <!-- поля -->
+</form>
+
+
+- Поля ввода (input):
+
+<input type="text" name="username" placeholder="Введите имя" required>
+<input type="password" name="password">
+<input type="email" name="email">
+<input type="number" name="age" min="0" max="120">
+<input type="date" name="birthday">
+<input type="checkbox" name="agree" value="yes"> Согласен
+<input type="radio" name="gender" value="male"> Мужской
+<input type="radio" name="gender" value="female"> Женский
+<input type="file" name="file" accept=".jpg,.png">
+<input type="hidden" name="id" value="123">
+<input type="submit" value="Отправить">
+<input type="reset" value="Сбросить">
+<input type="button" value="Кнопка (без действия)">
+
+<!-- дополнительные атрибуты: disabled, readonly, autofocus, pattern (regex) -->
+
+
+- Текстовая область:
+
+<textarea name="message" rows="4" cols="50" placeholder="Введите сообщение"></textarea>
+
+
+- Выпадающий список (select):
+
+<select name="city">
+    <option value="moscow">Москва</option>
+    <option value="spb" selected>Санкт-Петербург</option>
+    <optgroup label="Города">
+        <option value="kazan">Казань</option>
+    </optgroup>
+</select>
+
+
+- Поле с автодополнением (datalist):
+
+<input list="browsers" name="browser">
+<datalist id="browsers">
+    <option value="Chrome">
+    <option value="Firefox">
+</datalist>
+
+
+- Кнопка (стилизуемая):
+
+<button type="submit">Отправить</button>	<!-- type: submit, reset, button -->
+
+
+- Подпись к полю (label):
+
+<label for="username">Имя:</label>
+<input id="username" type="text">
+
+
+ = Семантические теги (HTML5):
+
+- Структурные:
+
+<header>шапка сайта</header>
+<nav>навигация</nav>
+<main>основное содержимое (уникальное)</main>
+<article>статья (самостоятельный контент)</article>
+<section>раздел (группа по теме)</section>
+<aside>боковая панель (доп. информация)</aside>
+<footer>подвал</footer>
+
+
+- Другие семантические:
+
+<details>
+    <summary>Заголовок деталей</summary>
+    Скрытое содержимое, раскрываемое по клику.
+</details>
+
+<figure>
+    <img src="..." alt="...">
+    <figcaption>Подпись к рисунку</figcaption>
+</figure>
+
+<time datetime="2026-09-09">9 сентября 2026</time>
+
+<progress value="70" max="100">70%</progress>
+<meter value="0.6" min="0" max="1">60%</meter>
+
+
+ = Медиа:
+
+- Видео:
+
+<video src="video.mp4" controls width="400" poster="preview.jpg">
+    <track src="subtitles.vtt" kind="subtitles" srclang="ru" label="Русские">
+    Ваш браузер не поддерживает видео.
+</video>
+
+
+- Аудио:
+
+<audio src="audio.mp3" controls>
+    Ваш браузер не поддерживает аудио.
+</audio>
+
+
+- Встраивание (iframe):
+
+<iframe src="https://example.com" width="600" height="400" allowfullscreen></iframe>
+
+
+ = Глобальные атрибуты (для всех тегов):
+
+- id="уникальный"				<!-- уникальный идентификатор -->
+- class="класс1 класс2"			<!-- один или несколько классов (через пробел) -->
+- style="color: red;"			<!-- инлайн-стили -->
+- title="подсказка"				<!-- всплывающая подсказка -->
+- data-*="значение"				<!-- пользовательские данные (data-attr) -->
+- hidden						<!-- скрыть элемент -->
+- contenteditable="true"		<!-- разрешить редактирование -->
+- tabindex="0"					<!-- порядок фокуса при Tab -->
+- draggable="true"				<!-- разрешить перетаскивание -->
+
+
+ = Специальные символы (сущности):
+
+&lt;  <
+&gt;  >
+&amp; &
+&quot; "
+&apos; '
+&nbsp; неразрывный пробел
+&copy; ©
+&reg;  ®
+&trade; ™
+&mdash; —
+&ndash; –
+
+
+ = Мета-теги (в head):
+
+- <meta charset="UTF-8">
+- <meta name="viewport" content="width=device-width, initial-scale=1.0">
+- <meta name="description" content="Описание страницы для SEO">
+- <meta http-equiv="X-UA-Compatible" content="IE=edge">		<!-- для IE -->
+
+
+
+	--- ПОЛНАЯ ШПАРГАЛКА ПО HTML (СОВЕТЫ) ---
+
+ = Валидность и стандарты:
+
+- Используйте валидатор W3C (https://validator.w3.org/).
+- Всегда закрывайте теги (кроме самозакрывающихся: <br>, <img>, <input>, <link>, <meta>, <hr>, <source>, <track> и т.д.).
+- Булевые атрибуты (required, disabled, checked, readonly) можно писать без значения.
+
+ = Доступность (a11y):
+
+- Отдавайте предпочтение семантическим тегам вместо <div> / <span>.
+- Всегда добавляйте alt для <img> (если изображение декоративное – alt="").
+- Связывайте label с полями через for/id.
+- Используйте role и aria-* только при необходимости (когда семантики недостаточно).
+
+ = Производительность:
+
+- CSS подключайте в <head> (чтобы не было FOUC).
+- JavaScript подключайте перед </body> или с атрибутами defer / async.
+- Для изображений используйте loading="lazy" для элементов ниже сгиба (viewport).
+- Минифицируйте HTML (удаляйте лишние пробелы и комментарии в продакшене).
+
+ = Совместимость:
+
+- Для поддержки HTML5 в старых IE используйте html5shiv:
+    <!--[if lt IE 9]>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <![endif]-->
+
+- Проверяйте поддержку новых тегов и атрибутов на caniuse.com.
+
+ = Пример базового шаблона:
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Моя страница</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Заголовок сайта</h1>
+    </header>
+    <main>
+        <p>Привет, мир!</p>
+    </main>
+    <footer>
+        <p>&copy; 2026</p>
+    </footer>
+    <script src="script.js"></script>
+</body>
+</html>
+
+ = Полезные ссылки:
+
+- Спецификация HTML: https://html.spec.whatwg.org/
+- MDN Web Docs: https://developer.mozilla.org/ru/docs/Web/HTML
+- Can I Use: https://caniuse.com/

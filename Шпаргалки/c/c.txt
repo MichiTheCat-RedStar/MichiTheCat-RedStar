@@ -28,8 +28,8 @@ int main(void) {
 
 - Директивы препроцессора (подключение заголовков):
 
-#include <stdio.h>				# стандартные заголовки
-#include "myheader.h"			# пользовательские
+#include <stdio.h>				// стандартные заголовки
+#include "myheader.h"			// пользовательские
 
 
  = Типы данных:
@@ -101,8 +101,8 @@ int *ptr;
 
 - Массивы:
 
-int arr[10];				# статический массив
-arr[0] = 5;					# доступ по индексу
+int arr[10];				// статический массив
+arr[0] = 5;					// доступ по индексу
 
 
 
@@ -122,27 +122,27 @@ arr[0] = 5;					# доступ по индексу
 
 - Целые (размер зависит от платформы, но стандарт гарантирует минимум):
 
-char				# 1 байт (обычно)
-signed char			# знаковый
-unsigned char		# беззнаковый
-short int			# не менее 2 байт
+char				// 1 байт (обычно)
+signed char			// знаковый
+unsigned char		// беззнаковый
+short int			// не менее 2 байт
 unsigned short int
-int					# не менее 2 байт (обычно 4)
+int					// не менее 2 байт (обычно 4)
 unsigned int
-long int			# не менее 4 байт
+long int			// не менее 4 байт
 unsigned long int
-long long int		# не менее 8 байт (C99)
+long long int		// не менее 8 байт (C99)
 unsigned long long int
 
 - Вещественные:
 
-float				# 4 байта
-double				# 8 байт
-long double			# 10/16 байт (зависит от платформы)
+float				// 4 байта
+double				// 8 байт
+long double			// 10/16 байт (зависит от платформы)
 
 - Логический (C99, нужен #include <stdbool.h>):
 
-bool				# true/false (на самом деле int)
+bool				// true/false (на самом деле int)
 
 
 - void: отсутствие типа, используется для указателей (void*) и функций без возврата.
@@ -237,8 +237,8 @@ return_type function_name(parameter_list) {
 
 - Объявление:
 
-int arr[10];					# массив из 10 int
-int arr[][5] = {{1,2},{3,4}};	# двумерный массив
+int arr[10];					// массив из 10 int
+int arr[][5] = {{1,2},{3,4}};	// двумерный массив
 
 
 - Доступ: arr[index] = value;
@@ -251,22 +251,22 @@ int arr[][5] = {{1,2},{3,4}};	# двумерный массив
 - Строка — массив char, заканчивающийся нулевым символом '\0'.
 - Объявление:
 
-char str[] = "Hello";			# массив из 6 элементов (включая '\0')
-char *str2 = "World";			# указатель на строковой литерал (нельзя изменять)
+char str[] = "Hello";			// массив из 6 элементов (включая '\0')
+char *str2 = "World";			// указатель на строковой литерал (нельзя изменять)
 
 
 - Функции для строк (из <string.h>):
 
-strlen(s)					# длина (без '\0')
-strcpy(dest, src)			# копирование
-strncpy(dest, src, n)		# копирование с ограничением
-strcat(dest, src)			# конкатенация
-strncat(dest, src, n)		# конкатенация с ограничением
-strcmp(s1, s2)				# сравнение (0 — равны)
-strncmp(s1, s2, n)			# сравнение первых n символов
-strchr(s, c)				# поиск символа
-strstr(haystack, needle)	# поиск подстроки
-strtok(s, delim)			# разбиение на токены
+strlen(s)					// длина (без '\0')
+strcpy(dest, src)			// копирование
+strncpy(dest, src, n)		// копирование с ограничением
+strcat(dest, src)			// конкатенация
+strncat(dest, src, n)		// конкатенация с ограничением
+strcmp(s1, s2)				// сравнение (0 — равны)
+strncmp(s1, s2, n)			// сравнение первых n символов
+strchr(s, c)				// поиск символа
+strstr(haystack, needle)	// поиск подстроки
+strtok(s, delim)			// разбиение на токены
 
 
  = Указатели:
@@ -284,9 +284,9 @@ strtok(s, delim)			# разбиение на токены
 
 - Выделение памяти:
 
-void *malloc(size_t size);		# выделить size байт
-void *calloc(size_t num, size_t size);	# выделить num элементов по size байт, инициализирует нулями
-void *realloc(void *ptr, size_t new_size);	# изменить размер
+void *malloc(size_t size);					// выделить size байт
+void *calloc(size_t num, size_t size);		// выделить num элементов по size байт, инициализирует нулями
+void *realloc(void *ptr, size_t new_size);	// изменить размер
 
 
 - Освобождение:
@@ -327,7 +327,7 @@ p1.y = 10;
 - Указатель на структуру:
 
 struct Point *ptr = &p1;
-ptr->x = 7;				# эквивалентно (*ptr).x = 7;
+ptr->x = 7;						// эквивалентно (*ptr).x = 7;
 
 
 - typedef для упрощения:
@@ -367,7 +367,7 @@ enum Color c = RED;
 - #define — макрос:
 
 #define PI 3.14159
-#define SQUARE(x) ((x)*(x))		# макрос с параметрами
+#define SQUARE(x) ((x)*(x))		// макрос с параметрами
 
 
 - #undef — отмена определения.
@@ -411,56 +411,56 @@ enum Color c = RED;
 
 - Вывод в консоль:
 
-printf("format", ...);		# форматированный вывод
-puts("string");				# вывод строки с переводом строки
-putchar('c');				# вывод одного символа
+printf("format", ...);			// форматированный вывод
+puts("string");					// вывод строки с переводом строки
+putchar('c');					// вывод одного символа
 
 
 - Ввод с консоли:
 
-scanf("format", &var);			# форматированный ввод (требует адреса)
-gets()							# устарело, не используйте
-fgets(buffer, size, stdin);		# безопасное чтение строки
-getchar();						# чтение одного символа
+scanf("format", &var);			// форматированный ввод (требует адреса)
+gets()							// устарело, не используйте
+fgets(buffer, size, stdin);		// безопасное чтение строки
+getchar();						// чтение одного символа
 
 
 - Форматы для printf/scanf:
 
-%d, %i		# int
-%u		# unsigned int
-%o, %x, %X	# восьмеричный/шестнадцатеричный
-%f, %lf		# float, double
-%e, %E		# экспоненциальный
-%c		# char
-%s		# строка (char*)
-%p		# указатель
-%%		# символ %
-%zu		# size_t (C99)
+%d, %i		// int
+%u			// unsigned int
+%o, %x, %X	// восьмеричный/шестнадцатеричный
+%f, %lf		// float, double
+%e, %E		// экспоненциальный
+%c			// char
+%s			// строка (char*)
+%p			// указатель
+%%			// символ %
+%zu			// size_t (C99)
 
 
 - Работа с файлами:
 
-FILE *f = fopen("file.txt", "r");	# открыть для чтения
-fclose(f);							# закрыть
+FILE *f = fopen("file.txt", "r");	// открыть для чтения
+fclose(f);							// закрыть
 
-fprintf(f, "format", ...);			# запись в файл
-fscanf(f, "format", &var);			# чтение из файла
+fprintf(f, "format", ...);			// запись в файл
+fscanf(f, "format", &var);			// чтение из файла
 
-fread(buffer, size, count, f);		# бинарное чтение
-fwrite(buffer, size, count, f);		# бинарная запись
+fread(buffer, size, count, f);		// бинарное чтение
+fwrite(buffer, size, count, f);		// бинарная запись
 
-fseek(f, offset, SEEK_SET);			# переместить указатель
-ftell(f);							# текущая позиция
-rewind(f);							# в начало
+fseek(f, offset, SEEK_SET);			// переместить указатель
+ftell(f);							// текущая позиция
+rewind(f);							// в начало
 
-feof(f);							# проверка конца файла
-ferror(f);							# проверка ошибки
+feof(f);							// проверка конца файла
+ferror(f);							// проверка ошибки
 
 
  = Время (time.h):
 
-time_t t = time(NULL);				# текущее время в секундах с эпохи
-struct tm *tm = localtime(&t);		# локальное время
+time_t t = time(NULL);				// текущее время в секундах с эпохи
+struct tm *tm = localtime(&t);		// локальное время
 printf("%d-%02d-%02d %02d:%02d:%02d",
        tm->tm_year + 1900,
        tm->tm_mon + 1,
@@ -481,9 +481,9 @@ M_PI и др. константы (но не стандартизованы)
 
  = Случайные числа (stdlib.h):
 
-srand(time(NULL));			# инициализация генератора
-rand();						# число от 0 до RAND_MAX
-rand() % N;					# число от 0 до N-1
+srand(time(NULL));			// инициализация генератора
+rand();						// число от 0 до RAND_MAX
+rand() % N;					// число от 0 до N-1
 
 
  = Обработка ошибок:
@@ -507,8 +507,8 @@ int main(int argc, char *argv[]) {
 
 - Обычная компиляция:
 
-gcc -c source1.c source2.c				# создать объектные файлы
-gcc source1.o source2.o -o program		# линковка
+gcc -c source1.c source2.c				// создать объектные файлы
+gcc source1.o source2.o -o program		// линковка
 
 
 - Одним шагом:
