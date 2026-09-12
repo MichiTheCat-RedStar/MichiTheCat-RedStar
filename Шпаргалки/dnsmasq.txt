@@ -1,0 +1,331 @@
+	--- DNSMASQ (DEBIAN) ---
+
+ = Основы:
+
+- dnsmasq - лёгкий DNS-форвардер и DHCP-сервер для локальных сетей.
+
+- Может работать как DNS-кэш, DHCP-сервер, TFTP-сервер и PXE-загрузчик.
+
+- Основной конфиг: /etc/dnsmasq.conf.
+
+- Директория дополнительных конфигов: /etc/dnsmasq.d/ - все файлы с расширением .conf внутри читаются автоматически.
+
+- Слушает порт 53 (DNS) и 67/68 (DHCP) по умолчанию.
+
+- Проверка синтаксиса конфига: dnsmasq --test.
+
+
+ = Установка и служба:
+
+- Установка:
+
+sudo apt update
+sudo apt install dnsmasq
+
+
+- Управление через systemd:
+
+sudo systemctl start dnsmasq
+sudo systemctl stop dnsmasq
+sudo systemctl restart dnsmasq
+sudo systemctl enable dnsmasq
+sudo systemctl status dnsmasq
+
+
+- Перечитать конфиг без перезапуска (сброс кэша):
+
+sudo systemctl reload dnsmasq
+
+- Или через сигнал:
+
+sudo kill -HUP $(pidof dnsmasq)
+
+
+ = Важно: конфликт с systemd-resolved:
+
+- В Debian по умолчанию systemd-resolved занимает порт 53 на 127.0.0.53.
+
+- dnsmasq не сможет запуститься, если порт занят.
+
+- Отключить systemd-resolved:
+
+sudo systemctl disable --now systemd-resolved
+
+
+- Удалить симлинк /etc/resolv.conf и создать свой:
+
+sudo rm /etc/resolv.conf
+echo "nameserver 127.0.0.1" | sudo tee /etc/resolv.conf
+
+
+- Или оставить systemd-resolved, но настроить dnsmasq на другой порт (не рекомендуется для локального DNS).
+
+
+ = Конфигурация DNS:
+
+- Слушать только локально:
+
+listen-address=127.0.0.1
+
+
+- Слушать локальный адрес и адрес в LAN:
+
+listen-address=127.0.0.1,192.168.1.100
+
+
+- Слушать конкретный интерфейс:
+
+interface=wlp3s0
+
+
+- Исключить интерфейс:
+
+except-interface=eth0
+
+
+- Не читать /etc/resolv.conf (использовать только указанные upstream):
+
+no-resolv
+
+
+- Указать upstream DNS-серверы:
+
+server=1.1.1.1
+server=8.8.8.8
+
+
+- Не пересылать запросы для имён без точки (локальные):
+
+domain-needed
+
+
+- Не пересылать обратные запросы для приватных IP:
+
+bogus-priv
+
+
+- Размер кэша (по умолчанию 150):
+
+cache-size=1000
+
+
+- Домен для DHCP-клиентов:
+
+domain=home.lan
+
+
+ = Локальные записи:
+
+- Привязать домен и все поддомены к IP:
+
+address=/mysite.com/192.168.1.100
+
+
+- Заблокировать домен (вернуть 0.0.0.0):
+
+address=/ads.example.com/0.0.0.0
+
+
+- Заблокировать домен и все поддомены:
+
+address=/.example.com/0.0.0.0
+
+
+- Привязать конкретное имя к IP:
+
+host-record=server.home.lan,192.168.1.100
+
+
+- Несколько имён на один IP:
+
+host-record=server,server.home.lan,192.168.1.100
+
+
+- Дополнительный файл hosts (формат как /etc/hosts):
+
+addn-hosts=/etc/dnsmasq.hosts
+
+
+ = Конфигурация DHCP:
+
+- Включить DHCP для диапазона:
+
+dhcp-range=192.168.1.100,192.168.1.200,255.255.255.0,24h
+
+- Формат: start,end,mask,lease_time.
+
+
+- DHCP только для указанных хостов:
+
+dhcp-range=192.168.1.0,static,255.255.255.0,12h
+
+
+- Фиксированный IP по MAC:
+
+dhcp-host=aa:bb:cc:dd:ee:ff,192.168.1.50
+
+
+- Фиксированный IP с именем:
+
+dhcp-host=aa:bb:cc:dd:ee:ff,pc1,192.168.1.50
+
+
+- Шлюз и DNS для DHCP-клиентов:
+
+dhcp-option=option:router,192.168.1.1
+dhcp-option=option:dns-server,192.168.1.100
+
+
+- Отключить DHCP на интерфейсе:
+
+no-dhcp-interface=eth0
+
+
+ = Логи и отладка:
+
+- Включить лог запросов:
+
+log-queries
+
+
+- Указать файл лога:
+
+log-facility=/var/log/dnsmasq.log
+
+
+- Проверить конфиг без запуска:
+
+dnsmasq --test
+
+
+- Запустить в foreground с отладкой (остановив службу):
+
+sudo systemctl stop dnsmasq
+sudo dnsmasq -d --log-queries
+
+
+- Проверить, слушает ли порт:
+
+ss -tulnp | grep :53
+
+
+- Проверить разрешение имени:
+
+dig @127.0.0.1 mysite.com
+nslookup mysite.com 127.0.0.1
+
+
+ = Примеры для Debian:
+
+- Локальный DNS-кэш только для этой машины:
+
+# /etc/dnsmasq.conf
+listen-address=127.0.0.1
+cache-size=1000
+no-resolv
+server=1.1.1.1
+server=8.8.8.8
+
+
+- DNS для всей LAN с локальными именами:
+
+# /etc/dnsmasq.conf
+interface=wlp3s0
+listen-address=192.168.31.244
+domain-needed
+bogus-priv
+no-resolv
+server=1.1.1.1
+address=/mysite.com/192.168.31.244
+host-record=server.home.lan,192.168.31.244
+cache-size=2000
+
+
+- DHCP + DNS:
+
+# /etc/dnsmasq.conf
+interface=wlp3s0
+dhcp-range=192.168.31.100,192.168.31.200,255.255.255.0,24h
+dhcp-option=option:router,192.168.31.1
+dhcp-option=option:dns-server,192.168.31.244
+dhcp-host=aa:bb:cc:dd:ee:ff,pc1,192.168.31.50
+domain=home.lan
+address=/mysite.com/192.168.31.244
+
+
+- Отдельный файл для локальных записей:
+
+# /etc/dnsmasq.d/local.conf
+address=/mysite.com/192.168.31.244
+address=/jellyfin.home.lan/192.168.31.244
+host-record=server.home.lan,192.168.31.244
+
+
+ = Использование на других устройствах:
+
+- Чтобы другие устройства в сети видели локальные записи, нужно прописать IP машины с dnsmasq как DNS-сервер.
+
+- В настройках Wi-Fi/Ethernet на устройстве указать DNS вручную: 192.168.31.244.
+
+- Либо настроить dnsmasq на роутере (если прошивка поддерживает), тогда все устройства автоматически получат его через DHCP.
+
+
+ = Зарезервированные TLD для локальных имён:
+
+- .lan - распространённый, но не стандарт.
+
+- .home.arpa - официальный стандарт (RFC 8375), рекомендуется.
+
+- .internal - используется в корпоративных сетях, безопасен.
+
+- .local - НЕ использовать, конфликтует с mDNS (Avahi, Bonjour).
+
+
+ = Проверка работы:
+
+- Проверить, что dnsmasq слушает:
+
+sudo ss -tulnp | grep dnsmasq
+
+
+- Проверить резолв локального имени:
+
+dig mysite.com
+nslookup mysite.com
+
+
+- Посмотреть, какой DNS используется системой:
+
+resolvectl status
+
+- Если systemd-resolved отключён - проверять /etc/resolv.conf:
+
+cat /etc/resolv.conf
+
+
+- Проверить кэш dnsmasq:
+
+sudo kill -USR1 $(pidof dnsmasq)
+
+- В логе появится статистика по кэшу (при log-facility).
+
+
+ = Советы:
+
+- Если dnsmasq не запускается, проверьте порт 53: sudo ss -tulnp | grep :53.
+
+- На Debian часто мешает systemd-resolved - его нужно отключать до запуска dnsmasq.
+
+- При изменении конфига всегда проверяйте: dnsmasq --test.
+
+- Кэш dnsmasq хранится в памяти, при перезапуске он очищается.
+
+- Не используйте address=/domain/ для доменов, которые должны резолвиться через upstream - это перехватит все запросы.
+
+- Если делаете проброс на роутере, не забудьте открыть порт 53 для LAN-интерфейса.
+
+- Для отладки удобно запускать в foreground: sudo dnsmasq -d.
+
+- Логи по умолчанию пишутся в syslog, для отдельного файла используйте log-facility.
+
+- Правила из /etc/dnsmasq.d/ читаются в алфавитном порядке, суффикс .conf обязателен.

@@ -1,0 +1,508 @@
+	--- БЫСТРАЯ ШПАРГАЛКА VNC ---
+
+ = Сервер:
+
+- Установка:
+
+sudo apt install x11vnc
+
+
+- Задать пароль:
+
+x11vnc -storepasswd
+
+
+- Узнать свой IP для соединение клиента:
+
+ip addr
+
+
+- Хост:
+
+x11vnc -display :0 -forever -shared -rfbauth ~/.vnc/passwd
+
+
+- Хост с окном нужного размера:
+
+x11vnc -display :0 -forever -shared -rfbauth ~/.vnc/passwd -scale 1280x720
+
+
+ = Клиент:
+
+- Установка:
+
+sudo apt install tigervnc-viewer
+
+
+- Подключение:
+
+vncviewer 192.168.x.x:0
+
+
+
+	--- VNC ---
+
+ = Основы:
+
+- VNC - Virtual Network Computing, система удалённого доступа к графическому рабочему столу через протокол RFB (Remote FrameBuffer).
+
+- Клиент-серверная архитектура: VNC-сервер на удалённой машине, VNC-клиент (viewer) на локальной.
+
+- Протокол RFB работает поверх TCP, по умолчанию порт 5900 + номер дисплея.
+
+- Номера дисплеев: :0 - порт 5900, :1 - порт 5901, :2 - порт 5902 и так далее.
+
+- По умолчанию VNC-трафик не шифруется, пароль передаётся через challenge-response механизм, но данные идут открыто.
+
+- Рекомендуется использовать SSH-туннель для шифрования трафика.
+
+
+ = Установка:
+
+- Debian/Ubuntu (TigerVNC):
+
+sudo apt update
+sudo apt install tigervnc-standalone-server tigervnc-common
+
+
+- Debian/Ubuntu (TightVNC):
+
+sudo apt install tightvncserver
+
+
+- RHEL/CentOS/Fedora (TigerVNC):
+
+sudo dnf install tigervnc-server
+
+
+- Arch Linux:
+
+sudo pacman -S tigervnc
+
+
+- x11vnc (для доступа к уже запущенному X-дисплею):
+
+sudo apt install x11vnc
+
+
+ = Сервер (vncserver):
+
+- Создать пароль VNC (первый запуск):
+
+vncpasswd
+
+- Пароль хранится в ~/.vnc/passwd, обфусцирован, но не зашифрован надёжно.
+
+- Пароль: минимум 6 символов, значимы только первые 8.
+
+- Можно задать отдельный пароль только для просмотра (view-only).
+
+
+- Запустить VNC-сессию на дисплее :1:
+
+vncserver :1
+
+- Порт будет 5901.
+
+
+- Запустить с указанием разрешения:
+
+vncserver :1 -geometry 1920x1080
+
+- Формат: -geometry ШИРИНАxВЫСОТА.
+
+
+- Запустить с указанием глубины цвета:
+
+vncserver :1 -depth 24
+
+
+- Список активных сессий:
+
+vncserver -list
+
+- Показывает номер дисплея и порт.
+
+
+- Убить сессию:
+
+vncserver -kill :1
+
+- Номер дисплея можно посмотреть через -list.
+
+
+- Перезапустить сессию:
+
+vncserver -kill :1 && vncserver :1
+
+
+ = Конфигурация сервера:
+
+- Файл автозапуска сессии:
+
+~/.vnc/xstartup
+
+- Должен быть исполняемым:
+
+chmod +x ~/.vnc/xstartup
+
+
+- Пример для XFCE4:
+
+#!/bin/sh
+unset SESSION_MANAGER
+unset DBUS_SESSION_BUS_ADDRESS
+exec startxfce4
+
+
+- Пример для GNOME:
+
+#!/bin/sh
+export XKL_XMODMAP_DISABLE=1
+exec gnome-session
+
+
+- Пример для простого окружения без рабочего стола:
+
+#!/bin/sh
+xterm -geometry 80x24+10+10 -ls -title "$VNCDESKTOP Desktop" &
+twm &
+
+
+ = Автозапуск (systemd):
+
+- Шаблон unit-файла TigerVNC находится в /lib/systemd/system/vncserver@.service.
+
+- Скопировать шаблон:
+
+sudo cp /lib/systemd/system/vncserver@.service /etc/systemd/system/vncserver@:1.service
+
+
+- Отредактировать, заменив <USER> на имя пользователя:
+
+sudo nano /etc/systemd/system/vncserver@:1.service
+
+
+- Перезагрузить systemd:
+
+sudo systemctl daemon-reload
+
+
+- Включить и запустить:
+
+sudo systemctl enable --now vncserver@:1.service
+
+
+- Проверить статус:
+
+sudo systemctl status vncserver@:1.service
+
+
+ = Клиент (vncviewer):
+
+- Подключиться к серверу:
+
+vncviewer hostname:1
+
+- Номер дисплея соответствует порту (1 -> 5901).
+
+
+- Подключиться напрямую к порту:
+
+vncviewer hostname::5901
+
+- Двойное двоеточие указывает на номер порта, а не дисплея.
+
+
+- Полноэкранный режим:
+
+vncviewer -FullScreen hostname:1
+
+
+- Режим только просмотра (без ввода):
+
+vncviewer -ViewOnly hostname:1
+
+- Полезно для мониторинга без риска вмешательства.
+
+
+- Общий доступ (не отключать других клиентов):
+
+vncviewer -Shared hostname:1
+
+
+- Указать файл пароля:
+
+vncviewer -passwd ~/.vnc/passwd hostname:1
+
+- Файл создаётся утилитой vncpasswd.
+
+
+- Через SSH-туннель:
+
+vncviewer -via user@gateway hostname:1
+
+- Автоматически создаёт SSH-туннель перед подключением.
+
+
+- Указать кодировку:
+
+vncviewer -PreferredEncoding Tight hostname:1
+
+- Варианты: Tight, ZRLE, hextile, raw. Tight - для медленных сетей, raw - для локальных.
+
+
+- Настроить качество JPEG:
+
+vncviewer -QualityLevel 9 hostname:1
+
+- 0-9, по умолчанию 8.
+
+
+- Настроить сжатие:
+
+vncviewer -CompressLevel 2 hostname:1
+
+- 0-6, по умолчанию 2.
+
+
+- Прослушивать обратные подключения:
+
+vncviewer -listen 5500
+
+- Сервер сам подключается к клиенту (reverse connection).
+
+
+ = Порты и дисплеи:
+
+- :0 - порт 5900 - обычно используется уже запущенным X-сервером.
+
+- :1 - порт 5901 - первая созданная VNC-сессия.
+
+- :2 - порт 5902 - вторая созданная VNC-сессия.
+
+- :N - порт 5900 + N.
+
+- Reverse connection: порт 5500 + номер дисплея.
+
+
+ = Безопасность:
+
+- SSH-туннель (рекомендуется):
+
+ssh -L 5901:localhost:5901 user@server
+
+- После этого подключаться к localhost:5901. Весь трафик шифруется SSH.
+
+- На сервере можно ограничить VNC только локальными подключениями:
+
+vncserver -localhost :1
+
+- Тогда подключение возможно только через SSH-туннель.
+
+
+- TLS/SSL (если нужна нативная поддержка):
+
+- Сгенерировать сертификат:
+
+mkdir -p ~/.vnc/ssl
+cd ~/.vnc/ssl
+openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes
+
+
+- Настроить TigerVNC в ~/.vnc/config:
+
+SecurityTypes=TLSNone,X509None,VeNCrypt,TLSVnc
+X509Cert=~/.vnc/ssl/cert.pem
+X509Key=~/.vnc/ssl/key.pem
+
+- Не все клиенты поддерживают TLS, SSH-туннель надёжнее.
+
+
+- Ограничить доступ по IP (firewalld):
+
+sudo firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="192.168.1.100" port protocol="tcp" port="5901" accept'
+sudo firewall-cmd --reload
+
+
+- Ограничить доступ по IP (iptables):
+
+iptables -A INPUT -p tcp --dport 5901 -s 192.168.1.100 -j ACCEPT
+iptables -A INPUT -p tcp --dport 5901 -j DROP
+
+
+- Отключить общий доступ и передачу файлов (TigerVNC):
+
+alwaysshared=no
+nevershared=yes
+dontdisconnect=yes
+
+- Добавить в ~/.vnc/config.
+
+
+ = x11vnc:
+
+- Особенность: подключается к уже существующему X-дисплею, а не создаёт новый.
+
+- Установка:
+
+sudo apt install x11vnc
+
+
+- Создать пароль:
+
+x11vnc -storepasswd
+
+
+- Запустить с доступом к дисплею :0:
+
+x11vnc -display :0 -auth guess -forever -loop -noxdamage -repeat -rfbauth ~/.x11vnc/passwd -rfbport 5900
+
+- -display :0 - целевой X-дисплей.
+
+- -forever - не завершаться после отключения клиента.
+
+- -loop - переподключаться при обрыве.
+
+- -noxdamage - обход проблем с X DAMAGE.
+
+- -rfbauth - файл пароля.
+
+- -rfbport 5900 - порт.
+
+
+- Управление запущенным x11vnc:
+
+x11vnc -R stop
+
+- Удалённая остановка сервера.
+
+
+x11vnc -R shared
+
+- Включить общий доступ.
+
+
+x11vnc -R scale:3/4
+
+- Масштабировать рабочий стол.
+
+
+x11vnc -R ping
+
+- Проверить, отвечает ли сервер.
+
+
+ = Reverse connection (обратное подключение):
+
+- Полезно, если сервер за NAT или файрволом, и входящие порты закрыты.
+
+- На клиенте запустить прослушивание:
+
+vncviewer -listen 5500
+
+
+- На сервере запустить VNC с обратным подключением:
+
+x0vncserver -connect client_ip:5500
+
+- Или через x11vnc:
+
+x11vnc -connect client_ip:5500
+
+
+- Для TigerVNC сервер должен поддерживать -connect или использоваться vncconnect:
+
+vncconnect client_ip:5500
+
+- Утилита для инициирования обратного подключения.
+
+
+ = Диагностика:
+
+- Логи VNC-сервера:
+
+~/.vnc/hostname:display.log
+
+- Например: ~/.vnc/server:1.log.
+
+- Следить в реальном времени:
+
+tail -f ~/.vnc/server:1.log
+
+
+- Проверить, слушает ли порт:
+
+ss -tulnp | grep 5901
+
+
+- Проверить доступность порта с клиента:
+
+nc -zv server_ip 5901
+
+
+- Проверить версию VNC-сервера:
+
+vncserver -version
+
+
+ = Примеры:
+
+- Быстрый запуск сервера с XFCE на дисплее :1:
+
+vncserver :1 -geometry 1920x1080 -depth 24
+
+
+- Подключение через SSH-туннель (всё в одной команде):
+
+vncviewer -via user@server localhost:1
+
+- Эквивалент: ssh -L 5901:localhost:5901 user@server + vncviewer localhost:1.
+
+
+- Полный цикл: сервер + SSH-туннель + клиент:
+
+# На сервере:
+vncserver :1 -localhost
+
+# На клиенте:
+ssh -L 5901:localhost:5901 user@server
+# В другом терминале:
+vncviewer localhost:5901
+
+
+- Обратное подключение (сервер за NAT):
+
+# На клиенте:
+vncviewer -listen 5500
+
+# На сервере:
+x11vnc -connect client_ip:5500
+
+
+- x11vnc для доступа к текущему рабочему столу:
+
+x11vnc -display :0 -forever -shared -rfbauth ~/.x11vnc/passwd
+
+
+ = Советы:
+
+- Всегда используйте SSH-туннель или TLS для VNC. Без шифрования пароль и данные передаются открыто.
+
+- Не открывайте VNC-порт в интернет напрямую. Даже с паролем это риск.
+
+- Для production используйте TigerVNC, а не TightVNC - TightVNC больше не поддерживается.
+
+- -localhost на сервере + SSH-туннель - минимально безопасная конфигурация.
+
+- Для доступа к уже запущенному рабочему столу (не виртуальному) используйте x11vnc, а не vncserver.
+
+- vncpasswd хранит пароль в обфусцированном виде, но не зашифрованном. Файл ~/.vnc/passwd должен быть доступен только владельцу.
+
+- При проблемах с чёрным экраном проверьте ~/.vnc/xstartup - он должен запускать оконный менеджер или рабочий стол.
+
+- Для отладки используйте vncserver -list и логи в ~/.vnc/.
+
+- Если клиент не подключается, проверьте файрвол: sudo ufw allow 5901/tcp или аналог.
+
+- Для высоких разрешений (4K) может потребоваться драйвер dummy от RealVNC или увеличение видеопамяти.
