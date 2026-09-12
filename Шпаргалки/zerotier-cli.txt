@@ -1,0 +1,198 @@
+	--- ОСНОВНЫЕ КОМАНДЫ ZEROTIER-CLI ---
+
+ = Синтаксис и запуск:
+
+- Базовый синтаксис:
+
+zerotier-cli [-switches] <command> [arguments]
+
+
+- Запуск с правами root (Linux/Unix):
+
+sudo zerotier-cli <command>
+
+
+- Показать справку по всем командам:
+
+zerotier-cli -h
+zerotier-cli help
+
+
+- Показать версию:
+
+zerotier-cli -v
+
+
+ = Статус и информация:
+
+- Показать статус узла (ID, версия, онлайн-статус):
+
+zerotier-cli info
+zerotier-cli status
+
+
+- Статус с JSON-выводом (подробнее):
+
+zerotier-cli info -j
+
+
+- Показать список всех пиров:
+
+zerotier-cli listpeers
+zerotier-cli peers
+
+
+ = Управление сетями:
+
+- Показать все сети, к которым подключён узел:
+
+zerotier-cli listnetworks
+
+
+- Подключиться к сети (16-значный hex ID):
+
+zerotier-cli join <network ID>
+
+
+- Отключиться от сети:
+
+zerotier-cli leave <network ID>
+
+
+ = Настройки сети (get/set):
+
+- Получить значение настройки:
+
+zerotier-cli get <network ID> <setting>
+
+
+- Установить настройку:
+
+zerotier-cli set <network ID> <setting> <value>
+
+
+- Разрешить использовать как глобальный роутер (Exit Node):
+
+zerotier-cli set <network ID> allowGlobal=true
+
+
+- Разрешить переопределять маршрут по умолчанию (полный туннель):
+
+zerotier-cli set <network ID> allowDefault=true
+
+
+- Разрешить управление DNS через ZeroTier:
+
+zerotier-cli set <network ID> allowDNS=true
+
+
+ = Moon (федеративные root-серверы):
+
+- Показать список известных moon:
+
+zerotier-cli listmoons
+
+
+- Подключиться к moon:
+
+zerotier-cli orbit <world ID> <seed>
+
+
+- Отключиться от moon:
+
+zerotier-cli deorbit <world ID>
+
+
+ = Диагностика:
+
+- Создать дамп-файл для отладки:
+
+zerotier-cli dump
+
+
+
+	--- ПОЛНАЯ ШПАРГАЛКА ПО ZEROTIER-CLI ---
+
+ = Флаги (switches):
+
+- JSON-вывод (удобно для скриптов и парсинга):
+
+zerotier-cli -j <command>
+
+
+- Указать альтернативную рабочую директорию сервиса:
+
+zerotier-cli -D<path> <command>
+
+
+- Комбинирование:
+
+zerotier-cli -j info
+
+
+ = Примеры вывода:
+
+- info:
+
+200 info abcdef1234 1.14.2 ONLINE
+
+
+- listnetworks:
+
+200 listnetworks <nwid> <name> <mac> <status> <type> <dev> <ZT assigned ips>
+200 listnetworks 8056c2e21c000001 CORPO-NET ee:7b:79:ab:a4:a7 OK PRIVATE ztr2q6cvq2 fd56:5799:d8f6:788e:ec99:93f5:15d:7c3e/88,10.147.17.1/24
+
+
+- listpeers:
+
+200 peers <ztaddr> <ver> <role> <lat> <link> <lastTX> <lastRX> <path>
+1b1e1cdcf3 1.14.0 LEAF 51 DIRECT 799 4533 5.79.106.66/34944
+77ccde71b0 - PLANET 79 DIRECT 24648 69739 103.196.103.67/9993
+
+
+- join:
+
+200 join OK
+
+
+- get (пример — MTU сети):
+
+zerotier-cli get 8056c2e21c000001 mtu
+# вывод: 2800
+
+
+ = Коды статуса сети при join:
+
+- OK — успешно подключено.
+- REQUESTING_CONFIGURATION — идёт согласование с контроллером сети.
+- NOT_FOUND — неверный Network ID.
+- ACCESS_DENIED — узел не авторизован на контроллере (нужно одобрить в my.zerotier.com).
+- PORT_ERROR — проблема с портом UDP/9993.
+
+
+ = Статус узла (из info / status):
+
+- ONLINE — связь с глобальной инфраструктурой есть.
+- OFFLINE — связи с root-серверами нет (идёт повтор).
+- TUNNELED — UDP/9993 заблокирован, используется TCP-релей.
+
+
+ = Права и authtoken:
+
+- По умолчанию требует root/sudo.
+- Для непривилегированного пользователя скопировать токен:
+
+sudo cp /var/lib/zerotier-one/authtoken.secret ~/.zeroTierOneAuthToken
+sudo chown $USER ~/.zeroTierOneAuthToken
+sudo chmod 0600 ~/.zeroTierOneAuthToken
+
+
+ = Полезные советы:
+
+- После join подождите и проверьте listnetworks — статус должен стать OK.
+- Если ACCESS_DENIED — авторизуйте устройство в веб-интерфейсе ZeroTier Central.
+- Используйте -j для скриптов и парсинга.
+- listpeers показывает не всех участников ваших сетей, а VL1-пиров (root-серверы, контроллеры и активные узлы).
+- Для настройки Exit Node (выход в интернет через другую машину) используйте allowGlobal=true и allowDefault=true.
+
+- Сайт: https://my.zerotier.com/

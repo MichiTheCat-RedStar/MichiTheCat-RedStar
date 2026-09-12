@@ -1,0 +1,122 @@
+	--- ОСНОВНЫЕ КОМАНДЫ PYTHON HTTP.SERVER ---
+
+ = Запуск из командной строки:
+
+- Базовый запуск (текущая директория, порт 8000):
+
+python -m http.server
+
+
+- Указать порт:
+
+python -m http.server 8080
+
+
+- Привязать к конкретному интерфейсу:
+
+python -m http.server 8000 --bind 127.0.0.1
+
+
+- Указать директорию для раздачи:
+
+python -m http.server 8000 --directory /путь/к/папке
+
+
+- Включить CGI (устарело, удалено в Python 3.13+):
+
+python -m http.server 8000 --cgi
+
+
+ = Полный список опций:
+
+- -h, --help: показать справку
+- --bind ADDRESS: адрес привязки (по умолчанию 0.0.0.0)
+- --directory DIRECTORY: директория для раздачи (по умолчанию текущая)
+- --cgi: включить CGI (устарело)
+- port: порт (по умолчанию 8000)
+
+
+
+	--- ИСПОЛЬЗОВАНИЕ В КОДЕ PYTHON ---
+
+ = Простой сервер:
+
+- Импорт и запуск:
+
+from http.server import HTTPServer, SimpleHTTPRequestHandler
+
+server_address = ('', 8000)
+httpd = HTTPServer(server_address, SimpleHTTPRequestHandler)
+httpd.serve_forever()
+
+
+- С указанием директории:
+
+import http.server
+import socketserver
+
+handler = http.server.SimpleHTTPRequestHandler
+httpd = socketserver.TCPServer(('', 8000), handler)
+httpd.serve_forever()
+
+
+ = Кастомный обработчик:
+
+- Наследование от BaseHTTPRequestHandler:
+
+from http.server import BaseHTTPRequestHandler, HTTPServer
+
+class MyHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+        self.wfile.write(b'Hello, world!')
+
+httpd = HTTPServer(('', 8000), MyHandler)
+httpd.serve_forever()
+
+
+- Обработка POST:
+
+def do_POST(self):
+    content_length = int(self.headers['Content-Length'])
+    post_data = self.rfile.read(content_length)
+    self.send_response(200)
+    self.end_headers()
+    self.wfile.write(b'Received: ' + post_data)
+
+
+ = Многопоточный сервер:
+
+- Использование ThreadingHTTPServer:
+
+from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
+
+httpd = ThreadingHTTPServer(('', 8000), SimpleHTTPRequestHandler)
+httpd.serve_forever()
+
+
+
+	--- ПОЛЕЗНЫЕ ДЕТАЛИ ---
+
+ = Особенности:
+
+- SimpleHTTPRequestHandler раздаёт файлы из текущей директории.
+- Поддерживает методы GET и HEAD.
+- Логи запросов выводятся в stderr.
+- Для остановки нажмите Ctrl+C.
+
+
+ = Безопасность:
+
+- Не используйте на публичных интерфейсах без необходимости.
+- Нет аутентификации и шифрования.
+- Подходит для локальной разработки и обмена файлами в доверенной сети.
+
+
+ = Совместимость:
+
+- Модуль http.server входит в стандартную библиотеку Python 3.
+- В Python 2 назывался SimpleHTTPServer.
+- CGIHTTPRequestHandler удалён в Python 3.13.
