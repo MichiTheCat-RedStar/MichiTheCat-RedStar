@@ -1,0 +1,328 @@
+	--- ОСНОВНЫЕ КОМАНДЫ SUBPROCESS ---
+
+ = Импорт и базовый запуск:
+
+- Импорт модуля:
+
+import subprocess
+
+
+- Запуск команды и ожидание завершения:
+
+subprocess.run(['ls', '-l'])
+
+
+- Запуск с захватом вывода:
+
+result = subprocess.run(['ls', '-l'], capture_output=True, text=True)
+print(result.stdout)
+
+
+- Запуск с проверкой кода возврата:
+
+subprocess.run(['ls', '-l'], check=True)
+
+
+ = Захват вывода:
+
+- Получить stdout и stderr:
+
+result = subprocess.run(['echo', 'hello'], capture_output=True, text=True)
+print(result.stdout)   # hello
+print(result.stderr)   # пусто
+
+
+- Только stdout:
+
+result = subprocess.run(['echo', 'hello'], stdout=subprocess.PIPE, text=True)
+print(result.stdout)
+
+
+- Только stderr:
+
+result = subprocess.run(['ls', '/nonexistent'], stderr=subprocess.PIPE, text=True)
+print(result.stderr)
+
+
+ = Передача ввода:
+
+- Передать строку в stdin:
+
+result = subprocess.run(
+    ['cat'],
+    input='hello\nworld\n',
+    capture_output=True,
+    text=True
+)
+print(result.stdout)
+
+
+- Передать байты:
+
+result = subprocess.run(
+    ['cat'],
+    input=b'hello\n',
+    capture_output=True
+)
+print(result.stdout)
+
+
+ = Проверка кода возврата:
+
+- Вручную:
+
+result = subprocess.run(['ls', '-l'])
+if result.returncode != 0:
+    print('Ошибка')
+
+
+- Автоматически (выбросит исключение при ошибке):
+
+subprocess.run(['ls', '-l'], check=True)
+
+
+ = Таймаут:
+
+- Ограничить время выполнения:
+
+try:
+    subprocess.run(['sleep', '10'], timeout=2, check=True)
+except subprocess.TimeoutExpired:
+    print('Превышено время ожидания')
+
+
+ = Оболочка (shell):
+
+- Запуск через shell (осторожно с вводом пользователя):
+
+subprocess.run('ls -l | grep txt', shell=True)
+
+
+- Безопасный вариант без shell:
+
+subprocess.run(['ls', '-l'])
+
+
+ = Окружение и рабочая директория:
+
+- Изменить рабочую директорию:
+
+subprocess.run(['ls'], cwd='/tmp')
+
+
+- Передать своё окружение:
+
+import os
+env = os.environ.copy()
+env['MY_VAR'] = 'value'
+subprocess.run(['printenv', 'MY_VAR'], env=env)
+
+
+- Полностью заменить окружение:
+
+subprocess.run(['printenv'], env={'PATH': '/usr/bin'})
+
+
+
+	--- ПОЛНАЯ ШПАРГАЛКА ПО SUBPROCESS ---
+
+ = Классы и функции:
+
+- subprocess.run: высокоуровневый запуск, ожидает завершения, возвращает CompletedProcess.
+
+- subprocess.call: запуск и возврат кода возврата (устаревшее, используйте run).
+
+- subprocess.check_call: как call, но выбрасывает CalledProcessError при ненулевом коде.
+
+- subprocess.check_output: запуск и возврат stdout, выбрасывает CalledProcessError при ошибке.
+
+- subprocess.Popen: низкоуровневый класс для гибкого управления процессом.
+
+- subprocess.CompletedProcess: результат работы run, содержит args, returncode, stdout, stderr.
+
+- subprocess.PIPE: константа для создания канала.
+
+- subprocess.DEVNULL: константа для перенаправления в /dev/null.
+
+- subprocess.STDOUT: перенаправление stderr в stdout.
+
+
+ = Popen (низкоуровневый):
+
+- Создание процесса:
+
+p = subprocess.Popen(['ls', '-l'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
+
+- Ожидание завершения:
+
+stdout, stderr = p.communicate()
+print(stdout)
+
+
+- Проверка кода возврата:
+
+p.wait()
+print(p.returncode)
+
+
+- Чтение вывода построчно:
+
+p = subprocess.Popen(['ls', '-l'], stdout=subprocess.PIPE, text=True)
+for line in p.stdout:
+    print(line, end='')
+p.wait()
+
+
+- Запись в stdin:
+
+p = subprocess.Popen(['cat'], stdin=subprocess.PIPE, text=True)
+p.communicate('hello\n')
+
+
+ = Потоки и пайпы:
+
+- Перенаправить stderr в stdout:
+
+result = subprocess.run(
+    ['ls', '/nonexistent'],
+    stdout=subprocess.PIPE,
+    stderr=subprocess.STDOUT,
+    text=True
+)
+print(result.stdout)
+
+
+- Игнорировать вывод:
+
+subprocess.run(['ls', '-l'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+- Связать два процесса через пайп:
+
+p1 = subprocess.Popen(['ls', '-l'], stdout=subprocess.PIPE)
+p2 = subprocess.Popen(['grep', 'txt'], stdin=p1.stdout, stdout=subprocess.PIPE)
+p1.stdout.close()
+output = p2.communicate()[0]
+print(output.decode())
+
+
+ = Текст и кодировки:
+
+- text=True автоматически декодирует в str:
+
+result = subprocess.run(['echo', 'привет'], capture_output=True, text=True)
+print(result.stdout)
+
+
+- Указать кодировку:
+
+result = subprocess.run(
+    ['echo', 'привет'],
+    capture_output=True,
+    text=True,
+    encoding='utf-8'
+)
+
+
+- Обработка ошибок декодирования:
+
+result = subprocess.run(
+    ['echo', 'привет'],
+    capture_output=True,
+    text=True,
+    encoding='utf-8',
+    errors='replace'
+)
+
+
+ = Обработка ошибок:
+
+- CalledProcessError:
+
+try:
+    subprocess.run(['ls', '/nonexistent'], check=True)
+except subprocess.CalledProcessError as e:
+    print('Код возврата:', e.returncode)
+    print('Вывод:', e.output)
+    print('Ошибки:', e.stderr)
+
+
+- TimeoutExpired:
+
+try:
+    subprocess.run(['sleep', '10'], timeout=1, check=True)
+except subprocess.TimeoutExpired as e:
+    print('Таймаут:', e.timeout)
+
+
+- FileNotFoundError:
+
+try:
+    subprocess.run(['nonexistent_command'])
+except FileNotFoundError:
+    print('Команда не найдена')
+
+
+ = Безопасность:
+
+- Избегайте shell=True с вводом от пользователя.
+
+- Если shell=True необходим, экранируйте аргументы через shlex.quote:
+
+import shlex
+user_input = 'some; rm -rf /'
+safe_input = shlex.quote(user_input)
+subprocess.run(f'echo {safe_input}', shell=True)
+
+
+- Предпочитайте список аргументов вместо строки.
+
+- Проверяйте пути к исполняемым файлам.
+
+- Ограничивайте права процесса.
+
+
+ = Примеры:
+
+- Получить версию Python:
+
+result = subprocess.run(['python', '--version'], capture_output=True, text=True)
+print(result.stdout)
+
+
+- Запустить скрипт и получить вывод:
+
+result = subprocess.run(['python', 'script.py'], capture_output=True, text=True)
+print(result.stdout)
+print(result.stderr)
+
+
+- Передать переменные окружения:
+
+import os
+env = os.environ.copy()
+env['MY_VAR'] = '123'
+subprocess.run(['printenv', 'MY_VAR'], env=env)
+
+
+- Работа с большим выводом:
+
+p = subprocess.Popen(['find', '/', '-name', '*.txt'], stdout=subprocess.PIPE, text=True)
+for line in p.stdout:
+    print(line, end='')
+p.wait()
+
+
+- Запуск в фоне:
+
+p = subprocess.Popen(['sleep', '60'])
+print('PID:', p.pid)
+# процесс работает в фоне, можно продолжить работу
+p.terminate()  # завершить при необходимости
+
+
+- Перенаправление в файл:
+
+with open('output.txt', 'w') as f:
+    subprocess.run(['ls', '-l'], stdout=f, text=True)

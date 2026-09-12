@@ -1,0 +1,645 @@
+	--- ОСНОВЫ ASYNCIO ---
+
+ = Синтаксис:
+
+- Объявление корутины:
+
+async def main():
+    print('Hello')
+
+- Вызов корутины (создаёт объект корутины):
+
+coro = main()
+
+- Запуск корутины:
+
+import asyncio
+asyncio.run(main())
+
+- Ожидание корутины:
+
+await main()
+
+- Асинхронный контекстный менеджер:
+
+async with resource:
+    ...
+
+- Асинхронный итератор:
+
+async for item in async_iter:
+    ...
+
+
+ = Импорт:
+
+- Базовый:
+
+import asyncio
+
+- Псевдоним:
+
+import asyncio as aio
+
+
+ = Версии:
+
+- asyncio добавлен в Python 3.4.
+- async/await синтаксис с Python 3.5.
+- asyncio.run() с Python 3.7.
+- TaskGroup и timeout() с Python 3.11.
+- asyncio.timeout_at() с Python 3.11.
+
+
+
+	--- ЗАПУСК И ЦИКЛ СОБЫТИЙ ---
+
+ = Запуск:
+
+- Запустить главную корутину:
+
+asyncio.run(main())
+
+- Получить текущий цикл:
+
+loop = asyncio.get_running_loop()
+
+- Получить цикл (устаревшее вне корутины):
+
+loop = asyncio.get_event_loop()
+
+- Создать новый цикл:
+
+loop = asyncio.new_event_loop()
+
+- Установить цикл по умолчанию:
+
+asyncio.set_event_loop(loop)
+
+- Закрыть цикл:
+
+loop.close()
+
+- Запустить цикл навсегда:
+
+loop.run_forever()
+
+- Остановить цикл:
+
+loop.stop()
+
+
+ = Политики цикла:
+
+- Получить политику:
+
+policy = asyncio.get_event_loop_policy()
+
+- Установить политику:
+
+asyncio.set_event_loop_policy(policy)
+
+- Windows: ProactorEventLoop (по умолчанию с 3.8):
+
+asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+
+- Windows: SelectorEventLoop:
+
+asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+
+ = Колбэки:
+
+- Вызвать soon:
+
+loop.call_soon(callback, arg)
+
+- Вызвать через delay секунд:
+
+loop.call_later(delay, callback, arg)
+
+- Вызвать в абсолютное время:
+
+loop.call_at(when, callback, arg)
+
+- Потокобезопасный вызов:
+
+loop.call_soon_threadsafe(callback, arg)
+
+
+ = Исполнители:
+
+- Запустить в executor:
+
+await loop.run_in_executor(None, func, arg)
+
+- Свой executor:
+
+from concurrent.futures import ThreadPoolExecutor
+executor = ThreadPoolExecutor(max_workers=4)
+await loop.run_in_executor(executor, func, arg)
+
+- Установить default executor:
+
+loop.set_default_executor(executor)
+
+
+
+	--- ЗАДАЧИ И КОРУТИНЫ ---
+
+ = Создание задач:
+
+- Создать задачу:
+
+task = asyncio.create_task(coro())
+
+- Обёртка над корутиной или future:
+
+task = asyncio.ensure_future(coro())
+
+- Создать задачу с именем:
+
+task = asyncio.create_task(coro(), name='my-task')
+
+- Получить текущую задачу:
+
+task = asyncio.current_task()
+
+- Получить все задачи:
+
+tasks = asyncio.all_tasks()
+
+
+ = Ожидание задач:
+
+- Ожидать одну задачу:
+
+result = await task
+
+- Ожидать несколько задач:
+
+results = await asyncio.gather(task1, task2)
+
+- gather с возвратом исключений:
+
+results = await asyncio.gather(task1, task2, return_exceptions=True)
+
+- Ожидать с условием:
+
+done, pending = await asyncio.wait([task1, task2], return_when=asyncio.FIRST_COMPLETED)
+
+- Асинхронный цикл по завершённым:
+
+for task in asyncio.as_completed([task1, task2]):
+    result = await task
+
+- Отменить задачу:
+
+task.cancel()
+
+- Проверить отмену:
+
+if task.cancelled():
+    ...
+
+- Проверить завершение:
+
+if task.done():
+    ...
+
+- Получить результат:
+
+result = task.result()
+
+- Получить исключение:
+
+exc = task.exception()
+
+- Добавить колбэк:
+
+task.add_done_callback(callback)
+
+
+ = TaskGroup (Python 3.11+):
+
+- Группа задач:
+
+async with asyncio.TaskGroup() as tg:
+    tg.create_task(coro1())
+    tg.create_task(coro2())
+# при выходе ждёт все задачи, при ошибке отменяет остальные
+
+
+ = Защита от отмены:
+
+- Защитить задачу от отмены:
+
+await asyncio.shield(task)
+
+
+
+	--- ТАЙМАУТЫ И ОТМЕНА ---
+
+ = Таймауты:
+
+- Ожидать с таймаутом:
+
+try:
+    result = await asyncio.wait_for(coro(), timeout=5)
+except asyncio.TimeoutError:
+    print('Таймаут')
+
+- Контекстный менеджер timeout (Python 3.11+):
+
+async with asyncio.timeout(5):
+    await coro()
+
+- timeout_at:
+
+async with asyncio.timeout_at(deadline):
+    await coro()
+
+
+ = Отмена:
+
+- Отменить задачу:
+
+task.cancel()
+
+- Обработать отмену:
+
+try:
+    await task
+except asyncio.CancelledError:
+    print('Отменено')
+    raise
+
+- Отменить все задачи:
+
+for task in asyncio.all_tasks():
+    task.cancel()
+
+
+ = Исключения:
+
+- asyncio.CancelledError:
+
+задача отменена.
+
+- asyncio.TimeoutError:
+
+истёк таймаут.
+
+- asyncio.InvalidStateError:
+
+неверное состояние future.
+
+- asyncio.QueueEmpty:
+
+очередь пуста.
+
+- asyncio.QueueFull:
+
+очередь переполнена.
+
+
+
+	--- СИНХРОНИЗАЦИЯ ---
+
+ = Lock:
+
+- Создать:
+
+lock = asyncio.Lock()
+
+- Захватить:
+
+async with lock:
+    ...
+
+- Вручную:
+
+await lock.acquire()
+try:
+    ...
+finally:
+    lock.release()
+
+
+ = Event:
+
+- Создать:
+
+event = asyncio.Event()
+
+- Установить:
+
+event.set()
+
+- Сбросить:
+
+event.clear()
+
+- Ожидать:
+
+await event.wait()
+
+
+ = Condition:
+
+- Создать:
+
+cond = asyncio.Condition()
+
+- Ожидать:
+
+async with cond:
+    await cond.wait()
+
+- Уведомить одного:
+
+async with cond:
+    cond.notify()
+
+- Уведомить всех:
+
+async with cond:
+    cond.notify_all()
+
+
+ = Semaphore:
+
+- Создать:
+
+sem = asyncio.Semaphore(10)
+
+- Захватить:
+
+async with sem:
+    ...
+
+- BoundedSemaphore:
+
+sem = asyncio.BoundedSemaphore(10)
+
+
+
+	--- ОЧЕРЕДИ ---
+
+ = Queue:
+
+- Создать:
+
+q = asyncio.Queue(maxsize=0)
+
+- Положить:
+
+await q.put(item)
+
+- Положить без ожидания:
+
+q.put_nowait(item)
+
+- Получить:
+
+item = await q.get()
+
+- Получить без ожидания:
+
+item = q.get_nowait()
+
+- Сообщить о выполнении:
+
+q.task_done()
+
+- Ждать все task_done:
+
+await q.join()
+
+- Размер:
+
+q.qsize()
+
+- Пуста:
+
+q.empty()
+
+- Полна:
+
+q.full()
+
+
+ = PriorityQueue:
+
+- Создать:
+
+q = asyncio.PriorityQueue()
+
+- Класть кортежи (priority, item):
+
+await q.put((1, 'важное'))
+
+
+ = LifoQueue:
+
+- Создать:
+
+q = asyncio.LifoQueue()
+
+
+
+	--- СЕТЬ И ПРОЦЕССЫ ---
+
+ = TCP-клиент:
+
+- Открыть соединение:
+
+reader, writer = await asyncio.open_connection('host', 12345)
+
+- Читать:
+
+data = await reader.read(100)
+line = await reader.readline()
+
+- Писать:
+
+writer.write(b'hello')
+await writer.drain()
+
+- Закрыть:
+
+writer.close()
+await writer.wait_closed()
+
+
+ = TCP-сервер:
+
+- Запустить сервер:
+
+async def handle(reader, writer):
+    data = await reader.read(100)
+    writer.write(data)
+    await writer.drain()
+    writer.close()
+
+server = await asyncio.start_server(handle, '127.0.0.1', 8888)
+
+- Обслуживать:
+
+async with server:
+    await server.serve_forever()
+
+
+ = Подпроцессы:
+
+- Запустить:
+
+proc = await asyncio.create_subprocess_exec(
+    'ls', '-l',
+    stdout=asyncio.subprocess.PIPE,
+    stderr=asyncio.subprocess.PIPE
+)
+
+- Запустить через shell:
+
+proc = await asyncio.create_subprocess_shell(
+    'ls -l | grep txt',
+    stdout=asyncio.subprocess.PIPE
+)
+
+- Общаться:
+
+stdout, stderr = await proc.communicate()
+
+- Ждать:
+
+returncode = await proc.wait()
+
+
+ = Синхронные функции:
+
+- Запустить в отдельном потоке:
+
+result = await asyncio.to_thread(func, arg)
+
+- Через executor:
+
+result = await loop.run_in_executor(None, func, arg)
+
+
+
+	--- УТИЛИТЫ И ОТЛАДКА ---
+
+ = sleep:
+
+- Спать:
+
+await asyncio.sleep(1)
+
+
+ = Текущее время:
+
+- Время цикла:
+
+loop.time()
+
+
+ = Отладка:
+
+- Включить режим отладки:
+
+loop.set_debug(True)
+
+- Проверить:
+
+loop.get_debug()
+
+- Порог медленного колбэка:
+
+loop.slow_callback_duration = 0.1
+
+
+ = Сигналы:
+
+- Добавить обработчик:
+
+loop.add_signal_handler(signal.SIGINT, callback)
+
+- Удалить:
+
+loop.remove_signal_handler(signal.SIGINT)
+
+
+ = Асинхронные генераторы и контексты:
+
+- Асинхронный генератор:
+
+async def agen():
+    yield 1
+    await asyncio.sleep(0)
+    yield 2
+
+async for x in agen():
+    print(x)
+
+- Асинхронный контекстный менеджер:
+
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def resource():
+    await setup()
+    try:
+        yield obj
+    finally:
+        await cleanup()
+
+async with resource() as obj:
+    ...
+
+
+ = Примеры:
+
+- Параллельный запуск:
+
+async def fetch(url):
+    await asyncio.sleep(1)
+    return url
+
+async def main():
+    results = await asyncio.gather(
+        fetch('a'),
+        fetch('b'),
+        fetch('c')
+    )
+    print(results)
+
+asyncio.run(main())
+
+- Таймаут:
+
+async def main():
+    try:
+        await asyncio.wait_for(asyncio.sleep(10), timeout=2)
+    except asyncio.TimeoutError:
+        print('Не успел')
+
+asyncio.run(main())
+
+- Очередь:
+
+async def worker(q):
+    while True:
+        item = await q.get()
+        print('Обработка', item)
+        q.task_done()
+
+async def main():
+    q = asyncio.Queue()
+    task = asyncio.create_task(worker(q))
+    for i in range(5):
+        await q.put(i)
+    await q.join()
+    task.cancel()
+
+asyncio.run(main())

@@ -18,16 +18,27 @@
     ├── gcc.txt
     ├── git.txt
     ├── python
+    │   ├── asyncio.txt
     │   ├── flask.txt
+    │   ├── http.txt
     │   ├── json.txt
     │   ├── path.txt
     │   ├── pyenv.txt
     │   ├── pyqt.txt
     │   ├── python.txt
+    │   ├── random.txt
     │   ├── re.txt
+    │   ├── secrets.txt
     │   ├── sqlite3.txt
+    │   ├── string.txt
+    │   ├── subprocess.txt
     │   └── tkinter.txt
     ├── sql.txt
-    └── unix.txt
+    ├── unix.txt
+    ├── zerotier-cli.txt
+    └── форматирование
+        ├── html.txt
+        ├── jinja2.txt
+        └── markdown.txt
 
-6 directories, 24 files
+7 directories, 34 files

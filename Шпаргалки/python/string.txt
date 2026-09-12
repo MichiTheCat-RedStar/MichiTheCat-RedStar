@@ -1,0 +1,218 @@
+	--- ОСНОВНЫЕ КОМАНДЫ STRING ---
+
+ = Константы:
+
+- ascii_letters: все ASCII буквы (a-z, A-Z)
+- ascii_lowercase: a-z
+- ascii_uppercase: A-Z
+- digits: 0-9
+- hexdigits: 0-9, a-f, A-F
+- octdigits: 0-7
+- punctuation: ASCII знаки пунктуации
+- printable: все печатные ASCII символы
+- whitespace: пробельные символы
+
+
+ = Функции:
+
+- capwords(s, sep=None): делает первую букву каждого слова заглавной, остальные строчными. По умолчанию разделитель — пробел.
+
+
+ = Класс Template:
+
+- Создание шаблона:
+
+from string import Template
+t = Template('Привет, $name!')
+t.substitute(name='Мир')
+
+- substitute: подставляет значения, выбрасывает KeyError при отсутствии ключа.
+- safe_substitute: не выбрасывает исключение, оставляет $key как есть.
+- get_identifiers(): возвращает список имён в шаблоне (Python 3.11+).
+- is_valid(): проверяет корректность шаблона (Python 3.11+).
+
+
+ = Класс Formatter:
+
+- Позволяет настраивать форматирование строк.
+- format(format_string, *args, **kwargs)
+- vformat(format_string, args, kwargs)
+- parse(format_string) — разбирает строку на литералы и поля.
+- get_field(field_name, args, kwargs)
+- get_value(key, args, kwargs)
+- check_unused_args(used_args, args, kwargs)
+- convert_field(value, conversion)
+- format_field(value, format_spec)
+
+
+
+	--- ПОЛНАЯ ШПАРГАЛКА ПО STRING ---
+
+ = Константы (подробно):
+
+- string.ascii_letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+- string.ascii_lowercase = 'abcdefghijklmnopqrstuvwxyz'
+- string.ascii_uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+- string.digits = '0123456789'
+- string.hexdigits = '0123456789abcdefABCDEF'
+- string.octdigits = '01234567'
+- string.punctuation = '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'
+- string.printable = digits + ascii_letters + punctuation + whitespace
+- string.whitespace = ' \t\n\r\x0b\x0c'
+
+
+ = Использование констант:
+
+- Сгенерировать пароль из букв и цифр:
+
+import string
+import secrets
+alphabet = string.ascii_letters + string.digits
+password = ''.join(secrets.choice(alphabet) for _ in range(12))
+
+- Проверить, является ли символ цифрой:
+
+if ch in string.digits:
+    print('Цифра')
+
+- Проверить, является ли символ печатным:
+
+if ch in string.printable:
+    print('Печатный')
+
+
+ = Функция capwords:
+
+- Сделать заголовок:
+
+import string
+string.capwords('hello world')  # 'Hello World'
+
+- С указанием разделителя:
+
+string.capwords('hello-world', sep='-')  # 'Hello-World'
+
+
+ = Template (шаблоны):
+
+- Импорт:
+
+from string import Template
+
+- Создание и подстановка:
+
+t = Template('$who любит $what')
+t.substitute(who='Аня', what='мороженое')
+# 'Аня любит мороженое'
+
+- Безопасная подстановка:
+
+t.safe_substitute(who='Аня')
+# 'Аня любит $what'
+
+- Именованные и позиционные:
+
+t = Template('$name: $value')
+t.substitute(name='Цвет', value='красный')
+
+- Экранирование $:
+
+t = Template('Цена: $$100')
+t.substitute()  # 'Цена: $100'
+
+- Проверка идентификаторов (Python 3.11+):
+
+t = Template('$name $age')
+t.get_identifiers()  # ['name', 'age']
+
+- Проверка корректности (Python 3.11+):
+
+t = Template('$name')
+t.is_valid()  # True
+
+- Некорректный шаблон:
+
+t = Template('$')
+t.is_valid()  # False
+
+ = Formatter (расширенное форматирование):
+
+- Импорт:
+
+from string import Formatter
+
+- Базовое использование:
+
+fmt = Formatter()
+fmt.format('{}, {}!', 'Привет', 'Мир')  # 'Привет, Мир!'
+
+- С именованными полями:
+
+fmt.format('{name} — {age}', name='Аня', age=25)
+
+- Разбор строки формата:
+
+list(fmt.parse('{name} — {age}'))
+# [('', 'name', '', None), (' — ', 'age', '', None), ('', None, None, None)]
+
+- Получить поле:
+
+fmt.get_field('name', (), {'name': 'Аня'})  # 'Аня'
+
+- Получить значение:
+
+fmt.get_value('name', (), {'name': 'Аня'})  # 'Аня'
+
+- Проверка неиспользованных аргументов:
+
+fmt.check_unused_args([], (), {'name': 'Аня'})  # None
+
+- Преобразование:
+
+fmt.convert_field('привет', 'upper')  # 'ПРИВЕТ'
+
+- Форматирование поля:
+
+fmt.format_field(42, '05d')  # '00042'
+
+
+ = Примеры:
+
+- Генерация случайной строки:
+
+import string
+import secrets
+''.join(secrets.choice(string.ascii_letters) for _ in range(10))
+
+- Валидация ввода:
+
+import string
+def is_hex(s):
+    return all(c in string.hexdigits for c in s)
+
+- Форматирование шаблона письма:
+
+from string import Template
+letter = Template('''
+Здравствуйте, $name!
+Ваш заказ №$order готов.
+''')
+print(letter.substitute(name='Иван', order='12345'))
+
+
+ = Совместимость и версии:
+
+- string.Template доступен с Python 2.4.
+- Template.get_identifiers() и is_valid() добавлены в Python 3.11.
+- string.capwords доступен с Python 2.0.
+- Все константы доступны во всех версиях Python 3.
+- Formatter доступен с Python 2.6.
+
+
+ = Замечания:
+
+- Модуль string не заменяет встроенные методы str.
+- Для большинства операций используйте методы строк: upper(), lower(), split(), join(), replace() и т.д.
+- Модуль string полезен для констант и Template.
+- Для сложного форматирования используйте f-строки или str.format().
+- Template удобен для пользовательских шаблонов, где не нужен полный синтаксис format.

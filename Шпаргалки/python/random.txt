@@ -1,0 +1,319 @@
+	--- ОСНОВНЫЕ КОМАНДЫ RANDOM ---
+
+ = Импорт и базовые функции:
+
+- Импорт модуля:
+
+import random
+
+
+- Случайное число с плавающей точкой от 0.0 до 1.0:
+
+random.random()
+
+
+- Случайное число с плавающей точкой в диапазоне [a, b]:
+
+random.uniform(a, b)
+
+
+- Случайное целое число в диапазоне [a, b] включительно:
+
+random.randint(a, b)
+
+
+- Случайное целое из range(start, stop, step):
+
+random.randrange(start, stop, step)
+
+
+- Случайный элемент из последовательности:
+
+random.choice(seq)
+
+
+- Несколько случайных элементов с заменой:
+
+random.choices(population, weights=None, k=1)
+
+
+- Несколько случайных элементов без замены:
+
+random.sample(population, k)
+
+
+- Перемешать последовательность на месте:
+
+random.shuffle(x)
+
+
+- Случайные байты:
+
+random.randbytes(n)
+
+
+ = Seed и состояние:
+
+- Установить seed:
+
+random.seed(a=None, version=2)
+
+
+- Получить состояние генератора:
+
+state = random.getstate()
+
+
+- Восстановить состояние:
+
+random.setstate(state)
+
+
+ = Распределения:
+
+- Гауссово распределение (mu, sigma):
+
+random.gauss(mu, sigma)
+
+
+- Нормальное распределение (mu, sigma):
+
+random.normalvariate(mu, sigma)
+
+
+- Экспоненциальное распределение (lambd):
+
+random.expovariate(lambd)
+
+
+- Гамма-распределение (alpha, beta):
+
+random.gammavariate(alpha, beta)
+
+
+- Бета-распределение (alpha, beta):
+
+random.betavariate(alpha, beta)
+
+
+- Логнормальное распределение (mu, sigma):
+
+random.lognormvariate(mu, sigma)
+
+
+- Распределение Вейбулла (alpha, beta):
+
+random.weibullvariate(alpha, beta)
+
+
+- Треугольное распределение (low, high, mode):
+
+random.triangular(low, high, mode)
+
+
+- Биномиальное распределение (n, p) — Python 3.12+:
+
+random.binomialvariate(n, p)
+
+
+- Распределение Парето (alpha):
+
+random.paretovariate(alpha)
+
+
+- Распределение фон Мизеса (mu, kappa):
+
+random.vonmisesvariate(mu, kappa)
+
+
+
+	--- ПОЛНАЯ ШПАРГАЛКА ПО RANDOM ---
+
+ = Генерация чисел:
+
+- Вещественное число [0.0, 1.0):
+
+random.random()
+
+
+- Вещественное число [a, b]:
+
+random.uniform(a, b)
+
+
+- Целое число [a, b]:
+
+random.randint(a, b)
+
+
+- Целое число из диапазона range(start, stop, step):
+
+random.randrange(start, stop, step)
+
+
+- Пример: случайное чётное от 0 до 10:
+
+random.randrange(0, 11, 2)
+
+
+ = Выбор из последовательностей:
+
+- Один случайный элемент:
+
+random.choice(['яблоко', 'банан', 'вишня'])
+
+
+- Несколько элементов с заменой (могут повторяться):
+
+random.choices(['a', 'b', 'c'], k=5)
+
+
+- С весами:
+
+random.choices(['a', 'b', 'c'], weights=[3, 2, 1], k=5)
+
+
+- Несколько уникальных элементов без замены:
+
+random.sample(range(100), 5)
+
+
+- Перемешивание списка на месте:
+
+cards = [1, 2, 3, 4, 5]
+random.shuffle(cards)
+
+
+- Случайные байты:
+
+random.randbytes(8)
+
+
+ = Seed и воспроизводимость:
+
+- Фиксация seed для повторяемости:
+
+random.seed(42)
+random.random()   # всегда одно и то же
+
+
+- Сохранение состояния:
+
+state = random.getstate()
+random.random()
+random.setstate(state)
+random.random()   # повтор предыдущего вызова
+
+
+ = Распределения (подробно):
+
+- Нормальное (гауссово):
+
+random.gauss(mu=0, sigma=1)
+
+
+- Нормальное (альтернатива):
+
+random.normalvariate(mu=0, sigma=1)
+
+
+- Экспоненциальное:
+
+random.expovariate(lambd=1.5)
+
+
+- Гамма:
+
+random.gammavariate(alpha=2, beta=1)
+
+
+- Бета:
+
+random.betavariate(alpha=2, beta=3)
+
+
+- Логнормальное:
+
+random.lognormvariate(mu=0, sigma=1)
+
+
+- Вейбулла:
+
+random.weibullvariate(alpha=1, beta=1.5)
+
+
+- Треугольное:
+
+random.triangular(low=0, high=10, mode=5)
+
+
+- Биномиальное (Python 3.12+):
+
+random.binomialvariate(n=10, p=0.5)
+
+
+- Парето:
+
+random.paretovariate(alpha=3)
+
+
+- Фон Мизеса:
+
+random.vonmisesvariate(mu=0, kappa=1)
+
+
+ = Примеры использования:
+
+- Бросание кубика:
+
+random.randint(1, 6)
+
+
+- Случайный пароль из букв:
+
+import string
+''.join(random.choices(string.ascii_letters + string.digits, k=12))
+
+
+- Выбор случайного имени:
+
+names = ['Аня', 'Боря', 'Вова', 'Галя']
+random.choice(names)
+
+
+- Перемешать колоду карт:
+
+deck = list(range(52))
+random.shuffle(deck)
+
+
+- Сгенерировать 10 чисел от 1 до 100:
+
+[random.randint(1, 100) for _ in range(10)]
+
+
+- Выбрать 3 уникальных числа из 100:
+
+random.sample(range(100), 3)
+
+
+- Случайное число с нормальным распределением:
+
+random.gauss(0, 1)
+
+
+ = Безопасность:
+
+- Модуль random не подходит для криптографии.
+- Для криптографически стойких чисел используйте secrets.
+- Mersenne Twister (основа random) предсказуем при достаточном количестве выходных данных.
+- Не используйте random для генерации паролей, токенов и ключей.
+
+
+ = Совместимость:
+
+- random.randbytes(n) — Python 3.9+.
+- random.binomialvariate(n, p) — Python 3.12+.
+- random.choices(population, weights, k) — Python 3.6+.
+- В Python 2 модуль назывался random, но имел отличия.
+- Для воспроизводимости между версиями Python используйте version=2 в seed.
