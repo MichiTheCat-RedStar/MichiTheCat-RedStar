@@ -4,6 +4,7 @@
 ├── Изображения
 │   └── БустиСсылка.png
 ├── Мысли.txt
+├── Ссылки.md
 ├── Теория Всего
 │   ├── Other
 │   │   ├── РабочийСтол.md
@@ -45,4 +46,4 @@
         ├── jinja2.txt
         └── markdown.txt
 
-8 directories, 37 files
+8 directories, 38 files
