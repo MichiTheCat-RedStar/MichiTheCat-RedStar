@@ -1,6 +1,8 @@
 .
 ├── ReadMe.md
 ├── Дерево.txt
+├── Изображения
+│   └── БустиСсылка.png
 ├── Мысли.txt
 ├── Теория Всего
 │   ├── Other
@@ -14,6 +16,7 @@
     ├── c
     │   ├── c.txt
     │   └── stdint.txt
+    ├── dnsmasq.txt
     ├── docker.txt
     ├── gcc.txt
     ├── git.txt
@@ -35,10 +38,11 @@
     │   └── tkinter.txt
     ├── sql.txt
     ├── unix.txt
+    ├── vnc.txt
     ├── zerotier-cli.txt
     └── форматирование
         ├── html.txt
         ├── jinja2.txt
         └── markdown.txt
 
-7 directories, 34 files
+8 directories, 37 files
