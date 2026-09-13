@@ -1,3 +1,35 @@
+	--- БЫСТРАЯ ШПАРГАЛКА ZEROTIER-CLI
+
+ = Подключение:
+
+- Инфо:
+
+sudo zerotier-cli info
+
+
+- Лист сетей:
+
+sudo zerotier-cli listnetworks
+
+
+- Подключение:
+
+sudo zerotier-cli join <Network ID>
+
+
+- Проверка:
+
+ping <ZeroTier IP>
+
+ip addr		# Все сети, если что
+
+
+- Управление:
+
+https://my.zerotier.com/network
+
+
+
 	--- ОСНОВНЫЕ КОМАНДЫ ZEROTIER-CLI ---
 
  = Синтаксис и запуск:
