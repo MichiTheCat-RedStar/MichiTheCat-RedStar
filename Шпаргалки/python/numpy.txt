@@ -1,0 +1,651 @@
+	--- ОСНОВНЫЕ КОМАНДЫ NUMPY ---
+
+ = Импорт и базовое:
+
+- Импорт:
+
+import numpy as np
+
+
+- Версия:
+
+np.__version__
+
+
+- Создание из списка:
+
+arr = np.array([1, 2, 3])
+
+
+- Двумерный массив:
+
+arr = np.array([[1, 2], [3, 4]])
+
+
+- Тип данных:
+
+arr.dtype
+
+
+- Форма:
+
+arr.shape
+
+
+
+	--- ПОЛНАЯ ШПАРГАЛКА ПО NUMPY ---
+
+ = Типы данных:
+
+- Основные целые:
+
+np.int8
+np.int16
+np.int32
+np.int64
+np.uint8
+np.uint16
+np.uint32
+np.uint64
+
+
+- Вещественные:
+
+np.float16
+np.float32
+np.float64
+
+
+- Комплексные:
+
+np.complex64
+np.complex128
+
+
+- Логический:
+
+np.bool_
+
+
+- Указать dtype при создании:
+
+np.array([1, 2, 3], dtype=np.float32)
+
+
+- Преобразовать тип:
+
+arr.astype(np.float64)
+
+
+- Границы типа:
+
+np.iinfo(np.int32)
+np.finfo(np.float64)
+
+
+ = Создание массивов:
+
+- Нули:
+
+np.zeros((3, 4))				# 3x4 float64
+np.zeros((2, 3), dtype=int)		# целые нули
+
+
+- Единицы:
+
+np.ones((2, 3))
+np.ones_like(arr)				# форма и dtype как у arr
+
+
+- Заполнить значением:
+
+np.full((2, 2), 7)
+np.full_like(arr, 3.14)
+
+
+- Пустой массив:
+
+np.empty((2, 2))
+
+
+- Диапазон:
+
+np.arange(0, 10, 2)				# [0 2 4 6 8]
+np.arange(5)					# [0 1 2 3 4]
+
+
+- Равномерные точки:
+
+np.linspace(0, 1, 5)			# 5 точек от 0 до 1 включительно
+
+
+- Единичная матрица:
+
+np.eye(3)						# 3x3
+np.identity(3)					# 3x3
+
+
+- Диагональ:
+
+np.diag([1, 2, 3])				# диагональная матрица
+np.diag(arr)					# извлечь диагональ
+
+
+ = Атрибуты массива:
+
+- Форма:
+
+arr.shape
+
+
+- Число измерений:
+
+arr.ndim
+
+
+- Число элементов:
+
+arr.size
+
+
+- Тип элементов:
+
+arr.dtype
+
+
+- Размер элемента в байтах:
+
+arr.itemsize
+
+
+- Всего байт:
+
+arr.nbytes
+
+
+- Транспонирование:
+
+arr.T
+
+
+- Вещественная и мнимая часть:
+
+arr.real
+arr.imag
+
+
+ = Оси:
+
+- axis=0:
+
+# свёртка по строкам, результат по столбцам
+
+
+- axis=1:
+
+# свёртка по столбцам, результат по строкам
+
+
+- axis=-1:
+
+# последняя ось
+
+
+ = Изменение формы:
+
+- Изменить форму:
+
+arr.reshape(2, 3)
+arr.reshape(-1)					# в одномерный
+
+
+- Развернуть в одномерный, представление:
+
+arr.ravel()
+
+
+- Развернуть в одномерный, копия:
+
+arr.flatten()
+
+
+- Транспонировать:
+
+arr.transpose()
+arr.T
+
+
+- Поменять оси:
+
+np.swapaxes(arr, 0, 1)
+
+
+- Добавить ось:
+
+np.expand_dims(arr, axis=0)
+arr[np.newaxis, :]
+
+
+- Убрать оси длины 1:
+
+np.squeeze(arr)
+
+
+- Изменить размер:
+
+np.resize(arr, (2, 3))				# новый массив
+arr.resize((2, 3), refcheck=False)	# in-place
+
+
+ = Индексация и срезы:
+
+- Элемент:
+
+arr[0]
+arr[1, 2]
+
+
+- Срез:
+
+arr[1:4]
+arr[:, 1]
+arr[::2]
+arr[::-1]						# реверс
+
+
+- Логическая маска:
+
+arr[arr > 0]
+arr[(arr > 0) & (arr < 10)]
+
+
+- Fancy indexing:
+
+arr[[0, 2, 4]]
+arr[[0, 1], [1, 0]]
+
+
+- np.where:
+
+np.where(arr > 0, arr, 0)		# заменить отрицательные на 0
+np.where(arr > 0)				# индексы, где условие истинно
+
+
+- Взять и положить:
+
+np.take(arr, [0, 2])
+np.put(arr, [0, 2], [10, 20])
+
+
+ = Операции и broadcasting:
+
+- Поэлементные:
+
+arr + 1
+arr - 2
+arr * 3
+arr / 4
+arr // 2
+arr % 3
+arr ** 2
+-arr
+
+
+- Сравнения:
+
+arr > 0
+arr == 0
+arr != 0
+arr >= 0
+
+
+- Логические:
+
+np.logical_and(a, b)
+np.logical_or(a, b)
+np.logical_not(a)
+np.logical_xor(a, b)
+
+
+- Матричное умножение:
+
+a @ b
+np.dot(a, b)
+np.matmul(a, b)
+
+
+- Поэлементное умножение:
+
+a * b
+
+
+- Broadcasting:
+
+a = np.array([[1], [2], [3]])	# shape (3,1)
+b = np.array([10, 20])			# shape (2,)
+a + b							# shape (3,2)
+
+
+ = Универсальные функции:
+
+- Математические:
+
+np.abs(arr)
+np.sqrt(arr)
+np.square(arr)
+np.exp(arr)
+np.log(arr)
+np.log10(arr)
+np.log2(arr)
+np.sin(arr)
+np.cos(arr)
+np.tan(arr)
+np.arcsin(arr)
+np.arccos(arr)
+np.arctan(arr)
+np.sinh(arr)
+np.cosh(arr)
+np.tanh(arr)
+
+
+- Округление:
+
+np.round(arr, 2)
+np.floor(arr)
+np.ceil(arr)
+np.trunc(arr)
+np.rint(arr)
+
+
+- Специальные:
+
+np.sign(arr)
+np.clip(arr, 0, 1)
+np.power(arr, 2)
+np.mod(arr, 3)
+np.remainder(arr, 3)
+
+
+ = Агрегация и статистика:
+
+- Сумма:
+
+arr.sum()
+arr.sum(axis=0)
+arr.sum(axis=1)
+
+
+- Среднее:
+
+arr.mean()
+np.mean(arr, axis=0)
+
+
+- Минимум и максимум:
+
+arr.min()
+arr.max()
+arr.argmin()
+arr.argmax()
+
+
+- Стандартное отклонение и дисперсия:
+
+arr.std()
+arr.var()
+np.std(arr, ddof=1)				# выборочное
+
+
+- Произведение и накопление:
+
+arr.prod()
+arr.cumsum()
+arr.cumprod()
+
+
+- Любой и все:
+
+arr.any()
+arr.all()
+np.any(arr > 0, axis=0)
+np.all(arr > 0, axis=1)
+
+
+- Медиана и процентили:
+
+np.median(arr)
+np.percentile(arr, 50)
+np.quantile(arr, 0.5)
+
+
+- Сортировка и уникальные:
+
+np.sort(arr)
+arr.sort()					# in-place
+np.argsort(arr)
+np.unique(arr, return_counts=True)
+
+
+ = Объединение и разделение:
+
+- Объединить:
+
+np.concatenate([a, b], axis=0)
+np.vstack([a, b])
+np.hstack([a, b])
+np.stack([a, b], axis=0)
+np.column_stack([a, b])
+np.dstack([a, b])
+
+
+- Разделить:
+
+np.split(arr, 3)
+np.hsplit(arr, 2)
+np.vsplit(arr, 2)
+np.array_split(arr, 3)
+
+
+- Повторить:
+
+np.repeat(arr, 3)
+np.tile(arr, 2)
+np.tile(arr, (2, 3))
+
+
+ = Линейная алгебра:
+
+- Импорт:
+
+from numpy.linalg import inv, det, eig, eigvals, solve, norm
+
+
+- Обратная матрица:
+
+np.linalg.inv(A)
+
+
+- Определитель:
+
+np.linalg.det(A)
+
+
+- Решить Ax = b:
+
+x = np.linalg.solve(A, b)
+
+
+- Собственные значения и векторы:
+
+vals, vecs = np.linalg.eig(A)
+vals = np.linalg.eigvals(A)
+
+
+- Норма:
+
+np.linalg.norm(v)				# евклидова
+np.linalg.norm(A, ord='fro')	# Фробениуса
+
+
+- Разложения:
+
+Q, R = np.linalg.qr(A)
+U, S, Vh = np.linalg.svd(A)
+L = np.linalg.cholesky(A)
+
+
+- Ранг:
+
+np.linalg.matrix_rank(A)
+
+
+- След:
+
+np.trace(A)
+
+
+- Матричная степень:
+
+np.linalg.matrix_power(A, 3)
+
+
+ = Случайные числа:
+
+- Новый генератор:
+
+rng = np.random.default_rng(seed=42)
+
+
+- Равномерное [0, 1):
+
+rng.random((2, 3))
+
+
+- Целые:
+
+rng.integers(0, 10, size=(2, 3))
+
+
+- Нормальное:
+
+rng.normal(loc=0, scale=1, size=(2, 3))
+
+
+- Равномерное [low, high):
+
+rng.uniform(low=0, high=1, size=10)
+
+
+- Выбор:
+
+rng.choice([1, 2, 3], size=5, replace=True)
+rng.choice([1, 2, 3], size=5, replace=False)
+
+
+- Перемешать и перестановка:
+
+rng.shuffle(arr)				# in-place
+rng.permutation(arr)
+
+
+- Старый API:
+
+np.random.seed(42)
+np.random.rand(2, 3)
+np.random.randn(2, 3)
+np.random.randint(0, 10, size=(2, 3))
+
+
+ = Файловый ввод и вывод:
+
+- Сохранить один массив:
+
+np.save('arr.npy', arr)
+
+
+- Загрузить:
+
+arr = np.load('arr.npy')
+
+
+- Сохранить несколько массивов:
+
+np.savez('data.npz', a=arr1, b=arr2)
+
+
+- Загрузить npz:
+
+data = np.load('data.npz')
+data['a']
+data['b']
+
+
+- Сохранить в текст:
+
+np.savetxt('arr.txt', arr, delimiter=',')
+
+
+- Загрузить из текста:
+
+arr = np.loadtxt('arr.txt', delimiter=',')
+
+
+- CSV с заголовком:
+
+np.genfromtxt('data.csv', delimiter=',', names=True)
+
+
+ = Полезное:
+
+- Печать без сокращений:
+
+np.set_printoptions(threshold=np.inf, precision=4, suppress=True)
+
+
+- Сравнение массивов:
+
+np.array_equal(a, b)
+np.allclose(a, b, rtol=1e-5, atol=1e-8)
+
+
+- Проверка NaN и Inf:
+
+np.isnan(arr)
+np.isinf(arr)
+np.isfinite(arr)
+
+
+- Поиск:
+
+np.searchsorted(sorted_arr, value)
+np.nonzero(arr)
+np.flatnonzero(arr)
+
+
+- Гистограмма:
+
+np.histogram(arr, bins=10)
+
+
+- Сетки:
+
+x = np.linspace(-1, 1, 100)
+y = np.linspace(-1, 1, 100)
+X, Y = np.meshgrid(x, y)
+
+
+- Индексация сетки:
+
+np.ix_([0, 1], [2, 3])
+
+
+- Копия и представление:
+
+arr.copy()						# копия
+arr.view()						# представление
+
+
+- Проверка памяти:
+
+np.shares_memory(a, b)
+a.base

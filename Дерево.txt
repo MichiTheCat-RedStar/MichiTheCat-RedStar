@@ -21,11 +21,14 @@
     ├── docker.txt
     ├── gcc.txt
     ├── git.txt
+    ├── math.txt
     ├── python
+    │   ├── ai.txt
     │   ├── asyncio.txt
     │   ├── flask.txt
     │   ├── http.txt
     │   ├── json.txt
+    │   ├── numpy.txt
     │   ├── path.txt
     │   ├── pyenv.txt
     │   ├── pyqt.txt
@@ -46,4 +49,4 @@
         ├── jinja2.txt
         └── markdown.txt
 
-8 directories, 38 files
+8 directories, 41 files
