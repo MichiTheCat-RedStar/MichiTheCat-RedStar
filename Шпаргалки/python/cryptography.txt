@@ -1,0 +1,758 @@
+	--- ОСНОВНЫЕ КОМАНДЫ CRYPTOGRAPHY ---
+
+ = Установка и импорт:
+
+- Установка:
+
+pip install cryptography
+
+
+- Версия:
+
+import cryptography
+cryptography.__version__
+
+
+- Основные импорты:
+
+from cryptography.fernet import Fernet
+from cryptography.hazmat.primitives import hashes, serialization, padding
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM, ChaCha20Poly1305
+from cryptography.hazmat.primitives.asymmetric import rsa, ec, padding as asym_padding
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
+from cryptography.hazmat.primitives.kdf.hkdf import HKDF
+from cryptography.x509 import load_pem_x509_certificate, load_pem_x509_certificates
+from cryptography.x509.oid import NameOID
+from cryptography.hazmat.backends import default_backend
+
+
+
+	--- FERNET (СИММЕТРИЧНОЕ ШИФРОВАНИЕ) ---
+
+ = Базовое использование:
+
+- Генерация ключа:
+
+key = Fernet.generate_key()			# 32 байта, URL-safe base64
+
+
+- Создание объекта:
+
+f = Fernet(key)
+
+
+- Шифрование:
+
+token = f.encrypt(b"secret message")# возвращает bytes
+
+
+- Расшифровка:
+
+plaintext = f.decrypt(token)		# возвращает исходные bytes
+plaintext.decode()					# в строку
+
+
+ = TTL (время жизни токена):
+
+- Шифрование с ограничением:
+
+token = f.encrypt(b"expires soon")
+
+
+- Расшифровка с проверкой возраста:
+
+f.decrypt(token, ttl=3600)			# ошибка, если токен старше 1 часа
+
+
+- Шифрование с явным временем (для тестов):
+
+f.encrypt_at_time(b"data", current_time=int(time.time()))
+
+
+ = Ротация ключей:
+
+- Несколько ключей:
+
+from cryptography.fernet import MultiFernet
+keys = [Fernet(key1), Fernet(key2)]
+mf = MultiFernet(keys)
+
+
+- Шифрование (первым ключом):
+
+token = mf.encrypt(b"data")
+
+
+- Расшифровка (любым из ключей):
+
+mf.decrypt(token)
+
+
+- Ротация:
+
+mf.rotate(token)					# перешифровать новым ключом
+
+
+ = Важно:
+
+- Ключ должен храниться в секрете.
+- Fernet использует AES-128-CBC + HMAC-SHA256.
+- Токен содержит метку времени в открытом виде.
+
+
+
+	--- СИММЕТРИЧНОЕ ШИФРОВАНИЕ (AES) ---
+
+ = AES-CBC (с PKCS7):
+
+- Генерация ключа и IV:
+
+key = os.urandom(32)				# 256 бит
+iv = os.urandom(16)					# 128 бит
+
+
+- Шифрование:
+
+padder = padding.PKCS7(128).padder()
+padded = padder.update(b"secret data") + padder.finalize()
+
+cipher = Cipher(algorithms.AES(key), modes.CBC(iv))
+encryptor = cipher.encryptor()
+ciphertext = encryptor.update(padded) + encryptor.finalize()
+
+
+- Расшифровка:
+
+cipher = Cipher(algorithms.AES(key), modes.CBC(iv))
+decryptor = cipher.decryptor()
+padded = decryptor.update(ciphertext) + decryptor.finalize()
+
+unpadder = padding.PKCS7(128).unpadder()
+plaintext = unpadder.update(padded) + unpadder.finalize()
+
+
+ = AES-GCM (аутентифицированное шифрование):
+
+- Генерация ключа:
+
+key = AESGCM.generate_key(bit_length=256)
+
+
+- Nonce:
+
+nonce = os.urandom(12)				# 96 бит, уникален для каждого шифрования
+
+
+- Дополнительные данные (AAD):
+
+aad = b"authenticated but not encrypted"
+
+
+- Шифрование:
+
+aesgcm = AESGCM(key)
+ciphertext = aesgcm.encrypt(nonce, b"secret", aad)
+
+
+- Расшифровка:
+
+plaintext = aesgcm.decrypt(nonce, ciphertext, aad)
+
+
+ = ChaCha20-Poly1305:
+
+- Генерация ключа:
+
+key = ChaCha20Poly1305.generate_key()
+
+
+- Шифрование:
+
+nonce = os.urandom(12)
+chacha = ChaCha20Poly1305(key)
+ciphertext = chacha.encrypt(nonce, b"secret data", None)
+
+
+- Расшифровка:
+
+plaintext = chacha.decrypt(nonce, ciphertext, None)
+
+
+ = Режимы шифрования:
+
+- CBC:
+
+modes.CBC(iv)						# требует padding
+
+
+- CTR:
+
+modes.CTR(iv)						# потоковый, без padding
+
+
+- GCM:
+
+modes.GCM(iv)						# аутентифицированный
+# или использовать AESGCM
+
+
+- OFB:
+
+modes.OFB(iv)
+
+
+- CFB:
+
+modes.CFB(iv)
+
+
+ = Важно:
+
+- IV / nonce должен быть уникальным для каждого шифрования.
+- GCM и ChaCha20-Poly1305 обеспечивают аутентификацию.
+- CBC без HMAC уязвим к padding oracle.
+
+
+
+	--- АСИММЕТРИЧНОЕ ШИФРОВАНИЕ (RSA) ---
+
+ = Генерация ключей:
+
+- Приватный ключ:
+
+private_key = rsa.generate_private_key(
+    public_exponent=65537,
+    key_size=4096,					# 2048, 3072, 4096
+    backend=default_backend()
+)
+
+
+- Публичный ключ:
+
+public_key = private_key.public_key()
+
+
+ = Шифрование и расшифровка:
+
+- Шифрование:
+
+ciphertext = public_key.encrypt(
+    b"secret message",
+    asym_padding.OAEP(
+        mgf=asym_padding.MGF1(algorithm=hashes.SHA256()),
+        algorithm=hashes.SHA256(),
+        label=None
+    )
+)
+
+
+- Расшифровка:
+
+plaintext = private_key.decrypt(
+    ciphertext,
+    asym_padding.OAEP(
+        mgf=asym_padding.MGF1(algorithm=hashes.SHA256()),
+        algorithm=hashes.SHA256(),
+        label=None
+    )
+)
+
+
+ = Сериализация ключей:
+
+- Приватный ключ в PEM (с паролем):
+
+pem_private = private_key.private_bytes(
+    encoding=serialization.Encoding.PEM,
+    format=serialization.PrivateFormat.PKCS8,
+    encryption_algorithm=serialization.BestAvailableEncryption(b"passphrase")
+)
+
+
+- Приватный ключ в PEM (без пароля):
+
+pem_private = private_key.private_bytes(
+    encoding=serialization.Encoding.PEM,
+    format=serialization.PrivateFormat.PKCS8,
+    encryption_algorithm=serialization.NoEncryption()
+)
+
+
+- Публичный ключ в PEM:
+
+pem_public = public_key.public_bytes(
+    encoding=serialization.Encoding.PEM,
+    format=serialization.PublicFormat.SubjectPublicKeyInfo
+)
+
+
+- Загрузка приватного ключа:
+
+loaded_private = serialization.load_pem_private_key(
+    pem_private,
+    password=b"passphrase",
+    backend=default_backend()
+)
+
+
+- Загрузка публичного ключа:
+
+loaded_public = serialization.load_pem_public_key(
+    pem_public,
+    backend=default_backend()
+)
+
+
+ = Важно:
+
+- RSA шифрует только небольшие объёмы (до ~190 байт для 2048 бит).
+- Для больших данных используйте гибридную схему (RSA + AES).
+- OAEP — рекомендуемая схема padding.
+
+
+
+	--- ХЕШИРОВАНИЕ ---
+
+ = Хеши:
+
+- SHA-256:
+
+digest = hashes.Hash(hashes.SHA256(), backend=default_backend())
+digest.update(b"data")
+digest.update(b"more data")
+hash_bytes = digest.finalize()
+
+
+- SHA-512:
+
+digest = hashes.Hash(hashes.SHA512(), backend=default_backend())
+
+
+- SHA3-256:
+
+digest = hashes.Hash(hashes.SHA3_256(), backend=default_backend())
+
+
+- BLAKE2b:
+
+digest = hashes.Hash(hashes.BLAKE2b(64), backend=default_backend())
+
+
+- SHA-1 (устаревший, только для совместимости):
+
+digest = hashes.Hash(hashes.SHA1(), backend=default_backend())
+
+
+- MD5 (устаревший, не для безопасности):
+
+digest = hashes.Hash(hashes.MD5(), backend=default_backend())
+
+
+ = HMAC:
+
+- HMAC-SHA256:
+
+h = hmac.HMAC(key, hashes.SHA256(), backend=default_backend())
+h.update(b"message")
+signature = h.finalize()
+
+
+- Проверка:
+
+h = hmac.HMAC(key, hashes.SHA256(), backend=default_backend())
+h.update(b"message")
+h.verify(signature)					# raises InvalidSignature
+
+
+ = Хеширование паролей (PBKDF2):
+
+- PBKDF2HMAC:
+
+kdf = PBKDF2HMAC(
+    algorithm=hashes.SHA256(),
+    length=32,
+    salt=salt,
+    iterations=600000,
+    backend=default_backend()
+)
+key = kdf.derive(b"password")
+
+
+- Проверка:
+
+kdf.verify(b"password", expected_key)
+
+
+ = Scrypt (лучше для паролей):
+
+- Scrypt:
+
+kdf = Scrypt(
+    salt=salt,
+    length=32,
+    n=2**14,
+    r=8,
+    p=1,
+    backend=default_backend()
+)
+key = kdf.derive(b"password")
+
+
+ = Важно:
+
+- Для паролей используйте PBKDF2, Scrypt или Argon2.
+- SHA-256 — для контрольных сумм и HMAC.
+- MD5 и SHA-1 небезопасны.
+
+
+
+	--- ЦИФРОВЫЕ ПОДПИСИ ---
+
+ = RSA подписи:
+
+- Генерация ключа:
+
+private_key = rsa.generate_private_key(
+    public_exponent=65537,
+    key_size=4096,
+    backend=default_backend()
+)
+public_key = private_key.public_key()
+
+
+- Подпись (PSS):
+
+signature = private_key.sign(
+    message,
+    asym_padding.PSS(
+        mgf=asym_padding.MGF1(hashes.SHA256()),
+        salt_length=asym_padding.PSS.MAX_LENGTH
+    ),
+    hashes.SHA256()
+)
+
+
+- Проверка:
+
+try:
+    public_key.verify(
+        signature,
+        message,
+        asym_padding.PSS(
+            mgf=asym_padding.MGF1(hashes.SHA256()),
+            salt_length=asym_padding.PSS.MAX_LENGTH
+        ),
+        hashes.SHA256()
+    )
+    print("Valid")
+except InvalidSignature:
+    print("Invalid")
+
+
+ = ECDSA подписи (меньше и быстрее):
+
+- Генерация ключа (P-256):
+
+private_key = ec.generate_private_key(
+    ec.SECP256R1(),
+    backend=default_backend()
+)
+public_key = private_key.public_key()
+
+
+- Подпись:
+
+signature = private_key.sign(message, ec.ECDSA(hashes.SHA256()))
+
+
+- Проверка:
+
+public_key.verify(signature, message, ec.ECDSA(hashes.SHA256()))
+
+
+ = EdDSA (Ed25519, современный):
+
+- Генерация:
+
+from cryptography.hazmat.primitives.asymmetric import ed25519
+private_key = ed25519.Ed25519PrivateKey.generate()
+public_key = private_key.public_key()
+
+
+- Подпись:
+
+signature = private_key.sign(message)
+
+
+- Проверка:
+
+public_key.verify(signature, message)
+
+
+ = Важно:
+
+- PSS — рекомендуемая схема для RSA.
+- ECDSA быстрее и короче RSA.
+- Ed25519 — современная альтернатива.
+
+
+
+	--- ПРОИЗВОДНЫЕ КЛЮЧИ (KDF) ---
+
+ = PBKDF2HMAC:
+
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+
+kdf = PBKDF2HMAC(
+    algorithm=hashes.SHA256(),
+    length=32,
+    salt=os.urandom(16),
+    iterations=600000,
+    backend=default_backend()
+)
+key = kdf.derive(b"password")
+
+
+ = Scrypt:
+
+from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
+
+kdf = Scrypt(
+    salt=os.urandom(16),
+    length=32,
+    n=2**14,
+    r=8,
+    p=1,
+    backend=default_backend()
+)
+key = kdf.derive(b"password")
+
+
+ = HKDF (для производных ключей из секретов):
+
+from cryptography.hazmat.primitives.kdf.hkdf import HKDF
+
+hkdf = HKDF(
+    algorithm=hashes.SHA256(),
+    length=32,
+    salt=None,
+    info=b"application context",
+    backend=default_backend()
+)
+key = hkdf.derive(shared_secret)
+
+
+ = Важно:
+
+- Для паролей: Scrypt или PBKDF2 с большим числом итераций.
+- Для производных ключей из DH: HKDF.
+
+
+
+	--- X.509 СЕРТИФИКАТЫ ---
+
+ = Загрузка:
+
+- Из PEM:
+
+cert = load_pem_x509_certificate(pem_data, default_backend())
+
+
+- Несколько сертификатов:
+
+certs = load_pem_x509_certificates(pem_data)
+
+
+- Из DER:
+
+cert = x509.load_der_x509_certificate(der_data, default_backend())
+
+
+ = Информация о сертификате:
+
+- Субъект:
+
+cert.subject
+
+
+- Издатель:
+
+cert.issuer
+
+
+- Серийный номер:
+
+cert.serial_number
+
+
+- Срок действия:
+
+cert.not_valid_before
+cert.not_valid_after
+
+
+- Публичный ключ:
+
+cert.public_key()
+
+
+- Отпечаток:
+
+cert.fingerprint(hashes.SHA256())
+
+
+- Расширения:
+
+cert.extensions
+
+
+- SAN (альтернативные имена):
+
+cert.extensions.get_extension_for_class(x509.SubjectAlternativeName).value
+
+
+ = Генерация самоподписанного сертификата:
+
+- Приватный ключ:
+
+key = rsa.generate_private_key(
+    public_exponent=65537,
+    key_size=2048,
+    backend=default_backend()
+)
+
+
+- Субъект:
+
+subject = issuer = x509.Name([
+    x509.NameAttribute(NameOID.COUNTRY_NAME, "US"),
+    x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, "California"),
+    x509.NameAttribute(NameOID.LOCALITY_NAME, "San Francisco"),
+    x509.NameAttribute(NameOID.ORGANIZATION_NAME, "My Company"),
+    x509.NameAttribute(NameOID.COMMON_NAME, "mycompany.com"),
+])
+
+
+- Сборка:
+
+cert = x509.CertificateBuilder()\
+    .subject_name(subject)\
+    .issuer_name(issuer)\
+    .public_key(key.public_key())\
+    .serial_number(x509.random_serial_number())\
+    .not_valid_before(datetime.datetime.utcnow())\
+    .not_valid_after(datetime.datetime.utcnow() + datetime.timedelta(days=365))\
+    .add_extension(
+        x509.SubjectAlternativeName([x509.DNSName("mycompany.com")]),
+        critical=False
+    )\
+    .sign(key, hashes.SHA256(), default_backend())
+
+
+- Сохранение:
+
+with open("cert.pem", "wb") as f:
+    f.write(cert.public_bytes(serialization.Encoding.PEM))
+
+
+ = Проверка цепочки:
+
+- Загрузка:
+
+from cryptography.x509 import load_pem_x509_certificate
+from cryptography.x509.verification import PolicyBuilder, Store
+
+peer = load_pem_x509_certificate(peer_pem)
+intermediate = load_pem_x509_certificate(intermediate_pem)
+root = load_pem_x509_certificate(root_pem)
+
+
+- Верификация:
+
+store = Store([root])
+builder = PolicyBuilder().store(store)
+verifier = builder.build_server_verifier(x509.DNSName("example.com"))
+verifier.verify(peer, [intermediate])
+
+
+ = Важно:
+
+- Всегда проверяйте срок действия.
+- Проверяйте цепочку до доверенного корня.
+- SAN — основной способ указания доменов.
+
+
+
+	--- УТИЛИТЫ И ПРИМЕРЫ ---
+
+ = Безопасное сравнение:
+
+import hmac
+hmac.compare_digest(a, b)			# защита от timing attacks
+
+
+- Случайные байты:
+
+os.urandom(32)						# криптостойкий
+
+
+- Кодирование:
+
+import base64
+base64.urlsafe_b64encode(data)
+base64.urlsafe_b64decode(encoded)
+
+
+- Hex:
+
+data.hex()
+bytes.fromhex(hex_string)
+
+
+- PEM/DER:
+
+serialization.Encoding.PEM
+serialization.Encoding.DER
+
+
+- Форматы приватных ключей:
+
+serialization.PrivateFormat.PKCS8
+serialization.PrivateFormat.TraditionalOpenSSL
+
+
+- Форматы публичных ключей:
+
+serialization.PublicFormat.SubjectPublicKeyInfo
+serialization.PublicFormat.PKCS1
+
+
+- Шифрование приватного ключа:
+
+serialization.BestAvailableEncryption(b"password")
+serialization.NoEncryption()
+
+
+- Проверка типа ключа:
+
+from cryptography.hazmat.primitives.asymmetric import rsa, ec, ed25519
+isinstance(key, rsa.RSAPrivateKey)
+isinstance(key, ec.EllipticCurvePrivateKey)
+isinstance(key, ed25519.Ed25519PrivateKey)
+
+
+- Размер ключа:
+
+key.key_size						# для RSA
+key.curve							# для EC
+
+
+- PEM-заголовки:
+
+-----BEGIN PRIVATE KEY-----
+-----BEGIN PUBLIC KEY-----
+-----BEGIN CERTIFICATE-----
+-----BEGIN RSA PRIVATE KEY-----
+-----BEGIN EC PRIVATE KEY-----
