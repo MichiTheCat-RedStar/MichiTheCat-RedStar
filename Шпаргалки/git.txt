@@ -49,6 +49,20 @@ git clone <url>
 git clone <url> <имя_папки>
 
 
+= Глобальные изменения:
+
+- Русские имена путей:
+
+git config --global core.quotepath false
+
+
+- Скрыть свои личные данные:
+
+git config --global user.name "username"
+git config --global user.email "12345678+username@users.noreply.github.com"
+git config --global user.useConfigOnly true
+
+
 
 	--- ПОЛНАЯ ШПАРГАЛКА ПО GIT ---
 
