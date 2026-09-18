@@ -20,7 +20,7 @@
 
 > Остальные проекты не так актуальны, они были написано ранее и давно перестали поддерживаться, тогда я был не таким опытным и в основном экспериментировал, например сейчас вместо отдельных репозиториев под разные тесты есть единое место: [Полигон](https://github.com/MichiTheCat-RedStar/Sandbox).
 
-## Купить мне кофе:
+## Поддержка:
 
 <!-- TeaWrongFormat:Start -->
 
@@ -104,4 +104,5 @@ QR код ведёт на страницу, где можно кинуть мн�
 
 ---
 
-_Все права принадлежат **[MichiThecat-RedStar](https://github.com/MichiTheCat-RedStar)** (c) 2026. & art by **[june the opossum](https://github.com/pupipu69)** :3_
+_Все права принадлежат **[MichiThecat-RedStar](https://github.com/MichiTheCat-RedStar)** (c) 2026._  
+_& art by **[june the opossum](https://github.com/pupipu69)** :3._
