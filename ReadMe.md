@@ -28,7 +28,7 @@
 
 <p align="center">
 	<a href="https://boosty.to/michithecat_redstar/donate">
-		<img src="./Изображения/БустиСсылка.png" alt="Boosty" title="Поддержать меня на Boosty." style="width: 100%;>
+		<img src="./Изображения/живчики.png" alt="Boosty" title="Поддержать меня на Boosty." style="width: 100%;>
 	</a>
 </p>
 
@@ -104,4 +104,4 @@ QR код ведёт на страницу, где можно кинуть мн�
 
 ---
 
-_Все права принадлежат **[MichiThecat-RedStar](https://github.com/MichiTheCat-RedStar)** (c) 2026._
+_Все права принадлежат **[MichiThecat-RedStar](https://github.com/MichiTheCat-RedStar)** (c) 2026. & art by **[june the opossum](https://github.com/pupipu69)** :3_
