@@ -28,7 +28,7 @@
 
 <p align="center">
 	<a href="https://boosty.to/michithecat_redstar/donate">
-		<img src="./Изображения/БустиСсылка.png" alt="Boosty" title="Поддержать меня на Boosty." width="250">
+		<img src="./Изображения/БустиСсылка.png" alt="Boosty" title="Поддержать меня на Boosty." style="width: 100%;>
 	</a>
 </p>
 
