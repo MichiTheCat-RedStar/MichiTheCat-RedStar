@@ -104,5 +104,5 @@ QR код ведёт на страницу, где можно кинуть мн�
 
 ---
 
-_Все права принадлежат **[MichiThecat-RedStar](https://github.com/MichiTheCat-RedStar)** (c) 2026._  
-_& art by **[june the opossum](https://github.com/pupipu69)** :3._
+_Все права принадлежат **[MichiTheCat-RedStar](https://github.com/MichiTheCat-RedStar)** (c) 2026._  
+_& art by **[June the opossum](https://github.com/pupipu69)** :3._
