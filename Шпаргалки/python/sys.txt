@@ -1,0 +1,517 @@
+	--- ОСНОВЫ SYS ---
+
+ = Импорт и базовое:
+
+- Импорт модуля:
+
+import sys
+
+
+- Вывод версии Python:
+
+print(sys.version)			# полная строка версии
+
+
+- Кортеж версии:
+
+print(sys.version_info)		# (major, minor, micro, releaselevel, serial)
+
+
+- Проверка версии:
+
+if sys.version_info >= (3, 10):
+	print("Python 3.10+")
+
+
+ = Аргументы командной строки:
+
+- Список аргументов:
+
+sys.argv					# [script.py, arg1, arg2, ...]
+
+
+- Имя скрипта:
+
+sys.argv[0]					# имя скрипта
+
+
+- Количество аргументов:
+
+len(sys.argv) - 1			# без имени скрипта
+
+
+- Оригинальные аргументы:
+
+sys.orig_argv				# полная командная строка (3.10+)
+
+
+
+	--- ЗАВЕРШЕНИЕ И ИСКЛЮЧЕНИЯ ---
+
+ = Завершение программы:
+
+- Выход с кодом 0:
+
+sys.exit(0)					# успешное завершение
+
+
+- Выход с кодом 1:
+
+sys.exit(1)					# ошибка
+
+
+- Выход с сообщением:
+
+sys.exit("Ошибка: ...")		# выводит сообщение в stderr и код 1
+
+
+- Выход без аргументов:
+
+sys.exit()					# код 0
+
+
+ = Исключения:
+
+- Информация о текущем исключении:
+
+try:
+	1 / 0
+except:
+	exc_type, exc_value, exc_tb = sys.exc_info()
+	print(exc_type, exc_value)
+
+
+- Последнее необработанное исключение:
+
+sys.last_type
+sys.last_value
+sys.last_traceback
+
+
+- Очистка последнего исключения:
+
+sys.exc_clear()				# удалено в Python 3
+
+
+ = Коды возврата:
+
+- Константы:
+
+sys.exit(0)					# успех
+sys.exit(1)					# общая ошибка
+sys.exit(2)					# неправильное использование командной строки
+
+
+
+	--- ПУТИ И МОДУЛИ ---
+
+ = Пути поиска модулей:
+
+- Список путей:
+
+sys.path					# список директорий для импорта
+
+
+- Добавить путь:
+
+sys.path.append("/my/modules")
+
+
+- Вставить в начало:
+
+sys.path.insert(0, "/my/modules")
+
+
+- Удалить путь:
+
+sys.path.remove("/my/modules")
+
+
+ = Загруженные модули:
+
+- Словарь модулей:
+
+sys.modules					# {имя: модуль}
+
+
+- Проверить загрузку:
+
+if "math" in sys.modules:
+	print("math загружен")
+
+
+- Удалить модуль из кеша:
+
+del sys.modules["mymodule"]
+
+
+ = Встроенные модули:
+
+- Список встроенных модулей:
+
+sys.builtin_module_names
+
+
+- Стандартная библиотека:
+
+sys.stdlib_module_names		# frozenset имён (3.10+)
+
+
+
+	--- ПОТОКИ ВВОДА/ВЫВОДА ---
+
+ = Стандартные потоки:
+
+- Стандартный ввод:
+
+sys.stdin					# файловый объект для чтения
+
+
+- Стандартный вывод:
+
+sys.stdout					# файловый объект для записи
+
+
+- Стандартный вывод ошибок:
+
+sys.stderr					# файловый объект для ошибок
+
+
+ = Чтение и запись:
+
+- Чтение строки:
+
+line = sys.stdin.readline()
+
+
+- Запись в stdout:
+
+sys.stdout.write("Hello\n")
+
+
+- Запись в stderr:
+
+print("Error", file=sys.stderr)
+
+
+ = Перенаправление:
+
+- Сохранить оригинальный stdout:
+
+original_stdout = sys.stdout
+
+
+- Перенаправить в файл:
+
+with open("output.txt", "w") as f:
+	sys.stdout = f
+	print("В файл")
+	sys.stdout = original_stdout	# вернуть обратно
+
+
+
+	--- ИНФОРМАЦИЯ О СИСТЕМЕ И ВЕРСИИ ---
+
+ = Платформа и интерпретатор:
+
+- Имя платформы:
+
+sys.platform			# 'linux', 'win32', 'darwin', ...
+
+
+- Исполняемый файл:
+
+sys.executable			# путь к python
+
+
+- Версия:
+
+sys.version
+sys.version_info
+sys.hexversion			# версия в hex
+
+
+- Реализация:
+
+sys.implementation		# например, CPython
+
+
+ = Кодировки:
+
+- Кодировка по умолчанию:
+
+sys.getdefaultencoding()	# обычно 'utf-8'
+
+
+- Кодировка файловой системы:
+
+sys.getfilesystemencoding()	# 'utf-8' или 'mbcs'
+
+
+- Кодировка стандартных потоков:
+
+sys.stdin.encoding
+sys.stdout.encoding
+sys.stderr.encoding
+
+
+ = Порядок байтов:
+
+- Порядок байтов:
+
+sys.byteorder			# 'little' или 'big'
+
+
+ = Размеры и лимиты:
+
+- Максимальное целое:
+
+sys.maxsize				# 2**63 - 1 на 64-бит
+
+
+- Максимальный Unicode:
+
+sys.maxunicode			# 1114111 (0x10FFFF)
+
+
+- Размер объекта:
+
+sys.getsizeof(obj)		# размер в байтах
+
+
+- Информация о float:
+
+sys.float_info			# именованный кортеж
+
+
+- Информация о int:
+
+sys.int_info			# именованный кортеж
+
+
+- Информация о хеше:
+
+sys.hash_info			# параметры хеширования
+
+
+- Информация о потоках:
+
+sys.thread_info			# именованный кортеж
+
+
+
+	--- РЕСУРСЫ И ЛИМИТЫ ---
+
+ = Лимиты рекурсии:
+
+- Получить лимит:
+
+sys.getrecursionlimit()		# по умолчанию 1000
+
+
+- Установить лимит:
+
+sys.setrecursionlimit(2000)
+
+
+ = Переключение потоков:
+
+- Интервал переключения:
+
+sys.getswitchinterval()		# по умолчанию 0.005
+
+
+- Установить интервал:
+
+sys.setswitchinterval(0.01)
+
+
+ = Сборка мусора и память:
+
+- Количество выделенных блоков:
+
+sys.getallocatedblocks()
+
+
+- Счётчик ссылок:
+
+sys.getrefcount(obj)		# обычно на 1 больше
+
+
+- Интернирование строк:
+
+sys.intern("строка")		# для быстрого сравнения
+
+
+ = Ограничение длины int:
+
+- Получить лимит:
+
+sys.get_int_max_str_digits()# по умолчанию 4300 (3.11+)
+
+
+- Установить лимит:
+
+sys.set_int_max_str_digits(10000)
+
+
+
+	--- ОТЛАДКА И ПРОФИЛИРОВАНИЕ ---
+
+ = Трассировка:
+
+- Установить трассировку:
+
+def trace(frame, event, arg):
+	print(event, frame.f_code.co_name)
+	return trace
+
+sys.settrace(trace)
+
+
+- Отключить трассировку:
+
+sys.settrace(None)
+
+
+ = Профилирование:
+
+- Установить профилировщик:
+
+def profile(frame, event, arg):
+	pass
+
+sys.setprofile(profile)
+
+
+- Отключить профилировщик:
+
+sys.setprofile(None)
+
+
+ = Отладочный хук:
+
+- Точка останова:
+
+sys.breakpointhook()		# вызывается breakpoint()
+
+
+ = Аудит:
+
+- Добавить хук аудита:
+
+def audit_hook(event, args):
+	print(event, args)
+
+sys.addaudithook(audit_hook)
+
+
+- Вызвать событие аудита:
+
+sys.audit("my_event", "arg")
+
+
+
+	--- НАСТРОЙКИ ИНТЕРПРЕТАТОРА ---
+
+ = Флаги:
+
+- Флаги командной строки:
+
+sys.flags					# именованный кортеж
+
+
+- Флаги предупреждений:
+
+sys.warnoptions
+
+
+ = Запись байт-кода:
+
+- Отключить запись .pyc:
+
+sys.dont_write_bytecode = True
+
+
+- Префикс для __pycache__:
+
+sys.pycache_prefix = "/tmp/pycache"	# 3.8+
+
+
+ = Опции:
+
+- Опции -X:
+
+sys._xoptions				# словарь
+
+
+- Финальная стадия:
+
+sys.is_finalizing()			# True, если интерпретатор завершается
+
+
+ = Информация о Windows:
+
+- Версия Windows:
+
+sys.getwindowsversion()		# только Windows
+
+
+ = Информация о Android:
+
+- Уровень API Android:
+
+sys.getandroidapilevel()	# только Android
+
+
+
+	--- РАЗНОЕ ---
+
+ = Взаимодействие с C:
+
+- Версия C API:
+
+sys.api_version
+
+
+- Кодировка по умолчанию для C:
+
+sys.getdefaultencoding()
+
+
+ = Потоки и корутины:
+
+- Отслеживание корутин:
+
+sys.get_coroutine_origin_tracking_depth()
+sys.set_coroutine_origin_tracking_depth(10)
+
+
+- Асинхронные генераторы:
+
+sys.get_asyncgen_hooks()
+sys.set_asyncgen_hooks(firstiter, finalizer)
+
+
+ = Мониторинг (3.12+):
+
+- Инструменты мониторинга:
+
+sys.monitoring				# доступ к API мониторинга
+
+
+ = Прочее:
+
+- Версия Python в виде строки:
+
+sys.version
+
+
+- Выход из программы:
+
+sys.exit()
+
+
+- Принудительный выход:
+
+raise SystemExit(0)

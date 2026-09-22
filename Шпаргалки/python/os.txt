@@ -1,0 +1,684 @@
+	--- ОСНОВЫ OS ---
+
+ = Импорт и базовое:
+
+- Импорт:
+
+import os
+
+
+- Информация о ОС:
+
+os.name			# 'posix', 'nt', 'java'
+os.sep			# разделитель пути: '/' или '\\'
+os.altsep		# альтернативный разделитель
+os.pathsep		# разделитель путей: ':' или ';'
+os.linesep		# разделитель строк
+os.curdir		# текущая директория: '.'
+os.pardir		# родительская: '..'
+os.extsep		# расширение: '.'
+os.devnull		# нулевое устройство: '/dev/null' или 'nul'
+
+
+ = Переменные окружения:
+
+- Получить переменную:
+
+os.environ['HOME']					# KeyError, если нет
+os.environ.get('HOME', '/tmp')		# безопасно
+os.getenv('HOME', '/tmp')			# то же самое
+
+
+- Установить переменную:
+
+os.environ['MYVAR'] = 'value'
+
+
+- Удалить переменную:
+
+del os.environ['MYVAR']
+os.environ.pop('MYVAR', None)
+
+
+- Проверить наличие:
+
+'PATH' in os.environ
+
+
+- Все переменные:
+
+os.environ						# словарь
+os.environ.copy()				# копия
+
+
+- Низкоуровневые функции:
+
+os.putenv('MYVAR', 'value')		# не обновляет os.environ
+os.unsetenv('MYVAR')
+
+
+ = Текущая директория:
+
+- Получить:
+
+os.getcwd()
+
+
+- Сменить:
+
+os.chdir('/path/to/dir')
+
+
+- Безопасная смена:
+
+try:
+	os.chdir(path)
+except OSError as e:
+	print(f"Ошибка: {e}")
+
+
+- Абсолютный путь:
+
+os.path.abspath('file.txt')
+
+
+- Относительный путь от cwd:
+
+os.path.relpath('/other/path')
+
+
+
+	--- РАБОТА С ПУТЯМИ (OS.PATH) ---
+
+ = Основные операции:
+
+- Соединить:
+
+os.path.join('dir', 'file.txt')
+os.path.join('a', 'b', 'c')		# 'a/b/c'
+
+
+- Разделить:
+
+os.path.split('/path/file.txt')		# ('/path', 'file.txt')
+os.path.splitext('file.txt')		# ('file', '.txt')
+
+
+- Базовое имя:
+
+os.path.basename('/path/file.txt')	# 'file.txt'
+
+
+- Директория:
+
+os.path.dirname('/path/file.txt')	# '/path'
+
+
+- Нормализовать:
+
+os.path.normpath('dir/../file.txt')
+
+
+- Реальный путь:
+
+os.path.realpath('/path/link')		# разрешает симлинки
+
+
+ = Проверки:
+
+- Существует:
+
+os.path.exists(path)
+
+
+- Это файл:
+
+os.path.isfile(path)
+
+
+- Это директория:
+
+os.path.isdir(path)
+
+
+- Это ссылка:
+
+os.path.islink(path)
+
+
+- Это точка монтирования:
+
+os.path.ismount(path)
+
+
+- Абсолютный ли:
+
+os.path.isabs(path)
+
+
+ = Время и размер:
+
+- Время доступа:
+
+os.path.getatime(path)
+
+
+- Время модификации:
+
+os.path.getmtime(path)
+
+
+- Время создания:
+
+os.path.getctime(path)
+
+
+- Размер:
+
+os.path.getsize(path)
+
+
+ = Сравнение и прочее:
+
+- Общий путь:
+
+os.path.commonpath(['/a/b', '/a/c'])	# '/a'
+
+
+- Общий префикс:
+
+os.path.commonprefix(['/a/b', '/a/c'])	# '/a/'
+
+
+- Развернуть ~:
+
+os.path.expanduser('~/file')
+
+
+- Развернуть переменные:
+
+os.path.expandvars('$HOME/file')
+
+
+
+	--- ФАЙЛЫ И ДИРЕКТОРИИ ---
+
+ = Создание:
+
+- Создать директорию:
+
+os.mkdir('dir')
+
+
+- Создать директории рекурсивно:
+
+os.makedirs('a/b/c', exist_ok=True)
+
+
+- Создать файл:
+
+open('file.txt', 'w').close()
+fd = os.open('file.txt', os.O_CREAT | os.O_WRONLY, 0o644)
+os.close(fd)
+
+
+- Создать симлинк:
+
+os.symlink('target', 'link')
+
+
+- Создать жёсткую ссылку:
+
+os.link('src', 'dst')
+
+
+ = Удаление:
+
+- Удалить файл:
+
+os.remove('file.txt')			# или os.unlink
+
+
+- Удалить пустую директорию:
+
+os.rmdir('dir')
+
+
+- Удалить директорию рекурсивно:
+
+import shutil
+shutil.rmtree('dir')
+
+
+- Удалить ссылку:
+
+os.unlink('link')
+
+
+- Переименовать:
+
+os.rename('old', 'new')
+
+
+- Переместить с перезаписью:
+
+os.replace('old', 'new')		# атомарно
+
+
+ = Чтение директории:
+
+- Список файлов:
+
+os.listdir('.')					# имена
+
+
+- Скандир:
+
+with os.scandir('.') as it:
+	for entry in it:
+		print(entry.name, entry.is_file())
+
+
+- Рекурсивный обход:
+
+for root, dirs, files in os.walk('.'):
+	print(root, dirs, files)
+
+
+- Статистика:
+
+os.stat('file')
+os.lstat('link')				# не следует по ссылке
+
+
+ = Права доступа:
+
+- Изменить права:
+
+os.chmod('file', 0o755)
+
+
+- Изменить владельца:
+
+os.chown('file', uid, gid)
+
+
+- Получить/установить маску:
+
+old = os.umask(0o022)
+os.umask(old)
+
+
+
+	--- ПРОЦЕССЫ И СИСТЕМА ---
+
+ = Запуск команд:
+
+- Выполнить команду:
+
+os.system('ls -la')			# возвращает код
+
+
+- Запустить и заменить процесс:
+
+os.execvp('ls', ['ls', '-la'])
+os.execv('/bin/ls', ['ls', '-la'])
+
+
+- Порождать процесс:
+
+pid = os.fork()				# Unix
+if pid == 0:
+	print("Дочерний")
+else:
+	os.waitpid(pid, 0)
+
+
+ = Идентификаторы:
+
+- PID:
+
+os.getpid()
+
+
+- PPID:
+
+os.getppid()
+
+
+- UID/GID:
+
+os.getuid(), os.getgid()
+os.geteuid(), os.getegid()
+
+
+- Группы:
+
+os.getgroups()
+
+
+- Имя пользователя:
+
+import getpass
+getpass.getuser()
+
+
+ = Завершение:
+
+- Немедленный выход:
+
+os._exit(0)					# без очистки
+
+
+- Убить процесс:
+
+import signal
+os.kill(pid, signal.SIGTERM)
+
+
+- Проверить существование:
+
+os.kill(pid, 0)
+
+
+ = Информация о системе:
+
+- Загрузка CPU:
+
+os.getloadavg()				# Unix
+
+
+- Количество CPU:
+
+os.cpu_count()
+
+
+- Имя узла:
+
+os.uname()					# Unix
+
+
+- Размер терминала:
+
+os.get_terminal_size()
+
+
+- Случайные байты:
+
+os.urandom(16)
+
+
+
+	--- ФАЙЛОВЫЕ ДЕСКРИПТОРЫ (LOW-LEVEL) ---
+
+ = Открытие и закрытие:
+
+- Открыть:
+
+fd = os.open('file.txt', os.O_RDONLY)
+
+
+- Закрыть:
+
+os.close(fd)
+
+
+- Чтение:
+
+data = os.read(fd, 1024)
+
+
+- Запись:
+
+os.write(fd, b'hello')
+
+
+- Смещение:
+
+os.lseek(fd, 0, os.SEEK_SET)
+
+
+ = Флаги:
+
+- Режимы:
+
+os.O_RDONLY
+os.O_WRONLY
+os.O_RDWR
+
+
+- Создание и усечение:
+
+os.O_CREAT
+os.O_EXCL
+os.O_TRUNC
+os.O_APPEND
+
+
+- Пример:
+
+fd = os.open('file.txt', os.O_CREAT | os.O_WRONLY, 0o644)
+
+
+ = Дублирование:
+
+- Дублировать:
+
+new_fd = os.dup(fd)
+
+
+- Дублировать на номер:
+
+os.dup2(fd, new_fd)
+
+
+- Наследование:
+
+os.set_inheritable(fd, True)
+os.get_inheritable(fd)
+
+
+ = Файловая система:
+
+- Синхронизировать:
+
+os.fsync(fd)
+
+
+- Обрезать:
+
+os.ftruncate(fd, 100)
+
+
+- Статистика:
+
+os.fstat(fd)
+
+
+- Сменить права:
+
+os.fchmod(fd, 0o644)
+
+
+
+	--- ПРАВА ДОСТУПА И СТАТИСТИКА ---
+
+ = stat:
+
+- Получить:
+
+st = os.stat('file')
+
+
+- Поля:
+
+st.st_mode		# тип и права
+st.st_ino		# inode
+st.st_dev		# устройство
+st.st_nlink		# число ссылок
+st.st_uid		# владелец
+st.st_gid		# группа
+st.st_size		# размер
+st.st_atime		# время доступа
+st.st_mtime		# время модификации
+st.st_ctime		# время изменения
+
+
+ = Проверка прав:
+
+- Чтение:
+
+os.access('file', os.R_OK)
+
+
+- Запись:
+
+os.access('file', os.W_OK)
+
+
+- Выполнение:
+
+os.access('file', os.X_OK)
+
+
+- Существование:
+
+os.access('file', os.F_OK)
+
+
+ = Константы:
+
+os.R_OK
+os.W_OK
+os.X_OK
+os.F_OK
+
+
+
+	--- СИМВОЛЬНЫЕ ССЫЛКИ ---
+
+ = Создание и чтение:
+
+- Создать:
+
+os.symlink('target', 'link')
+
+
+- Прочитать:
+
+os.readlink('link')
+
+
+- Удалить:
+
+os.unlink('link')
+
+
+- Проверить:
+
+os.path.islink('link')
+
+
+- Реальный путь:
+
+os.path.realpath('link')
+
+
+
+	--- РАЗНОЕ ---
+
+ = Терминал:
+
+- Размер:
+
+os.get_terminal_size()
+
+
+- Имя терминала:
+
+os.ttyname(fd)
+
+
+- Открыть псевдотерминал:
+
+os.openpty()				# Unix
+
+
+ = Пользователи и группы:
+
+- Имя пользователя по uid:
+
+import pwd
+pwd.getpwuid(os.getuid()).pw_name
+
+
+- Группа по gid:
+
+import grp
+grp.getgrgid(os.getgid()).gr_name
+
+
+ = Случайность:
+
+- Байты:
+
+os.urandom(16)
+
+
+- Флаг:
+
+os.getrandom(16, os.GRND_RANDOM)
+
+
+ = Синхронизация:
+
+- Сбросить буферы:
+
+os.sync()					# Unix
+
+
+- Синхронизировать файл:
+
+os.fsync(fd)
+
+
+- Синхронизировать директорию:
+
+os.fsync(dir_fd)
+
+
+ = Платформенные:
+
+- Имя ОС:
+
+os.name
+
+
+- Unix:
+
+os.uname()
+os.fork()
+os.getuid()
+
+
+- Windows:
+
+os.getwindowsversion()
+os.startfile('file.txt')	# открыть файл
+
+
+ = Окружение:
+
+- Полный словарь:
+
+os.environ
+
+
+- Копия:
+
+os.environ.copy()
+
+
+- Обновить:
+
+os.environ.update({'KEY': 'VALUE'})
