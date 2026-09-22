@@ -1,0 +1,325 @@
+	--- ОСНОВЫ ZLIB (PYTHON) ---
+
+ = Базовое сжатие и распаковка:
+
+- Сжать байты:
+
+import zlib
+
+data = b"Hello, zlib!"
+compressed = zlib.compress(data)			# уровень по умолчанию (-1)
+
+
+- Распаковать байты:
+
+decompressed = zlib.decompress(compressed)	# decompressed == data
+
+
+- Указать уровень сжатия:
+
+compressed_fast = zlib.compress(data, level=1)	# Z_BEST_SPEED
+compressed_best = zlib.compress(data, level=9)	# Z_BEST_COMPRESSION
+compressed_none = zlib.compress(data, level=0)	# Z_NO_COMPRESSION
+compressed_def = zlib.compress(data, level=-1)	# Z_DEFAULT_COMPRESSION
+
+
+- Работа со строками:
+
+text = "Привет, мир!"
+encoded = text.encode("utf-8")				# str -> bytes
+compressed = zlib.compress(encoded)			# сжатие
+decompressed = zlib.decompress(compressed)	# bytes -> bytes
+decoded = decompressed.decode("utf-8")		# bytes -> str
+
+
+ = Потоковое сжатие:
+
+- Создать объект сжатия:
+
+compressor = zlib.compressobj(
+	level=9,							# уровень сжатия
+	method=zlib.DEFLATED,				# метод
+	wbits=zlib.MAX_WBITS,				# размер окна
+	memLevel=zlib.DEF_MEM_LEVEL,		# уровень памяти
+	strategy=zlib.Z_DEFAULT_STRATEGY	# стратегия
+)
+
+
+- Сжать по частям:
+
+part1 = compressor.compress(b"Hello, ")
+part2 = compressor.compress(b"world!")
+final = compressor.flush()				# завершить поток
+
+compressed_stream = part1 + part2 + final
+
+
+- Создать объект распаковки:
+
+decompressor = zlib.decompressobj(wbits=zlib.MAX_WBITS)
+
+
+- Распаковать по частям:
+
+decompressed1 = decompressor.decompress(part1)
+decompressed2 = decompressor.decompress(part2)
+decompressed3 = decompressor.flush()	# завершить поток
+
+original = decompressed1 + decompressed2 + decompressed3
+
+
+- Проверить завершение потока:
+
+if decompressor.eof:
+	print("Поток распакован полностью")
+
+
+
+	--- КОНТРОЛЬНЫЕ СУММЫ ---
+
+ = CRC32:
+
+- Вычислить CRC32:
+
+checksum = zlib.crc32(data)				# 32-битное беззнаковое число
+print(hex(checksum))
+
+
+- Инкрементальный CRC32:
+
+crc = 0
+for chunk in [b"Hello, ", b"world!"]:
+	crc = zlib.crc32(chunk, crc)		# начальное значение 0
+print(hex(crc))
+
+
+ = Adler-32:
+
+- Вычислить Adler-32:
+
+checksum = zlib.adler32(data)			# быстрее CRC32, но менее надёжен
+print(hex(checksum))
+
+
+- Инкрементальный Adler-32:
+
+adler = 1					# начальное значение по умолчанию
+for chunk in [b"Hello, ", b"world!"]:
+	adler = zlib.adler32(chunk, adler)
+print(hex(adler))
+
+
+- Сравнение:
+
+zlib.crc32(data)	# CRC-32
+zlib.adler32(data)	# Adler-32
+
+
+
+	--- УРОВНИ СЖАТИЯ И ПАРАМЕТРЫ ---
+
+ = Уровни сжатия:
+
+- Z_NO_COMPRESSION (0):
+
+zlib.compress(data, level=zlib.Z_NO_COMPRESSION)		# без сжатия
+
+
+- Z_BEST_SPEED (1):
+
+zlib.compress(data, level=zlib.Z_BEST_SPEED)			# максимальная скорость
+
+
+- Z_BEST_COMPRESSION (9):
+
+zlib.compress(data, level=zlib.Z_BEST_COMPRESSION)		# максимальное сжатие
+
+
+- Z_DEFAULT_COMPRESSION (-1):
+
+zlib.compress(data, level=zlib.Z_DEFAULT_COMPRESSION)	# баланс, уровень 6
+
+
+ = Параметр wbits:
+
+- +9 ... +15 (zlib-формат):
+
+zlib.compress(data, wbits=zlib.MAX_WBITS)			# 15 по умолчанию
+
+
+- -9 ... -15 (raw deflate):
+
+zlib.compress(data, wbits=-zlib.MAX_WBITS)			# без заголовка
+
+
+- +25 ... +31 (gzip-формат):
+
+zlib.compress(data, wbits=zlib.MAX_WBITS | 16)		# совместимо с gzip
+
+
+- MAX_WBITS:
+
+print(zlib.MAX_WBITS)								# 15
+
+
+ = Стратегии сжатия:
+
+- Z_DEFAULT_STRATEGY:
+
+zlib.compressobj(strategy=zlib.Z_DEFAULT_STRATEGY)	# обычные данные
+
+
+- Z_FILTERED:
+
+zlib.compressobj(strategy=zlib.Z_FILTERED)			# данные после фильтра
+
+
+- Z_HUFFMAN_ONLY:
+
+zlib.compressobj(strategy=zlib.Z_HUFFMAN_ONLY)		# только Хаффман
+
+
+- Z_RLE:
+
+zlib.compressobj(strategy=zlib.Z_RLE)				# RLE-сжатие, для PNG
+
+
+- Z_FIXED:
+
+zlib.compressobj(strategy=zlib.Z_FIXED)				# запрет динамических кодов
+
+
+
+	--- РАБОТА С ФАЙЛАМИ ---
+
+ = Сжатие и запись:
+
+- Сжать и записать в файл:
+
+data = b"Данные для сжатия" * 1000
+
+with open("file.bin", "wb") as f:
+	compressed = zlib.compress(data, level=9)
+	f.write(compressed)
+
+
+- Прочитать и распаковать:
+
+with open("file.bin", "rb") as f:
+	compressed = f.read()
+
+decompressed = zlib.decompress(compressed)
+
+
+ = Потоковая запись:
+
+- Записать большой файл:
+
+CHUNK_SIZE = 1024 * 1024		# 1 МБ
+
+compressor = zlib.compressobj(level=9)
+
+with open("input.bin", "rb") as fin, \
+     open("output.zlib", "wb") as fout:
+	while chunk := fin.read(CHUNK_SIZE):
+		compressed_chunk = compressor.compress(chunk)
+		fout.write(compressed_chunk)
+	fout.write(compressor.flush())
+
+
+- Прочитать большой файл:
+
+decompressor = zlib.decompressobj()
+
+with open("output.zlib", "rb") as fin, \
+     open("restored.bin", "wb") as fout:
+	while chunk := fin.read(CHUNK_SIZE):
+		decompressed_chunk = decompressor.decompress(chunk)
+		fout.write(decompressed_chunk)
+	fout.write(decompressor.flush())
+
+
+
+	--- ОБРАБОТКА ОШИБОК ---
+
+ = Исключение zlib.error:
+
+- Перехват ошибки распаковки:
+
+try:
+	zlib.decompress(b"invalid data")
+except zlib.error as e:
+	print(f"Ошибка распаковки: {e}")
+
+
+ = Безопасная распаковка:
+
+- Вернуть None при ошибке:
+
+def safe_decompress(data):
+	try:
+		return zlib.decompress(data)
+	except zlib.error:
+		return None
+
+
+- Проверка контрольной суммы:
+
+try:
+	decompressed = zlib.decompress(compressed)
+	# zlib автоматически проверяет Adler-32
+except zlib.error as e:
+	print(f"Данные повреждены: {e}")
+
+
+
+	--- ПОЛЕЗНЫЕ ЗАМЕТКИ ---
+
+ = Совместимость с gzip:
+
+- Чтение .gz через модуль gzip:
+
+import gzip
+
+with gzip.open("file.gz", "rb") as f:
+	data = f.read()
+
+
+- Распаковка gzip через zlib:
+
+decompressed = zlib.decompress(gzip_data, wbits=zlib.MAX_WBITS | 16)
+
+
+ = Производительность:
+
+- level=1 (Z_BEST_SPEED) быстрее в ~3-5 раз, чем level=9
+- level=6 (Z_DEFAULT_COMPRESSION) — оптимальный баланс
+- Для сетевых данных часто достаточно level=1-3
+
+
+ = Частые ошибки:
+
+- Передача str вместо bytes:
+
+zlib.compress("строка")				# Ошибка: нужен bytes
+
+
+- Решение:
+
+zlib.compress("строка".encode("utf-8"))
+
+
+- Неверный wbits при распаковке:
+
+zlib.decompress(raw_deflate_data)	# Ошибка, если данные без заголовка
+
+
+- Решение:
+
+zlib.decompress(raw_deflate_data, wbits=-zlib.MAX_WBITS)
+
+
+- Забытый flush() при потоковом сжатии:
+
+compressor.compress(data)
+# Результат может быть неполным без compressor.flush()
