@@ -2,6 +2,17 @@
 [![GitHub](https://img.shields.io/badge/GitHub-MichiTheCat--RedStar-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/MichiTheCat-RedStar)
 [![Itch.io](https://img.shields.io/badge/Itch.io-michi--the--cat-FA5C5C?style=for-the-badge&logo=itch.io&logoColor=white)](https://michi-the-cat.itch.io)
 
+<!-- TeaWrongFormat:Start -->
+
+
+<p align="center">
+  <a href="https://destroy.spritefusion.com/?from=badge" target="_blank">
+    <img src="https://destroy.spritefusion.com/badge.svg" alt="Уничтожить сайт" width="180" height="40" />
+  </a>
+</p>
+
+<!-- TeaWrongFormat:End -->
+
 ---
 
 # Добро пожаловать на мою страницу!!!
