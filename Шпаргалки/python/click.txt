@@ -1,0 +1,638 @@
+	--- ОСНОВЫ CLICK ---
+
+ = Назначение:
+
+- Создание CLI-приложений:
+
+# Click — библиотека для создания красивых командных интерфейсов
+# с минимальным количеством кода
+# Входит в экосистему Pallets (Flask, Jinja, Werkzeug)
+# Работает на Python 3.7+
+
+
+ = Установка:
+
+- Через pip:
+
+pip install click
+
+# Рекомендуется устанавливать в виртуальное окружение
+
+
+- Проверка версии:
+
+click.__version__
+
+
+ = Импорт:
+
+- Стандартный:
+
+import click
+
+
+
+	--- КОМАНДЫ ---
+
+ = Создание команды:
+
+- Декоратор @click.command():
+
+import click
+
+@click.command()
+def hello():
+	click.echo('Hello World!')
+
+if __name__ == '__main__':
+	hello()
+
+# Декоратор превращает функцию в объект Command, готовый к вызову
+
+
+ = Help:
+
+- Автоматический --help:
+
+$ python hello.py --help
+Usage: hello.py [OPTIONS]
+Options:
+  --help  Show this message and exit.
+
+# Click генерирует help автоматически из docstring и метаданных
+
+
+- Настройка help:
+
+@click.command(help='Краткое описание команды')
+def hello():
+	pass
+
+
+- Короткий help:
+
+@click.command(short_help='Короткое описание')
+def hello():
+	pass
+
+
+ = Вывод:
+
+- click.echo():
+
+click.echo('Текст')						# с переводом строки
+click.echo('Текст', nl=False)			# без перевода строки
+click.echo('Ошибка', err=True)			# в stderr
+click.echo(b'bytes')					# байты
+
+
+- click.echo_via_pager():
+
+click.echo_via_pager(long_text)			# через пейджер (less, more)
+
+
+
+	--- ОПЦИИ ---
+
+ = Создание опций:
+
+- Декоратор @click.option():
+
+@click.command()
+@click.option('--name', default='World', help='Кого приветствовать')
+def hello(name):
+	click.echo(f'Hello {name}!')
+
+# Опции обычно начинаются с -- или -
+
+
+ = Именование:
+
+- Автоматический вывод имени:
+
+@click.option('--string-to-echo')		# имя: string_to_echo
+@click.option('-f', '--foo-bar')		# имя: foo_bar
+@click.option('--count', 'count')		# явное указание имени
+
+# Click преобразует дефисы в подчёркивания
+
+
+ = Параметры option():
+
+- Основные kwargs:
+
+default				# значение по умолчанию
+help				# текст подсказки
+required			# обязательность
+type				# тип значения
+prompt				# запрос ввода
+nargs				# количество значений
+multiple			# несколько значений
+is_flag				# флаг (boolean)
+flag_value			# значение флага
+count				# считать количество вхождений
+expose_value		# передавать ли значение в функцию
+
+
+ = Типы опций:
+
+- boolean:
+
+@click.option('--verbose', is_flag=True)
+def cli(verbose):
+	pass
+
+
+- выбор из списка:
+
+@click.option('--mode', type=click.Choice(['r', 'w', 'a']))
+def cli(mode):
+	pass
+
+
+- диапазон:
+
+@click.option('--count', type=click.IntRange(1, 100))
+def cli(count):
+	pass
+
+
+- несколько значений:
+
+@click.option('--pos', nargs=2, type=float)
+def cli(pos):
+	pass
+
+
+- несколько раз:
+
+@click.option('--tag', multiple=True)
+def cli(tag):
+	pass
+
+
+
+	--- АРГУМЕНТЫ ---
+
+ = Создание аргументов:
+
+- Декоратор @click.argument():
+
+@click.command()
+@click.argument('name')
+def hello(name):
+	click.echo(f'Hello {name}!')
+
+# Аргументы — позиционные параметры, обязательные по умолчанию
+
+
+ = Параметры argument():
+
+- Основные:
+
+type			# тип значения
+required		# обязательность (по умолчанию True)
+default			# значение по умолчанию
+nargs			# количество значений
+
+
+ = Типы аргументов:
+
+- файл:
+
+@click.argument('filename', type=click.File('r'))
+def read_file(filename):
+	click.echo(filename.read())
+
+
+- путь:
+
+@click.argument('path', type=click.Path(exists=True))
+def process(path):
+	pass
+
+
+- существующий файл:
+
+click.Path(exists=True, file_okay=True, dir_okay=False)
+
+
+- директория:
+
+click.Path(exists=True, file_okay=False, dir_okay=True)
+
+
+
+	--- ГРУППЫ КОМАНД ---
+
+ = Создание группы:
+
+- @click.group():
+
+@click.group()
+def cli():
+	pass
+
+@cli.command()
+def init():
+	click.echo('Initialized')
+
+@cli.command()
+def sync():
+	click.echo('Syncing')
+
+if __name__ == '__main__':
+	cli()
+
+
+ = Вложенные группы:
+
+- Group внутри Group:
+
+@click.group()
+def cli():
+	pass
+
+@cli.group()
+def db():
+	pass
+
+@db.command()
+def migrate():
+	click.echo('Migrating')
+
+
+ = Опции группы:
+
+- Общие опции:
+
+@click.group()
+@click.option('--debug/--no-debug', default=False)
+def cli(debug):
+	click.echo(f'Debug mode: {debug}')
+
+# Опции группы выполняются до подкоманды
+# Подкоманды не получают эти опции напрямую, только через контекст
+
+
+ = Цепочка команд:
+
+- chain=True:
+
+@click.group(chain=True)
+def cli():
+	pass
+
+@cli.command()
+def process():
+	pass
+
+@cli.command()
+def output():
+	pass
+
+# Позволяет: cli process output — последовательное выполнение
+
+
+
+	--- КОНТЕКСТ ---
+
+ = Получение контекста:
+
+- @click.pass_context:
+
+@click.group()
+@click.option('--debug/--no-debug', default=False)
+@click.pass_context
+def cli(ctx, debug):
+	ctx.obj['DEBUG'] = debug
+
+@cli.command()
+@click.pass_context
+def sync(ctx):
+	click.echo(f'Debug: {ctx.obj["DEBUG"]}')
+
+
+- click.get_current_context():
+
+from click import get_current_context
+
+@cli.command()
+def cmd():
+	ctx = get_current_context()
+	click.echo(ctx.info_name)
+
+
+ = Атрибуты Context:
+
+- Основные:
+
+ctx.obj					# пользовательский объект
+ctx.parent				# родительский контекст
+ctx.command				# текущая команда
+ctx.info_name			# имя команды
+ctx.invoked_subcommand	# имя вызванной подкоманды
+ctx.params				# параметры команды
+ctx.args				# оставшиеся аргументы
+
+
+ = Передача объекта:
+
+- obj в group:
+
+@click.group()
+@click.pass_context
+def cli(ctx):
+	ctx.obj = {'config': load_config()}
+
+@cli.command()
+@click.pass_obj
+def cmd(obj):
+	click.echo(obj['config'])
+
+# pass_obj — альтернатива pass_context, передаёт ctx.obj напрямую
+
+
+
+	--- ТИПЫ ПАРАМЕТРОВ ---
+
+ = click.Path:
+
+- Проверка пути:
+
+click.Path(exists=True)					# путь должен существовать
+click.Path(file_okay=False)				# только директория
+click.Path(dir_okay=False)				# только файл
+click.Path(writable=True)				# доступен для записи
+click.Path(readable=True)				# доступен для чтения
+click.Path(resolve_path=True)			# абсолютный путь
+
+
+ = click.File:
+
+- Открытие файла:
+
+click.File('r')							# чтение текста
+click.File('w')							# запись текста
+click.File('rb')						# чтение байтов
+click.File('wb')						# запись байтов
+click.File('-')							# stdin/stdout
+
+
+ = click.Choice:
+
+- Выбор из списка:
+
+click.Choice(['red', 'green', 'blue'])
+click.Choice(['r', 'g', 'b'], case_sensitive=False)
+
+
+ = click.IntRange и click.FloatRange:
+
+- Диапазон:
+
+click.IntRange(0, 100)					# целое от 0 до 100
+click.IntRange(min=0)					# минимум 0
+click.FloatRange(0.0, 1.0)				# число с плавающей точкой
+
+
+ = click.DateTime:
+
+- Дата и время:
+
+click.DateTime()						# ISO формат
+click.DateTime(formats=['%Y-%m-%d'])	# свой формат
+
+
+ = click.Tuple:
+
+- Кортеж:
+
+click.Tuple([str, int])					# ('name', 42)
+
+
+ = click.UUID:
+
+- UUID:
+
+click.UUID()							# UUID объект
+
+
+ = click.UNPROCESSED:
+
+- Без обработки:
+
+click.UNPROCESSED						# передать как есть
+
+
+
+	--- УТИЛИТЫ ---
+
+ = Цветной вывод:
+
+- click.secho():
+
+click.secho('Hello', fg='green')				# зелёный текст
+click.secho('Error', fg='red', bold=True)		# красный жирный
+click.secho('Warning', fg='yellow', bg='blue')	# жёлтый на синем
+
+
+- click.style():
+
+styled = click.style('Text', fg='red', bold=True)
+click.echo(styled)
+
+
+- Доступные цвета:
+
+fg='black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white'
+bg='black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white'
+bold=True, dim=True, underline=True, blink=True, reverse=True
+
+
+ = Ввод пользователя:
+
+- click.prompt():
+
+name = click.prompt('Введите имя')
+age = click.prompt('Возраст', type=int)
+click.prompt('Пароль', hide_input=True, confirmation_prompt=True)
+
+
+- click.confirm():
+
+if click.confirm('Продолжить?'):
+	click.echo('Продолжаем')
+
+
+ = Терминал:
+
+- click.getchar():
+
+char = click.getchar()					# прочитать один символ
+
+
+- click.clear():
+
+click.clear()							# очистить экран
+
+
+- click.pause():
+
+click.pause()							# ожидать нажатия клавиши
+
+
+ = Прогресс-бар:
+
+- click.progressbar():
+
+with click.progressbar(range(100)) as bar:
+	for i in bar:
+		do_work(i)
+
+
+- С параметрами:
+
+with click.progressbar(
+	items,
+	label='Обработка',
+	length=len(items),
+	show_pos=True,
+	fill_char='#',
+) as bar:
+	for item in bar:
+		process(item)
+
+
+ = Файловая система:
+
+- click.get_app_dir():
+
+config_dir = click.get_app_dir('MyApp')
+# ~/.config/MyApp на Linux
+# ~/Library/Application Support/MyApp на macOS
+# %APPDATA%\MyApp на Windows
+
+
+ = Запуск программ:
+
+- click.launch():
+
+click.launch('https://example.com')		# открыть URL
+click.launch('/path/to/file')			# открыть файл
+
+
+ = Редактирование:
+
+- click.edit():
+
+result = click.edit('Текст для редактирования')
+
+
+
+	--- ТЕСТИРОВАНИЕ ---
+
+ = CliRunner:
+
+- Импорт:
+
+from click.testing import CliRunner
+
+
+- Базовый тест:
+
+def test_hello():
+	@click.command()
+	@click.argument('name')
+	def hello(name):
+		click.echo(f'Hello {name}!')
+
+	runner = CliRunner()
+	result = runner.invoke(hello, ['Peter'])
+	assert result.exit_code == 0
+	assert result.output == 'Hello Peter!\n'
+
+
+ = Результат:
+
+- Атрибуты Result:
+
+result.exit_code		# код возврата
+result.output			# stdout
+result.exception		# исключение
+result.stderr			# stderr (в отдельном потоке)
+
+
+ = Изоляция файловой системы:
+
+- isolated_filesystem():
+
+with runner.isolated_filesystem():
+	with open('hello.txt', 'w') as f:
+		f.write('Hello World!')
+	result = runner.invoke(cat, ['hello.txt'])
+
+
+ = Ввод:
+
+- input в invoke():
+
+result = runner.invoke(test, input='wau wau\n')
+
+
+ = Ширина терминала:
+
+- terminal_width:
+
+result = runner.invoke(cli, ['--debug', 'sync'], terminal_width=60)
+
+
+
+	--- ПРИМЕЧАНИЯ ---
+
+ = Совместимость:
+
+- Версии Python:
+
+# Click 8.x требует Python 3.7+
+# Click 7.x поддерживает Python 2.7 и 3.4+
+
+
+ = Частые ошибки:
+
+- Забыли вызвать команду:
+
+# if __name__ == '__main__': cli() — обязательно
+
+
+- Декораторы в неверном порядке:
+
+# @click.command() должен быть последним (ближайшим к функции)
+# @click.option() — выше
+
+
+- Конфликт имён:
+
+# Если опция --name и аргумент name, нужно переименовать одно из них
+
+
+ = Рекомендации:
+
+- Разделяйте CLI и логику:
+
+# CLI-функции должны только парсить аргументы и вызывать логику
+
+
+- Используйте типы:
+
+# click.Path, click.File, click.Choice вместо str
+
+
+- Группируйте команды:
+
+# click.group() для связанных команд
+
+
+- Тестируйте через CliRunner:
+
+# Не запускайте subprocess в тестах

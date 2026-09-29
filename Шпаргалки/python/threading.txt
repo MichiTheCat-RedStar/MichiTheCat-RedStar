@@ -1,0 +1,604 @@
+	--- ОСНОВЫ THREADING ---
+
+ = Назначение:
+
+- Многопоточность:
+
+# Модуль threading — высокоуровневый интерфейс для работы с потоками
+# Входит в стандартную библиотеку Python
+# Потоки делят общую память, но подчиняются GIL
+# Для CPU-bound задач лучше multiprocessing
+# Для I/O-bound задач потоки подходят хорошо
+
+
+ = Импорт:
+
+- Стандартный:
+
+import threading
+
+
+
+	--- СОЗДАНИЕ ПОТОКОВ ---
+
+ = threading.Thread:
+
+- Через target:
+
+import threading
+
+def worker(name):
+	print(f"Поток {name} запущен")
+
+t = threading.Thread(target=worker, args=("A",))
+t.start()
+t.join()
+
+
+- С kwargs:
+
+def worker(name, count=1):
+	for i in range(count):
+		print(name, i)
+
+t = threading.Thread(target=worker, kwargs={"name": "A", "count": 3})
+t.start()
+t.join()
+
+
+ = Наследование:
+
+- Переопределение run():
+
+import threading
+
+class MyThread(threading.Thread):
+	def __init__(self, name):
+		super().__init__(name=name)
+		self.name = name
+
+	def run(self):
+		print(f"Поток {self.name} работает")
+
+t = MyThread("A")
+t.start()
+t.join()
+
+
+ = Параметры Thread:
+
+- Конструктор:
+
+threading.Thread(
+	target=None,			# вызываемый объект
+	args=(),				# позиционные аргументы
+	kwargs=None,			# именованные аргументы
+	name=None,				# имя потока
+	daemon=None,			# демон (умирает с main)
+	group=None,				# зарезервировано
+)
+
+
+ = Запуск и завершение:
+
+- start():
+
+t.start()				# запустить поток
+# Нельзя вызвать дважды — RuntimeError
+
+
+- join():
+
+t.join()				# ждать завершения
+t.join(timeout=1.0)		# ждать не больше 1 секунды
+# Возвращает None, проверяйте is_alive()
+
+
+- is_alive():
+
+t.is_alive()			# True, пока поток работает
+
+
+ = Демоны:
+
+- daemon:
+
+t = threading.Thread(target=worker, daemon=True)
+t.start()
+
+# Демон завершается при выходе из main
+# Не-демон блокирует завершение программы
+
+
+
+	--- ОСНОВНЫЕ ФУНКЦИИ ---
+
+ = Информация о потоках:
+
+- active_count():
+
+threading.active_count()		# число живых потоков
+
+
+- current_thread():
+
+threading.current_thread()		# текущий объект Thread
+threading.current_thread().name	# имя
+
+
+- main_thread():
+
+threading.main_thread()			# главный поток
+
+
+- enumerate():
+
+threading.enumerate()			# список всех живых Thread
+
+
+ = Идентификаторы:
+
+- get_ident():
+
+threading.get_ident()			# ID потока (целое)
+
+
+- get_native_id():
+
+threading.get_native_id()		# нативный ID (Python 3.8+)
+
+
+ = Таймауты:
+
+- stack_size():
+
+threading.stack_size()				# размер стека
+threading.stack_size(2*1024*1024)	# задать 2 МБ
+
+
+ = Локальные данные:
+
+- threading.local():
+
+data = threading.local()
+
+def worker():
+	data.x = 42
+	print(data.x)				# своё значение для каждого потока
+
+# У каждого потока свой набор атрибутов
+
+
+
+	--- СИНХРОНИЗАЦИЯ ---
+
+ = Lock:
+
+- Создание:
+
+lock = threading.Lock()
+
+
+- Захват и освобождение:
+
+lock.acquire()				# блокирует, пока не получит
+try:
+	# критическая секция
+	pass
+finally:
+	lock.release()
+
+
+- Контекстный менеджер:
+
+with lock:
+	# критическая секция
+	pass
+
+
+- Таймаут:
+
+if lock.acquire(timeout=1.0):
+	try:
+		pass
+	finally:
+		lock.release()
+else:
+	print("Не удалось захватить")
+
+
+- locked():
+
+lock.locked()				# True, если захвачен
+
+
+ = RLock:
+
+- Реентрантный замок:
+
+rlock = threading.RLock()
+
+with rlock:
+	with rlock:				# можно повторно захватить
+		pass
+
+# Один и тот же поток может захватывать несколько раз
+# Освобождать нужно столько же раз
+
+
+ = Condition:
+
+- Условная переменная:
+
+cond = threading.Condition()
+
+with cond:
+	cond.wait()				# ждать уведомления
+	cond.notify()			# разбудить одного
+	cond.notify_all()		# разбудить всех
+
+
+- С таймаутом:
+
+with cond:
+	cond.wait(timeout=1.0)	# вернёт True/False
+
+
+ = Event:
+
+- Событие:
+
+event = threading.Event()
+
+event.set()					# установить
+event.clear()				# сбросить
+event.is_set()				# проверить
+event.wait()				# ждать
+event.wait(timeout=1.0)		# ждать с таймаутом
+
+
+ = Semaphore:
+
+- Семафор:
+
+sem = threading.Semaphore(3)	# максимум 3 потока
+
+with sem:
+	# не более 3 одновременно
+	pass
+
+
+- BoundedSemaphore:
+
+sem = threading.BoundedSemaphore(3)
+# Не позволяет release() больше, чем acquire()
+
+
+ = Barrier:
+
+- Барьер:
+
+barrier = threading.Barrier(3)	# ждать 3 потока
+
+def worker():
+	print("До барьера")
+	barrier.wait()
+	print("После барьера")
+
+# Все потоки ждут, пока не соберутся все
+
+
+- Таймаут:
+
+barrier.wait(timeout=1.0)
+
+
+ = Timer:
+
+- Таймер:
+
+def hello():
+	print("Hello")
+
+t = threading.Timer(2.0, hello)
+t.start()					# вызовет hello через 2 секунды
+t.cancel()					# отменить
+
+
+
+	--- ОЧЕРЕДИ ---
+
+ = queue.Queue:
+
+- FIFO-очередь:
+
+import queue
+
+q = queue.Queue()
+
+q.put(1)					# положить
+q.put(2)
+item = q.get()				# взять
+q.task_done()				# отметить выполнение
+q.join()					# ждать все task_done()
+
+
+- Параметры:
+
+q = queue.Queue(maxsize=10)	# ограничить размер
+q.put(1, timeout=1.0)		# ждать место
+q.get(timeout=1.0)			# ждать элемент
+
+
+ = Другие очереди:
+
+- LifoQueue:
+
+q = queue.LifoQueue()		# стек, LIFO
+
+
+- PriorityQueue:
+
+q = queue.PriorityQueue()	# приоритетная
+q.put((1, "low"))
+q.put((0, "high"))			# сначала high
+
+
+ = Пустая и полная:
+
+- Исключения:
+
+queue.Empty					# get() без таймаута
+queue.Full					# put() без таймаута
+
+
+- Проверки:
+
+q.empty()					# пуста
+q.full()					# полна
+q.qsize()					# размер
+
+
+
+	--- THREADPOOLEXECUTOR ---
+
+ = Импорт:
+
+- concurrent.futures:
+
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+
+ = Создание:
+
+- Контекстный менеджер:
+
+with ThreadPoolExecutor(max_workers=4) as executor:
+	future = executor.submit(pow, 2, 3)
+	print(future.result())
+
+
+ = submit:
+
+- Отправка задачи:
+
+future = executor.submit(func, arg1, arg2, kw=1)
+
+
+ = map:
+
+- Параллельный map:
+
+results = executor.map(func, [1, 2, 3])
+for result in results:
+	print(result)
+
+
+ = as_completed:
+
+- По мере завершения:
+
+futures = [executor.submit(func, i) for i in range(5)]
+for future in as_completed(futures):
+	print(future.result())
+
+
+ = Future:
+
+- Методы:
+
+future.result(timeout=None)		# результат или исключение
+future.exception()				# исключение или None
+future.done()					# завершена
+future.cancel()					# отменить
+future.add_done_callback(fn)	# callback
+
+
+
+	--- GIL И ПРОИЗВОДИТЕЛЬНОСТЬ ---
+
+ = GIL:
+
+- Global Interpreter Lock:
+
+# В CPython одновременно выполняется только один поток байт-кода
+# Потоки переключаются каждые 5 мс (sys.getswitchinterval())
+# I/O-операции освобождают GIL
+# C-расширения могут освобождать GIL
+
+
+ = Когда потоки полезны:
+
+- I/O-bound:
+
+# Сеть, файлы, базы данных, subprocess
+# Потоки ждут I/O, GIL не мешает
+
+
+ = Когда потоки бесполезны:
+
+- CPU-bound:
+
+# Чистые вычисления на Python
+# Используйте multiprocessing или C-расширения
+
+
+
+	--- ИСКЛЮЧЕНИЯ И ТАЙМАУТЫ ---
+
+ = Исключения в потоках:
+
+- Не распространяются на main:
+
+def worker():
+	raise ValueError("Ошибка")
+
+t = threading.Thread(target=worker)
+t.start()
+t.join()
+# main не получит исключение
+
+
+- Перехват:
+
+def worker():
+	try:
+		raise ValueError("Ошибка")
+	except Exception as e:
+		print(f"Поймано: {e}")
+
+t = threading.Thread(target=worker)
+t.start()
+t.join()
+
+
+- Через ThreadPoolExecutor:
+
+with ThreadPoolExecutor() as executor:
+	future = executor.submit(worker)
+	try:
+		future.result()
+	except ValueError as e:
+		print(f"Поймано: {e}")
+
+
+ = Таймауты:
+
+- join(timeout):
+
+t.join(timeout=1.0)
+if t.is_alive():
+	print("Ещё работает")
+
+
+- Lock.acquire(timeout):
+
+if lock.acquire(timeout=1.0):
+	try:
+		pass
+	finally:
+		lock.release()
+
+
+- Event.wait(timeout):
+
+if event.wait(timeout=1.0):
+	print("Событие произошло")
+else:
+	print("Таймаут")
+
+
+- Condition.wait(timeout):
+
+with cond:
+	if cond.wait(timeout=1.0):
+		print("Уведомление получено")
+
+
+
+	--- ПРИМЕЧАНИЯ ---
+
+ = Совместимость:
+
+- Версии Python:
+
+# Python 3.2: ThreadPoolExecutor
+# Python 3.8: get_native_id()
+# Python 3.13: экспериментальный free-threaded режим (без GIL)
+
+
+ = Частые ошибки:
+
+- Забыли join():
+
+# Программа завершится раньше потоков
+
+
+- Гонки данных:
+
+# Общие данные без Lock приводят к неопределённому поведению
+
+
+- Deadlock:
+
+# Взаимная блокировка при захвате нескольких Lock
+# Используйте таймауты и единый порядок захвата
+
+
+- Изменение общего списка из потоков:
+
+# list.append() атомарен в CPython, но не гарантирован
+# Используйте Lock или queue.Queue
+
+
+ = Рекомендации:
+
+- Для I/O используйте потоки:
+
+# requests, файлы, сокеты
+
+
+- Для CPU используйте multiprocessing:
+
+# from multiprocessing import Pool
+
+
+- Для пула потоков используйте ThreadPoolExecutor:
+
+# Не создавайте вручную сотни Thread
+
+
+- Для обмена данными используйте queue.Queue:
+
+# Вместо общих списков
+
+
+- Для синхронизации используйте Lock:
+
+# Минимальное критические секции
+
+
+- Для отмены используйте Event:
+
+# Флаг остановки для рабочих потоков
+
+
+- Для таймаутов всегда указывайте timeout:
+
+# join(timeout), acquire(timeout), wait(timeout)
+
+
+ = Сигналы:
+
+- Только main thread:
+
+# signal.signal() можно вызывать только в главном потоке
+# В остальных потоках — ValueError
+
+
+ = Завершение программы:
+
+- Не-демоны блокируют выход:
+
+# Программа ждёт все не-демонические потоки
+# Демоны завершаются принудительно

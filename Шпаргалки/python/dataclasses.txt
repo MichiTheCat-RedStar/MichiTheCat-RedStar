@@ -1,0 +1,594 @@
+	--- ОСНОВЫ DATACLASSES ---
+
+ = Назначение:
+
+- Генерация методов:
+
+# Модуль dataclasses предоставляет декоратор @dataclass
+# Автоматически создаёт __init__, __repr__, __eq__ и другие
+# Уменьшает boilerplate при создании классов-контейнеров данных
+# Входит в стандартную библиотеку Python 3.7+
+
+
+ = Импорт:
+
+- Стандартный:
+
+from dataclasses import dataclass, field, asdict, astuple, replace, make_dataclass, fields, Field
+
+
+ = Базовый пример:
+
+- Создание класса:
+
+from dataclasses import dataclass
+
+@dataclass
+class Point:
+	x: int
+	y: int
+
+p = Point(1, 2)
+print(p)				# Point(x=1, y=2)
+print(p == Point(1, 2))	# True
+
+
+- Без @dataclass:
+
+class Point:
+	def __init__(self, x, y):
+		self.x = x
+		self.y = y
+	def __repr__(self):
+		return f"Point(x={self.x}, y={self.y})"
+	def __eq__(self, other):
+		return self.x == other.x and self.y == other.y
+
+
+	--- ПОЛЯ ---
+
+ = Объявление полей:
+
+- С аннотациями типов:
+
+@dataclass
+class User:
+	name: str
+	age: int
+	active: bool = True
+
+
+- Без значения по умолчанию:
+
+@dataclass
+class User:
+	name: str				# обязательное поле
+	age: int				# обязательное поле
+
+
+- Значения по умолчанию:
+
+@dataclass
+class User:
+	name: str
+	age: int = 0
+	active: bool = True
+
+
+ = Порядок полей:
+
+- Важно:
+
+# Поля без значений по умолчанию должны идти перед полями со значениями
+# Иначе TypeError: non-default argument follows default argument
+
+
+ = Изменяемые значения по умолчанию:
+
+- Ошибка:
+
+@dataclass
+class User:
+	tags: list = []			# TypeError: mutable default
+
+
+- Правильно:
+
+from dataclasses import field
+
+@dataclass
+class User:
+	tags: list = field(default_factory=list)
+
+
+ = field():
+
+- Параметры:
+
+field(
+	default,				# значение по умолчанию
+	default_factory,		# фабрика для изменяемых значений
+	init=True,				# включать в __init__
+	repr=True,				# включать в __repr__
+	compare=True,			# включать в сравнение
+	hash=None,				# включать в __hash__
+	metadata=None,			# произвольные метаданные
+)
+
+
+- Пример:
+
+@dataclass
+class User:
+	name: str
+	tags: list = field(default_factory=list)
+	internal_id: int = field(default=0, init=False, repr=False)
+
+
+ = ClassVar:
+
+- Поля класса (не экземпляра):
+
+from typing import ClassVar
+
+@dataclass
+class User:
+	name: str
+	version: ClassVar[str] = "1.0"		# не поле экземпляра
+
+
+ = InitVar:
+
+- Только для __init__:
+
+from dataclasses import dataclass, InitVar
+
+@dataclass
+class User:
+	name: str
+	password: InitVar[str]
+
+	def __post_init__(self, password: str):
+		self.password_hash = hash(password)
+
+
+	--- ПАРАМЕТРЫ ДЕКОРАТОРА ---
+
+ = @dataclass:
+
+- Параметры:
+
+@dataclass(
+	init=True,				# генерировать __init__
+	repr=True,				# генерировать __repr__
+	eq=True,				# генерировать __eq__
+	order=False,			# генерировать <, <=, >, >=
+	unsafe_hash=False,		# генерировать __hash__
+	frozen=False,			# неизменяемость
+	match_args=True,		# использовать в match/case
+	slots=False,			# использовать __slots__ (Python 3.10+)
+)
+
+
+- init:
+
+@dataclass(init=False)
+class Point:
+	x: int
+	y: int
+
+# __init__ не генерируется, нужно определить вручную
+
+
+- repr:
+
+@dataclass(repr=False)
+class Point:
+	x: int
+	y: int
+
+# __repr__ не генерируется
+
+
+- eq:
+
+@dataclass(eq=False)
+class Point:
+	x: int
+	y: int
+
+# __eq__ не генерируется, сравнение по умолчанию (по id)
+
+
+- order:
+
+@dataclass(order=True)
+class Point:
+	x: int
+	y: int
+
+# Генерируются __lt__, __le__, __gt__, __ge__
+# Сравнение по кортежу полей в порядке объявления
+
+
+- unsafe_hash:
+
+@dataclass(unsafe_hash=True)
+class Point:
+	x: int
+	y: int
+
+# Генерируется __hash__ на основе полей
+# Опасно, если класс изменяемый
+
+
+- frozen:
+
+@dataclass(frozen=True)
+class Point:
+	x: int
+	y: int
+
+# Экземпляры неизменяемы
+# При попытке изменения — FrozenInstanceError
+# Автоматически генерируется __hash__
+
+
+- slots:
+
+@dataclass(slots=True)
+class Point:
+	x: int
+	y: int
+
+# Создаётся __slots__, класс без __dict__
+# Экономит память, ускоряет доступ
+# Требует Python 3.10+
+
+
+	--- МЕТОДЫ ---
+
+ = __post_init__:
+
+- Пост-инициализация:
+
+@dataclass
+class User:
+	name: str
+	age: int
+
+	def __post_init__(self):
+		if self.age < 0:
+			raise ValueError("Возраст не может быть отрицательным")
+
+
+- С InitVar:
+
+@dataclass
+class User:
+	name: str
+	password: InitVar[str]
+
+	def __post_init__(self, password: str):
+		self.password_hash = hash(password)
+
+
+ = __repr__:
+
+- Автоматический:
+
+@dataclass
+class Point:
+	x: int
+	y: int
+
+p = Point(1, 2)
+print(p)				# Point(x=1, y=2)
+
+
+- Кастомный:
+
+@dataclass
+class Point:
+	x: int
+	y: int
+
+	def __repr__(self):
+		return f"({self.x}, {self.y})"
+
+
+ = __eq__:
+
+- Автоматический:
+
+@dataclass
+class Point:
+	x: int
+	y: int
+
+Point(1, 2) == Point(1, 2)	# True
+
+
+- Сравнение с другими типами:
+
+Point(1, 2) == (1, 2)		# False
+
+
+ = __hash__:
+
+- Правила:
+
+# Если eq=True и frozen=True — __hash__ генерируется
+# Если eq=True и frozen=False — __hash__ = None (нехэшируемый)
+# Если eq=False — __hash__ наследуется от object
+# unsafe_hash=True — принудительно генерирует __hash__
+
+
+ = Сортировка:
+
+- order=True:
+
+@dataclass(order=True)
+class Point:
+	x: int
+	y: int
+
+Point(1, 2) < Point(2, 1)	# True
+Point(1, 2) <= Point(1, 2)	# True
+
+
+	--- НАСЛЕДОВАНИЕ ---
+
+ = Базовое наследование:
+
+- Родитель и потомок:
+
+@dataclass
+class Base:
+	x: int
+
+@dataclass
+class Child(Base):
+	y: int
+
+c = Child(1, 2)			# Child(x=1, y=2)
+
+
+ = Переопределение полей:
+
+- Изменение типа:
+
+@dataclass
+class Base:
+	x: int
+
+@dataclass
+class Child(Base):
+	x: str				# переопределение типа
+
+# Значения по умолчанию переопределяются
+# Порядок полей сохраняется: сначала родительские, потом дочерние
+
+
+ = Значения по умолчанию в наследовании:
+
+- Проблема:
+
+@dataclass
+class Base:
+	x: int = 0
+
+@dataclass
+class Child(Base):
+	y: int				# TypeError: non-default argument follows default
+
+# Решение: дать значение по умолчанию и для y
+
+
+ = Наследование от не-dataclass:
+
+- Можно:
+
+class Mixin:
+	def method(self):
+		return "mixin"
+
+@dataclass
+class User(Mixin):
+	name: str
+
+# Поля только из @dataclass
+
+
+	--- СЕРИАЛИЗАЦИЯ ---
+
+ = asdict:
+
+- В словарь:
+
+from dataclasses import asdict
+
+@dataclass
+class Point:
+	x: int
+	y: int
+
+p = Point(1, 2)
+asdict(p)				# {'x': 1, 'y': 2}
+
+
+- Вложенные dataclass:
+
+@dataclass
+class Line:
+	start: Point
+	end: Point
+
+asdict(line)			# {'start': {'x': 1, 'y': 2}, 'end': {...}}
+
+
+ = astuple:
+
+- В кортеж:
+
+from dataclasses import astuple
+
+astuple(Point(1, 2))	# (1, 2)
+
+
+ = replace:
+
+- Копия с изменениями:
+
+from dataclasses import replace
+
+p = Point(1, 2)
+p2 = replace(p, x=10)	# Point(x=10, y=2)
+
+
+ = make_dataclass:
+
+- Динамическое создание:
+
+from dataclasses import make_dataclass
+
+Point = make_dataclass('Point', [('x', int), ('y', int)])
+p = Point(1, 2)
+
+
+ = fields:
+
+- Информация о полях:
+
+from dataclasses import fields
+
+@dataclass
+class Point:
+	x: int
+	y: int = 0
+
+for f in fields(Point):
+	print(f.name, f.type, f.default)
+
+# x <class 'int'> <dataclasses._MISSING_TYPE object>
+# y <class 'int'> 0
+
+
+	--- УТИЛИТЫ ---
+
+ = Field:
+
+- Атрибуты Field:
+
+f.name				# имя поля
+f.type				# тип
+f.default			# значение по умолчанию
+f.default_factory	# фабрика
+f.init				# участвует в __init__
+f.repr				# участвует в __repr__
+f.compare			# участвует в сравнении
+f.hash				# участвует в хэше
+f.metadata			# метаданные
+
+
+ = Metadata:
+
+- Использование:
+
+@dataclass
+class User:
+	name: str = field(metadata={'description': 'Имя пользователя'})
+
+# Доступ через fields():
+for f in fields(User):
+	print(f.metadata)		# {'description': 'Имя пользователя'}
+
+
+ = match/case:
+
+- Поддержка:
+
+@dataclass
+class Point:
+	x: int
+	y: int
+
+match Point(1, 2):
+	case Point(x=0, y=0):
+		print("Начало координат")
+	case Point(x=0, y=y):
+		print(f"На оси Y, y={y}")
+	case Point(x=x, y=0):
+		print(f"На оси X, x={x}")
+	case Point():
+		print("Где-то в пространстве")
+
+
+	--- ПРИМЕЧАНИЯ ---
+
+ = Совместимость:
+
+- Версии Python:
+
+# Python 3.7: dataclasses в стандартной библиотеке
+# Python 3.10: slots=True, match_args=True
+# Python 3.11: weakref_slot=True
+
+
+- Обратная совместимость:
+
+# Для Python 3.6: pip install dataclasses
+
+
+ = Частые ошибки:
+
+- Изменяемые значения по умолчанию:
+
+# Используйте default_factory=list вместо []
+
+
+- Порядок полей:
+
+# Поля со значениями по умолчанию идут после полей без них
+
+
+- Frozen и наследование:
+
+# Нельзя наследовать frozen от non-frozen и наоборот
+
+
+- eq=False и frozen=True:
+
+# __hash__ не генерируется, если eq=False
+
+
+ = Рекомендации:
+
+- Используйте default_factory:
+
+# Для list, dict, set и других изменяемых типов
+
+
+- Используйте frozen=True:
+
+# Для неизменяемых объектов и хэшируемости
+
+
+- Используйте slots=True:
+
+# Для экономии памяти при большом количестве экземпляров
+
+
+- Используйте __post_init__:
+
+# Для валидации и вычисляемых полей
+
+
+- Используйте field(compare=False):
+
+# Для полей, не участвующих в сравнении
+
+
+- Используйте ClassVar:
+
+# Для констант класса

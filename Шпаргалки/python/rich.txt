@@ -1,0 +1,691 @@
+	--- ОСНОВЫ RICH ---
+
+ = Установка:
+
+- Базовый пакет:
+
+pip install rich
+
+
+- С поддержкой Jupyter:
+
+pip install "rich[jupyter]"
+
+
+- Встроенное демо:
+
+python -m rich
+
+
+ = Назначение:
+
+- Богатый вывод в терминал:
+
+# Rich — библиотека для цветного текста, таблиц, панелей,
+# прогресс-баров, подсветки синтаксиса, Markdown и многого другого
+# в терминале
+
+
+ = Быстрый старт:
+
+- Замена print():
+
+from rich import print
+
+# Переопределяет встроенный print
+print("[bold red]Hello[/] World!")		# Console Markup
+print({"key": "value", "n": 42})		# авто pretty-print
+
+
+- Использование объекта Console (рекомендуется):
+
+from rich.console import Console
+
+console = Console()
+console.print("Hello", style="bold")
+console.log("debug info")				# с отметкой времени
+console.rule("[bold blue]Section")		# горизонтальная линия
+
+
+
+	--- CONSOLE API ---
+
+ = Создание консоли:
+
+- Параметры конструктора:
+
+console = Console()							# автоопределение
+console = Console(width=120)				# фиксированная ширина
+console = Console(color_system="truecolor")	# 16M цветов
+console = Console(stderr=True)				# вывод в stderr
+console = Console(record=True)				# включить экспорт
+console = Console(force_terminal=True)		# цвет в пайпах
+console = Console(style="white on blue")	# стиль по умолчанию
+
+
+ = Вывод:
+
+- Стилизованный вывод:
+
+console.print("Hello", style="bold red")
+console.print("Left", justify="left")
+console.print("Center", justify="center")
+console.print("Right", justify="right")
+console.print("[link=https://example.com]Click[/link]")
+
+
+- Pretty JSON:
+
+console.print_json('{"a": 1, "b": [2, 3]}')
+
+
+- Логирование:
+
+console.log("Starting process")			# с отметкой времени
+console.log("x =", x, log_locals=True)	# показать локальные переменные
+
+
+- Горизонтальные линии:
+
+console.rule()								# простая линия
+console.rule("[bold red]Chapter 1")			# с заголовком
+console.rule(style="cyan", align="left")	# выравнивание
+
+
+- Ввод:
+
+name = console.input("[bold]Name? [/]")	# стилизованный prompt
+
+
+- Спиннер (статус):
+
+with console.status("Working..."):
+	do_work()
+
+with console.status("Loading", spinner="dots"):
+	do_work()
+
+
+- Пейджер:
+
+with console.pager():					# системный пейджер (less, more)
+	console.print(long_text)
+
+with console.pager(styles=True):		# сохранить цвета
+	console.print(long_text)
+
+
+- Альтернативный экран:
+
+with console.screen():
+	console.print("Full screen")
+
+
+
+	--- CONSOLE MARKUP ---
+
+ = Основы разметки:
+
+- Теги стилей:
+
+[bold]жирный[/bold]
+[italic]курсив[/italic]
+[underline]подчёркнутый[/underline]
+[strike]зачёркнутый[/strike]
+[reverse]инвертированный[/reverse]
+[dim]тусклый[/dim]
+[blink]мигающий[/blink]
+
+
+- Цвета текста:
+
+[red]красный[/red]
+[green]зелёный[/green]
+[blue]синий[/blue]
+[magenta]пурпурный[/magenta]
+[cyan]голубой[/cyan]
+[yellow]жёлтый[/yellow]
+[white]белый[/white]
+[black]чёрный[/black]
+
+
+- Цвета фона:
+
+[on red]красный фон[/on red]
+[on green]зелёный фон[/on green]
+[on blue]синий фон[/on blue]
+
+
+- Комбинирование:
+
+[bold red on white]жирный красный на белом[/bold red on white]
+[italic underline cyan]курсив подчёркнутый голубой[/italic underline cyan]
+
+
+- Закрытие тегов:
+
+[bold]жирный[/bold]		# полное закрытие
+[bold]жирный[/]			# сокращённое закрытие
+
+
+
+	--- ТАБЛИЦЫ ---
+
+ = Создание таблицы:
+
+- Базовая:
+
+from rich.console import Console
+from rich.table import Table
+
+console = Console()
+table = Table(title="Моя таблица")
+
+table.add_column("Имя", style="cyan")
+table.add_column("Возраст", justify="right", style="magenta")
+table.add_column("Город", style="green")
+
+table.add_row("Алиса", "30", "Москва")
+table.add_row("Боб", "25", "Санкт-Петербург")
+
+console.print(table)
+
+
+- Заголовок таблицы:
+
+table = Table(
+	title="Пользователи",
+	title_style="bold red",
+	caption="Всего: 2",
+	caption_style="dim",
+)
+
+
+- Стили колонок:
+
+table.add_column("Имя", style="bold cyan", no_wrap=True)
+table.add_column("Сумма", justify="right", style="green")
+table.add_column("Статус", justify="center")
+
+
+- Границы:
+
+table = Table(box=box.ROUNDED)		# скруглённые
+table = Table(box=box.SIMPLE)		# простые
+table = Table(box=box.HEAVY)		# жирные
+table = Table(show_header=True, header_style="bold magenta")
+table = Table(show_lines=True)		# линии между строками
+
+
+
+	--- ПАНЕЛИ И КОЛОНКИ ---
+
+ = Панели:
+
+- Базовая панель:
+
+from rich.panel import Panel
+from rich.console import Console
+
+console = Console()
+console.print(Panel("Содержимое панели"))
+
+
+- С заголовком и подзаголовком:
+
+console.print(Panel(
+	"Текст внутри",
+	title="Заголовок",
+	subtitle="Подзаголовок",
+	title_align="left",
+))
+
+
+- Стили:
+
+console.print(Panel(
+	"Важное сообщение",
+	style="red on white",
+	border_style="bold blue",
+	box=box.DOUBLE,
+))
+
+
+ = Колонки:
+
+- Вывод в колонках:
+
+from rich.columns import Columns
+from rich.console import Console
+
+console = Console()
+console.print(Columns(["Столбец 1", "Столбец 2", "Столбец 3"]))
+
+
+- С параметрами:
+
+console.print(Columns(
+	items,
+	equal=True,			# равная ширина
+	expand=True,		# растянуть на всю ширину
+))
+
+
+
+	--- ДЕРЕВЬЯ ---
+
+ = Создание дерева:
+
+- Базовое:
+
+from rich.tree import Tree
+from rich.console import Console
+
+console = Console()
+tree = Tree("Корень")
+
+tree.add("Ветка 1")
+tree.add("Ветка 2")
+
+console.print(tree)
+
+
+- Вложенные ветки:
+
+tree = Tree("Корень")
+ветка1 = tree.add("Ветка 1")
+ветка1.add("Лист 1.1")
+ветка1.add("Лист 1.2")
+ветка2 = tree.add("Ветка 2")
+ветка2.add("Лист 2.1")
+
+console.print(tree)
+
+
+- С параметрами:
+
+tree = Tree(
+	"Корень",
+	guide_style="bold bright_blue",
+	expanded=True,
+)
+
+
+
+	--- ПРОГРЕСС И СТАТУС ---
+
+ = Прогресс-бары:
+
+- Базовый прогресс:
+
+from rich.progress import track
+import time
+
+for i in track(range(100), description="Обработка..."):
+	time.sleep(0.01)
+
+
+- Ручное управление:
+
+from rich.progress import Progress
+
+with Progress() as progress:
+	task = progress.add_task("Загрузка...", total=100)
+	while not progress.finished:
+		progress.update(task, advance=1)
+		time.sleep(0.01)
+
+
+- Несколько задач:
+
+with Progress() as progress:
+	task1 = progress.add_task("Задача 1", total=100)
+	task2 = progress.add_task("Задача 2", total=200)
+	while not progress.finished:
+		progress.update(task1, advance=1)
+		progress.update(task2, advance=2)
+		time.sleep(0.01)
+
+
+- Кастомизация:
+
+from rich.progress import (
+	Progress,
+	SpinnerColumn,
+	TextColumn,
+	BarColumn,
+	TimeRemainingColumn,
+)
+
+with Progress(
+	SpinnerColumn(),
+	TextColumn("[progress.description]{task.description}"),
+	BarColumn(),
+	TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+	TimeRemainingColumn(),
+) as progress:
+	task = progress.add_task("Работа...", total=100)
+
+
+ = Статус:
+
+- Спиннер:
+
+with console.status("Загрузка..."):
+	time.sleep(2)
+
+
+- С кастомным спиннером:
+
+with console.status("Обработка", spinner="dots"):
+	time.sleep(2)
+
+# Другие спиннеры: "dots", "line", "simpleDots", "bouncingBar",
+# "arrow", "clock", "moon", "earth", "material" и другие
+
+
+
+	--- ПОДСВЕТКА СИНТАКСИСА ---
+
+ = Syntax:
+
+- Базовый:
+
+from rich.syntax import Syntax
+from rich.console import Console
+
+console = Console()
+code = '''
+def hello():
+	print("Hello, World!")
+'''
+
+syntax = Syntax(code, "python", theme="monokai", line_numbers=True)
+console.print(syntax)
+
+
+- Из файла:
+
+syntax = Syntax.from_path("script.py", line_numbers=True)
+console.print(syntax)
+
+
+- Параметры:
+
+syntax = Syntax(
+	code,
+	"python",
+	theme="monokai",		# тема подсветки
+	line_numbers=True,		# номера строк
+	word_wrap=True,			# перенос строк
+	indent_guides=True,		# направляющие отступов
+	highlight_lines={2, 3},	# подсветить строки
+)
+
+
+
+	--- MARKDOWN И JSON ---
+
+ = Markdown:
+
+- Рендер Markdown:
+
+from rich.markdown import Markdown
+from rich.console import Console
+
+console = Console()
+markdown = Markdown("""
+# Заголовок
+
+**Жирный** текст и *курсив*.
+
+- Элемент 1
+- Элемент 2
+
+```python
+print("Hello")
+```
+""")
+
+console.print(markdown)
+
+
+- С параметрами:
+
+markdown = Markdown(
+	text,
+	code_theme="monokai",	# тема для кода
+	justify="left",			# выравнивание
+	inline_code_lexer="python",
+)
+
+
+ = JSON:
+
+- Pretty JSON:
+
+console.print_json('{"name": "Alice", "age": 30}')
+
+
+
+	--- ЛОГИРОВАНИЕ ---
+
+ = RichHandler:
+
+- Настройка:
+
+import logging
+from rich.logging import RichHandler
+
+FORMAT = "%(message)s"
+
+logging.basicConfig(
+	level="NOTSET",
+	format=FORMAT,
+	datefmt="[%X]",
+	handlers=[RichHandler()],
+)
+
+log = logging.getLogger("rich")
+log.info("Hello, World!")
+
+
+- С разметкой:
+
+log.error("[bold red blink]Сервер выключается![/]",
+	extra={"markup": True})
+
+
+- Отключить подсветку:
+
+log.error("123 не будет подсвечен",
+	extra={"highlighter": None})
+
+
+ = Обработка исключений:
+
+- Красивые исключения в логах:
+
+logging.basicConfig(
+	level="NOTSET",
+	format="%(message)s",
+	datefmt="[%X]",
+	handlers=[RichHandler(rich_tracebacks=True)],
+)
+
+log = logging.getLogger("rich")
+
+try:
+	1 / 0
+except Exception:
+	log.exception("Ошибка деления!")
+
+
+- Подавление фреймов:
+
+from rich.logging import RichHandler
+import click
+
+logging.basicConfig(
+	level="NOTSET",
+	format="%(message)s",
+	datefmt="[%X]",
+	handlers=[RichHandler(
+		rich_tracebacks=True,
+		tracebacks_suppress=[click],
+	)],
+)
+
+
+
+	--- TRACEBACKS ---
+
+ = Установка:
+
+- Глобальная замена:
+
+from rich.traceback import install
+
+install(
+	show_locals=True,		# показать локальные переменные
+	width=120,				# ширина traceback
+	extra_lines=3,			# дополнительные строки контекста
+	theme="monokai",		# тема подсветки
+	word_wrap=True,			# перенос длинных строк
+)
+
+# Теперь все необработанные исключения рендерятся красиво
+
+
+- Ручной вывод:
+
+from rich.console import Console
+console = Console()
+
+try:
+	1 / 0
+except Exception:
+	console.print_exception(show_locals=True)
+
+
+
+	--- INSPECT И PRETTY ---
+
+ = Inspect:
+
+- Инспекция объектов:
+
+from rich import inspect
+
+inspect(list)					# информация о классе
+inspect(list, methods=True)		# с методами
+inspect(list, all=True)			# с приватными методами
+inspect(obj, docs=True)			# с docstring
+
+
+ = Pretty:
+
+- Автоформатирование в REPL:
+
+from rich import pretty
+pretty.install()
+
+# Теперь все объекты в REPL выводятся красиво
+
+
+- Ручной pretty-print:
+
+from rich.pretty import pprint
+
+pprint({"users": [{"name": "Alice", "age": 30},
+	{"name": "Bob", "age": 25}]})
+
+
+
+	--- LIVE DISPLAY И LAYOUT ---
+
+ = Live:
+
+- Обновление в реальном времени:
+
+from rich.live import Live
+from rich.table import Table
+import time
+
+def generate_table() -> Table:
+	table = Table()
+	table.add_column("Время")
+	table.add_row(str(time.time()))
+	return table
+
+with Live(generate_table(), refresh_per_second=4) as live:
+	for _ in range(20):
+		time.sleep(0.25)
+		live.update(generate_table())
+
+
+ = Layout:
+
+- Разделение терминала:
+
+from rich.layout import Layout
+from rich.console import Console
+
+console = Console()
+layout = Layout()
+
+layout.split_column(
+	Layout(name="header", size=3),		# фиксированная высота
+	Layout(name="body", ratio=1),		# гибкая высота
+	Layout(name="footer", size=3),
+)
+
+layout["body"].split_row(
+	Layout(name="left"),				# левая панель
+	Layout(name="right"),				# правая панель
+)
+
+layout["header"].update("Заголовок")
+layout["left"].update("Левая панель")
+layout["right"].update("Правая панель")
+
+console.print(layout)
+
+
+
+	--- ЭКСПОРТ ---
+
+ = HTML, SVG, текст:
+
+- Включение записи:
+
+from rich.console import Console
+
+console = Console(record=True)
+console.print("[bold red]Hello[/] World")
+console.print("Ещё вывод")
+
+
+- HTML:
+
+html = console.export_html()			# получить HTML-строку
+console.save_html("output.html")		# записать в файл
+
+
+- SVG:
+
+svg = console.export_svg(title="Мой вывод")	# получить SVG-строку
+console.save_svg("output.svg")				# записать в файл
+
+
+- Текст:
+
+text = console.export_text()			# получить текстовую строку
+console.save_text("output.txt")			# записать в файл
+
+
+- Кастомная тема SVG:
+
+from rich.terminal_theme import MONOKAI
+
+console.save_svg("output.svg", theme=MONOKAI)

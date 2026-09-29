@@ -1,0 +1,994 @@
+	--- ОСНОВЫ REQUESTS ---
+
+ = Назначение:
+
+- HTTP-клиент:
+
+# requests — простая и удобная библиотека для HTTP-запросов
+# Поддерживает GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS
+# Автоматически обрабатывает JSON, cookies, сессии, редиректы
+# Не входит в стандартную библиотеку Python
+
+
+ = Установка:
+
+- Через pip:
+
+pip install requests
+
+
+ = Импорт:
+
+- Стандартный:
+
+import requests
+
+
+ = Быстрый старт:
+
+- GET-запрос:
+
+import requests
+
+response = requests.get('https://api.github.com')
+print(response.status_code)
+print(response.json())
+
+
+ = Версия:
+
+- Проверка:
+
+requests.__version__
+
+
+
+	--- ОСНОВНЫЕ МЕТОДЫ ---
+
+ = GET:
+
+- requests.get():
+
+requests.get(url, params=None, **kwargs)
+
+
+ = POST:
+
+- requests.post():
+
+requests.post(url, data=None, json=None, **kwargs)
+
+
+ = PUT:
+
+- requests.put():
+
+requests.put(url, data=None, **kwargs)
+
+
+ = PATCH:
+
+- requests.patch():
+
+requests.patch(url, data=None, **kwargs)
+
+
+ = DELETE:
+
+- requests.delete():
+
+requests.delete(url, **kwargs)
+
+
+ = HEAD:
+
+- requests.head():
+
+requests.head(url, **kwargs)
+
+
+ = OPTIONS:
+
+- requests.options():
+
+requests.options(url, **kwargs)
+
+
+ = Универсальный:
+
+- requests.request():
+
+requests.request(method, url, **kwargs)
+
+
+
+	--- ПАРАМЕТРЫ ЗАПРОСА ---
+
+ = URL:
+
+- Базовый:
+
+requests.get('https://api.example.com/users')
+
+
+ = Параметры строки запроса:
+
+- params:
+
+payload = {'key1': 'value1', 'key2': 'value2'}
+requests.get('https://httpbin.org/get', params=payload)
+# URL: https://httpbin.org/get?key1=value1&key2=value2
+
+
+ = Данные формы:
+
+- data:
+
+payload = {'key1': 'value1', 'key2': 'value2'}
+requests.post('https://httpbin.org/post', data=payload)
+
+
+ = JSON:
+
+- json:
+
+payload = {'key1': 'value1', 'key2': 'value2'}
+requests.post('https://httpbin.org/post', json=payload)
+# Автоматически устанавливает Content-Type: application/json
+
+
+ = Файлы:
+
+- files:
+
+files = {'file': open('report.xls', 'rb')}
+requests.post('https://httpbin.org/post', files=files)
+
+# С кортежем:
+files = {'file': ('report.xls', open('report.xls', 'rb'), 'application/vnd.ms-excel', {'Expires': '0'})}
+
+# Несколько файлов:
+files = [
+	('images', ('image1.png', open('image1.png', 'rb'), 'image/png')),
+	('images', ('image2.png', open('image2.png', 'rb'), 'image/png')),
+]
+
+
+ = Заголовки:
+
+- headers:
+
+headers = {'User-Agent': 'Mozilla/5.0'}
+requests.get('https://example.com', headers=headers)
+
+
+ = Cookies:
+
+- cookies:
+
+cookies = {'session_id': '12345'}
+requests.get('https://example.com', cookies=cookies)
+
+
+ = Аутентификация:
+
+- auth:
+
+from requests.auth import HTTPBasicAuth
+requests.get('https://api.example.com', auth=HTTPBasicAuth('user', 'pass'))
+
+# Или кортежем:
+requests.get('https://api.example.com', auth=('user', 'pass'))
+
+
+ = Таймаут:
+
+- timeout:
+
+requests.get('https://example.com', timeout=5)
+requests.get('https://example.com', timeout=(3.05, 27))	# (connect, read)
+
+
+ = Разрешение редиректов:
+
+- allow_redirects:
+
+requests.get('https://example.com', allow_redirects=False)
+
+
+ = Прокси:
+
+- proxies:
+
+proxies = {
+	'http': 'http://10.10.1.10:3128',
+	'https': 'http://10.10.1.10:1080',
+}
+requests.get('https://example.com', proxies=proxies)
+
+
+ = SSL-проверка:
+
+- verify:
+
+requests.get('https://example.com', verify=False)	# отключить проверку
+requests.get('https://example.com', verify='/path/to/cert.pem')
+
+
+ = Сертификат клиента:
+
+- cert:
+
+requests.get('https://example.com', cert=('/path/client.cert', '/path/client.key'))
+
+
+ = Потоковая передача:
+
+- stream:
+
+requests.get('https://example.com', stream=True)
+
+
+ = Хуки:
+
+- hooks:
+
+def print_url(r, *args, **kwargs):
+	print(r.url)
+
+requests.get('https://example.com', hooks={'response': print_url})
+
+
+
+	--- ЗАГОЛОВКИ ---
+
+ = Установка:
+
+- headers:
+
+headers = {
+	'User-Agent': 'MyApp/1.0',
+	'Accept': 'application/json',
+	'Authorization': 'Bearer token',
+}
+response = requests.get('https://api.example.com', headers=headers)
+
+
+ = Чтение:
+
+- response.headers:
+
+response.headers['Content-Type']
+response.headers.get('content-type')
+
+# Регистронезависимый словарь
+
+
+
+	--- COOKIES ---
+
+ = Отправка:
+
+- cookies:
+
+cookies = {'session_id': '12345'}
+requests.get('https://example.com', cookies=cookies)
+
+
+ = Получение:
+
+- response.cookies:
+
+response = requests.get('https://example.com')
+response.cookies['session_id']
+
+
+ = CookieJar:
+
+- requests.cookies.RequestsCookieJar:
+
+jar = requests.cookies.RequestsCookieJar()
+jar.set('name', 'value', domain='example.com', path='/')
+requests.get('https://example.com', cookies=jar)
+
+
+ = Сохранение в сессии:
+
+- session.cookies:
+
+session = requests.Session()
+session.get('https://example.com/login')
+print(session.cookies)
+
+
+
+	--- СЕССИИ ---
+
+ = Создание:
+
+- requests.Session():
+
+session = requests.Session()
+
+
+ = Преимущества:
+
+- Сохранение cookies:
+
+# Cookies сохраняются между запросами
+
+
+- Общие заголовки:
+
+session.headers.update({'User-Agent': 'MyApp/1.0'})
+
+
+- Общие параметры:
+
+session.params.update({'key': 'value'})
+
+
+- Аутентификация:
+
+session.auth = ('user', 'pass')
+
+
+- Прокси:
+
+session.proxies = {'https': 'http://10.10.1.10:1080'}
+
+
+ = Использование:
+
+- GET/POST через сессию:
+
+session.get('https://example.com')
+session.post('https://example.com', data={'key': 'value'})
+
+
+ = Закрытие:
+
+- session.close():
+
+session.close()
+
+# Или контекстный менеджер:
+with requests.Session() as session:
+	session.get('https://example.com')
+
+
+ = Монтирование адаптеров:
+
+- session.mount():
+
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+
+retry = Retry(total=3, backoff_factor=0.5, status_forcelist=[500, 502, 503, 504])
+adapter = HTTPAdapter(max_retries=retry)
+session.mount('https://', adapter)
+
+
+
+	--- ОТВЕТ ---
+
+ = Атрибуты:
+
+- response.status_code:
+
+response.status_code		# 200, 404, 500...
+
+
+- response.headers:
+
+response.headers			# словарь заголовков
+
+
+- response.text:
+
+response.text				# тело как строка (unicode)
+
+
+- response.content:
+
+response.content			# тело как байты
+
+
+- response.json():
+
+response.json()				# распарсить JSON
+
+
+- response.url:
+
+response.url				# итоговый URL
+
+
+- response.history:
+
+response.history			# список редиректов
+
+
+- response.elapsed:
+
+response.elapsed			# время выполнения (timedelta)
+
+
+- response.request:
+
+response.request			# исходный PreparedRequest
+
+
+- response.ok:
+
+response.ok					# True, если статус < 400
+
+
+- response.encoding:
+
+response.encoding			# кодировка (из заголовков или кастомная)
+
+
+- response.apparent_encoding:
+
+response.apparent_encoding	# определённая кодировка
+
+
+ = Методы:
+
+- raise_for_status():
+
+response.raise_for_status()	# исключение при 4xx/5xx
+
+
+- iter_content():
+
+for chunk in response.iter_content(chunk_size=8192):
+	pass
+
+
+- iter_lines():
+
+for line in response.iter_lines():
+	pass
+
+
+- close():
+
+response.close()
+
+
+ = Проверки:
+
+- ok:
+
+if response.ok:
+	pass
+
+
+- status_code:
+
+if response.status_code == 200:
+	pass
+elif response.status_code == 404:
+	pass
+
+
+
+	--- ОШИБКИ И ИСКЛЮЧЕНИЯ ---
+
+ = Базовое исключение:
+
+- requests.exceptions.RequestException:
+
+# Все исключения requests наследуются от RequestException
+
+
+ = Частые исключения:
+
+- ConnectionError:
+
+# Ошибка соединения
+
+
+- HTTPError:
+
+# raise_for_status() вызвал ошибку
+
+
+- Timeout:
+
+# Таймаут
+
+
+- TooManyRedirects:
+
+# Слишком много редиректов
+
+
+- URLRequired:
+
+# URL не указан
+
+
+- MissingSchema:
+
+# URL без схемы (http://, https://)
+
+
+- InvalidSchema:
+
+# Неподдерживаемая схема
+
+
+- InvalidURL:
+
+# Некорректный URL
+
+
+- InvalidHeader:
+
+# Некорректный заголовок
+
+
+- ChunkedEncodingError:
+
+# Ошибка chunked-кодирования
+
+
+- ContentDecodingError:
+
+# Ошибка декодирования контента
+
+
+- StreamConsumedError:
+
+# Поток уже прочитан
+
+
+- RetryError:
+
+# Ошибка после повторных попыток
+
+
+- UnrewindableBodyError:
+
+# Невозможно перемотать тело
+
+
+ = Обработка:
+
+- try/except:
+
+import requests
+from requests.exceptions import HTTPError, Timeout, ConnectionError
+
+try:
+	response = requests.get('https://example.com', timeout=5)
+	response.raise_for_status()
+except HTTPError as e:
+	print(f'HTTP error: {e}')
+except Timeout:
+	print('Таймаут')
+except ConnectionError:
+	print('Ошибка соединения')
+except requests.exceptions.RequestException as e:
+	print(f'Другая ошибка: {e}')
+
+
+
+	--- АУТЕНТИФИКАЦИЯ ---
+
+ = Basic:
+
+- HTTPBasicAuth:
+
+from requests.auth import HTTPBasicAuth
+requests.get('https://api.example.com', auth=HTTPBasicAuth('user', 'pass'))
+
+# Или:
+requests.get('https://api.example.com', auth=('user', 'pass'))
+
+
+ = Digest:
+
+- HTTPDigestAuth:
+
+from requests.auth import HTTPDigestAuth
+requests.get('https://api.example.com', auth=HTTPDigestAuth('user', 'pass'))
+
+
+ = Proxy:
+
+- HTTPProxyAuth:
+
+from requests.auth import HTTPProxyAuth
+proxies = {'http': 'http://proxy.example.com'}
+auth = HTTPProxyAuth('user', 'pass')
+requests.get('https://example.com', proxies=proxies, auth=auth)
+
+
+ = OAuth:
+
+- requests-oauthlib:
+
+pip install requests-oauthlib
+
+from requests_oauthlib import OAuth1, OAuth2
+
+# OAuth1:
+auth = OAuth1('client_key', 'client_secret', 'resource_owner_key', 'resource_owner_secret')
+requests.get('https://api.example.com', auth=auth)
+
+# OAuth2:
+token = {'access_token': 'token', 'token_type': 'Bearer'}
+requests.get('https://api.example.com', headers={'Authorization': f"Bearer {token['access_token']}"})
+
+
+
+	--- ПРОКСИ ---
+
+ = HTTP/HTTPS:
+
+- proxies:
+
+proxies = {
+	'http': 'http://10.10.1.10:3128',
+	'https': 'http://10.10.1.10:1080',
+}
+requests.get('https://example.com', proxies=proxies)
+
+
+ = SOCKS:
+
+- requests[socks]:
+
+pip install requests[socks]
+
+proxies = {
+	'http': 'socks5://user:pass@host:port',
+	'https': 'socks5://user:pass@host:port',
+}
+requests.get('https://example.com', proxies=proxies)
+
+
+ = Переменные окружения:
+
+- HTTP_PROXY, HTTPS_PROXY:
+
+# requests автоматически использует переменные окружения
+# Отключить: session.trust_env = False
+
+
+
+	--- SSL ---
+
+ = Проверка:
+
+- verify:
+
+requests.get('https://example.com', verify=True)				# по умолчанию
+requests.get('https://example.com', verify=False)				# отключить
+requests.get('https://example.com', verify='/path/to/cert.pem')	# свой CA
+
+
+ = Предупреждения:
+
+- urllib3:
+
+# При verify=False появляется InsecureRequestWarning
+# Отключить:
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+
+ = Клиентский сертификат:
+
+- cert:
+
+requests.get('https://example.com', cert=('/path/client.cert', '/path/client.key'))
+requests.get('https://example.com', cert='/path/client.pem')
+
+
+
+	--- ФАЙЛЫ ---
+
+ = Отправка:
+
+- files:
+
+files = {'file': open('report.xls', 'rb')}
+requests.post('https://httpbin.org/post', files=files)
+
+
+- С MIME-типом:
+
+files = {'file': ('report.xls', open('report.xls', 'rb'), 'application/vnd.ms-excel')}
+
+
+- Несколько файлов:
+
+files = [
+	('images', ('image1.png', open('image1.png', 'rb'), 'image/png')),
+	('images', ('image2.png', open('image2.png', 'rb'), 'image/png')),
+]
+
+
+ = Получение:
+
+- iter_content():
+
+response = requests.get('https://example.com/image.png', stream=True)
+with open('image.png', 'wb') as f:
+	for chunk in response.iter_content(chunk_size=8192):
+		f.write(chunk)
+
+
+
+	--- JSON ---
+
+ = Отправка:
+
+- json:
+
+payload = {'key': 'value'}
+requests.post('https://httpbin.org/post', json=payload)
+
+
+ = Получение:
+
+- response.json():
+
+response = requests.get('https://api.github.com')
+data = response.json()
+print(data['current_user_url'])
+
+
+ = Обработка ошибок:
+
+- JSONDecodeError:
+
+try:
+	data = response.json()
+except requests.exceptions.JSONDecodeError:
+	print('Не JSON')
+
+# В старых версиях: ValueError
+
+
+
+	--- STREAMING ---
+
+ = Потоковая загрузка:
+
+- stream=True:
+
+response = requests.get('https://example.com/big_file', stream=True)
+
+
+- iter_content():
+
+with open('big_file', 'wb') as f:
+	for chunk in response.iter_content(chunk_size=8192):
+		f.write(chunk)
+
+
+- iter_lines():
+
+for line in response.iter_lines():
+	if line:
+		print(line.decode('utf-8'))
+
+
+- raw:
+
+response.raw.read(1024)
+
+
+
+	--- ТАЙМАУТЫ ---
+
+ = Установка:
+
+- timeout:
+
+requests.get('https://example.com', timeout=5)	# 5 секунд
+requests.get('https://example.com', timeout=(3.05, 27))	# (connect, read)
+
+
+- None:
+
+requests.get('https://example.com', timeout=None)	# бесконечно (не рекомендуется)
+
+
+ = Исключения:
+
+- Timeout:
+
+from requests.exceptions import Timeout
+try:
+	requests.get('https://example.com', timeout=0.001)
+except Timeout:
+	print('Таймаут')
+
+
+
+	--- ХУКИ ---
+
+ = Response hooks:
+
+- hooks:
+
+def print_url(r, *args, **kwargs):
+	print(f'URL: {r.url}')
+
+def record_hook(r, *args, **kwargs):
+	r.hook_called = True
+	return r
+
+requests.get('https://example.com', hooks={'response': [print_url, record_hook]})
+
+
+
+	--- АДАПТЕРЫ И RETRY ---
+
+ = HTTPAdapter:
+
+- Создание:
+
+from requests.adapters import HTTPAdapter
+
+adapter = HTTPAdapter(max_retries=3, pool_connections=10, pool_maxsize=10)
+session = requests.Session()
+session.mount('https://', adapter)
+session.mount('http://', adapter)
+
+
+ = Retry:
+
+- urllib3.util.retry.Retry:
+
+from urllib3.util.retry import Retry
+
+retry = Retry(
+	total=3,
+	read=3,
+	connect=3,
+	backoff_factor=0.5,
+	status_forcelist=[500, 502, 503, 504],
+	method_whitelist=frozenset(['GET', 'POST']),
+)
+adapter = HTTPAdapter(max_retries=retry)
+
+
+ = Пример:
+
+- Полный:
+
+import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+
+session = requests.Session()
+retry = Retry(total=5, backoff_factor=0.1, status_forcelist=[500, 502, 503, 504])
+adapter = HTTPAdapter(max_retries=retry)
+session.mount('http://', adapter)
+session.mount('https://', adapter)
+response = session.get('https://example.com')
+
+
+
+	--- ПРИМЕЧАНИЯ ---
+
+ = Совместимость:
+
+- Версии Python:
+
+# requests 2.32: Python 3.8+
+# requests 2.31: Python 3.7+
+# requests 2.28: Python 3.7+
+# requests 2.27: Python 3.6+
+# Рекомендуется Python 3.8+
+
+
+ = Частые ошибки:
+
+- Забыли timeout:
+
+# Без timeout запрос может висеть бесконечно
+# Всегда указывайте timeout
+
+
+- verify=False:
+
+# Отключает проверку SSL, небезопасно
+# Используйте только для отладки
+
+
+- Сессия не закрыта:
+
+# Используйте with requests.Session() as session:
+
+
+- Content-Type:
+
+# json= устанавливает application/json
+# data= устанавливает application/x-www-form-urlencoded
+# files= устанавливает multipart/form-data
+
+
+- Кодировка:
+
+# response.text использует encoding из заголовков
+# Если кодировка неверна: response.encoding = 'utf-8'
+
+
+ = Рекомендации:
+
+- Используйте сессии:
+
+# Для нескольких запросов к одному хосту
+# Сохраняет cookies, заголовки, соединения
+
+
+- Всегда указывайте timeout:
+
+# Защита от зависаний
+
+
+- Обрабатывайте исключения:
+
+# try/except requests.exceptions.RequestException
+
+
+- Используйте raise_for_status():
+
+# Для проверки статуса
+
+
+- Для больших файлов:
+
+# stream=True + iter_content()
+
+
+- Для повторных попыток:
+
+# HTTPAdapter + Retry
+
+
+- Для отладки:
+
+# response.request.headers, response.request.body
+
+
+- Для JSON:
+
+# response.json() вместо json.loads(response.text)
+
+
+- Для проверки SSL:
+
+# Не отключайте verify без необходимости
+
+
+- Для прокси:
+
+# Учитывайте переменные окружения
+
+
+ = Ссылки:
+
+- Документация:
+
+# https://requests.readthedocs.io/
+# https://requests.readthedocs.io/en/latest/api/
+
+
+- Исходный код:
+
+# https://github.com/psf/requests
+
+
+- urllib3:
+
+# https://urllib3.readthedocs.io/

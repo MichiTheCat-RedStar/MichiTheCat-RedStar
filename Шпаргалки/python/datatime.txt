@@ -1,0 +1,460 @@
+	--- ОСНОВЫ DATETIME ---
+
+ = Назначение:
+
+- Работа с датами и временем:
+
+# Модуль datetime предоставляет классы для работы с датами и временем
+# Входит в стандартную библиотеку Python
+# Основные классы: date, time, datetime, timedelta, tzinfo, timezone
+# Для IANA-часовых поясов используйте zoneinfo (Python 3.9+)
+
+
+ = Импорт:
+
+- Стандартный:
+
+from datetime import datetime, date, time, timedelta, timezone
+
+
+- Модуль целиком:
+
+import datetime
+
+
+- ZoneInfo:
+
+from zoneinfo import ZoneInfo
+
+
+
+	--- КЛАССЫ ---
+
+ = date:
+
+- Только дата:
+
+date(year, month, day)
+date.today()
+date.fromtimestamp(ts)
+date.fromisoformat('2026-09-29')
+
+# Атрибуты: year, month, day
+# Методы: weekday(), isoweekday(), isoformat(), strftime(), replace()
+
+
+ = time:
+
+- Только время:
+
+time(hour, minute, second, microsecond, tzinfo)
+time.fromisoformat('12:34:56')
+
+# Атрибуты: hour, minute, second, microsecond, tzinfo
+# Методы: isoformat(), strftime(), replace()
+
+
+ = datetime:
+
+- Дата и время:
+
+datetime(year, month, day, hour, minute, second, microsecond, tzinfo)
+datetime.now(tz=None)
+datetime.utcnow()				# deprecated since 3.12
+datetime.today()
+datetime.fromtimestamp(ts, tz=None)
+datetime.utcfromtimestamp(ts)	# deprecated since 3.12
+datetime.fromisoformat('2026-09-29T12:34:56')
+datetime.combine(date, time)
+datetime.strptime('2026-09-29', '%Y-%m-%d')
+
+# Атрибуты: year, month, day, hour, minute, second, microsecond, tzinfo
+# Методы: date(), time(), timetz(), timestamp(), isoformat(),
+#         strftime(), replace(), astimezone()
+
+
+ = timedelta:
+
+- Разница между датами и временем:
+
+timedelta(days=0, seconds=0, microseconds=0,
+	milliseconds=0, minutes=0, hours=0, weeks=0)
+
+# Атрибуты: days, seconds, microseconds
+# Методы: total_seconds()
+# Поддерживает +, -, *, /, //, %, abs(), сравнение
+
+
+ = tzinfo:
+
+- Абстрактный базовый класс для часовых поясов:
+
+# Наследуйте и реализуйте utcoffset(), dst(), tzname(), fromutc()
+# Обычно используйте timezone или ZoneInfo
+
+
+ = timezone:
+
+- Фиксированное смещение от UTC:
+
+timezone.utc
+timezone(timedelta(hours=3))
+timezone(timedelta(hours=5, minutes=30))
+
+# Python 3.11+: datetime.UTC — alias timezone.utc
+
+
+
+	--- СОЗДАНИЕ ДАТ И ВРЕМЕНИ ---
+
+ = Текущие:
+
+- date.today():
+
+date.today()					# только дата
+
+
+- datetime.now():
+
+datetime.now()					# локальные дата и время
+datetime.now(timezone.utc)		# UTC
+datetime.now(ZoneInfo('Europe/Moscow'))
+
+
+ = Из timestamp:
+
+- datetime.fromtimestamp():
+
+datetime.fromtimestamp(ts)
+datetime.fromtimestamp(ts, timezone.utc)
+date.fromtimestamp(ts)
+
+
+ = Из ISO:
+
+- fromisoformat():
+
+date.fromisoformat('2026-09-29')
+time.fromisoformat('12:34:56')
+datetime.fromisoformat('2026-09-29T12:34:56+03:00')
+
+
+ = Комбинирование:
+
+- datetime.combine():
+
+datetime.combine(date(2026, 9, 29), time(12, 34))
+
+
+
+	--- ФОРМАТИРОВАНИЕ ---
+
+ = strftime:
+
+- datetime -> строка:
+
+dt.strftime('%Y-%m-%d %H:%M:%S')
+date.strftime('%d.%m.%Y')
+time.strftime('%H:%M')
+
+
+ = isoformat:
+
+- ISO 8601:
+
+dt.isoformat()					# '2026-09-29T12:34:56+03:00'
+dt.isoformat(sep=' ', timespec='seconds')
+date.isoformat()
+time.isoformat()
+
+
+ = ctime:
+
+- Строковое представление:
+
+dt.ctime()						# 'Tue Sep 29 12:34:56 2026'
+
+
+ = Форматы strftime:
+
+- Основные директивы:
+
+%Y		# год, 4 цифры
+%y		# год, 2 цифры
+%m		# месяц, 01–12
+%d		# день месяца, 01–31
+%H		# часы, 00–23
+%I		# часы, 01–12
+%M		# минуты, 00–59
+%S		# секунды, 00–61
+%f		# микросекунды, 000000–999999
+%j		# день года, 001–366
+%a		# сокращённое название дня недели
+%A		# полное название дня недели
+%b		# сокращённое название месяца
+%B		# полное название месяца
+%p		# AM или PM
+%U		# номер недели, воскресенье — первый день
+%W		# номер недели, понедельник — первый день
+%w		# день недели, 0 — воскресенье
+%z		# смещение UTC, например +0300
+%Z		# название часового пояса
+%c		# локальные дата и время
+%x		# локальная дата
+%X		# локальное время
+%%		# символ %
+
+
+
+	--- ПАРСИНГ ---
+
+ = strptime:
+
+- строка -> datetime:
+
+datetime.strptime('2026-09-29 12:34', '%Y-%m-%d %H:%M')
+# Возвращает datetime
+
+
+ = fromisoformat:
+
+- ISO 8601 -> объект:
+
+datetime.fromisoformat('2026-09-29T12:34:56+03:00')
+date.fromisoformat('2026-09-29')
+time.fromisoformat('12:34:56')
+
+
+
+	--- АРИФМЕТИКА ---
+
+ = timedelta:
+
+- Разница:
+
+delta = dt2 - dt1
+delta.days
+delta.seconds
+delta.microseconds
+delta.total_seconds()
+
+
+- Сложение и вычитание:
+
+dt + timedelta(days=1)
+dt - timedelta(hours=2)
+date + timedelta(weeks=1)
+
+
+ = Сравнение:
+
+- Операторы:
+
+dt1 < dt2
+dt1 == dt2
+
+# Нельзя сравнивать naive и aware datetime — TypeError
+
+
+ = Замена полей:
+
+- replace():
+
+dt.replace(year=2027, month=1)
+date.replace(day=1)
+time.replace(hour=0)
+
+
+
+	--- ЧАСОВЫЕ ПОЯСА ---
+
+ = timezone:
+
+- Фиксированное смещение:
+
+tz = timezone(timedelta(hours=3))
+dt = datetime.now(tz)
+dt.utcoffset()					# datetime.timedelta(seconds=10800)
+
+
+ = ZoneInfo:
+
+- IANA-пояса:
+
+from zoneinfo import ZoneInfo
+
+tz = ZoneInfo('Europe/Moscow')
+dt = datetime.now(tz)
+dt = datetime(2026, 9, 29, 12, 0, tzinfo=ZoneInfo('Europe/Moscow'))
+
+# Требует базы tzdata
+# В Linux обычно есть, в Windows: pip install tzdata
+
+
+ = astimezone:
+
+- Перевод между поясами:
+
+dt_utc = datetime.now(timezone.utc)
+dt_msk = dt_utc.astimezone(ZoneInfo('Europe/Moscow'))
+dt_local = dt_utc.astimezone()	# локальный пояс
+
+
+ = naive и aware:
+
+- naive:
+
+datetime.now()					# без tzinfo
+
+
+- aware:
+
+datetime.now(timezone.utc)		# с tzinfo
+
+# Нельзя смешивать в арифметике и сравнении
+
+
+ = UTC:
+
+- Python 3.11+:
+
+from datetime import UTC
+datetime.now(UTC)
+
+
+- До 3.11:
+
+datetime.now(timezone.utc)
+
+
+
+	--- TIMESTAMP ---
+
+ = Получение:
+
+- dt.timestamp():
+
+dt.timestamp()
+
+# Для aware datetime — корректно
+# Для naive — интерпретируется как локальное время
+
+
+ = Создание:
+
+- fromtimestamp():
+
+datetime.fromtimestamp(ts)
+datetime.fromtimestamp(ts, timezone.utc)
+date.fromtimestamp(ts)
+
+
+ = Осторожно:
+
+- Устаревшие функции:
+
+datetime.utcnow()				# deprecated in 3.12
+datetime.utcfromtimestamp(ts)	# deprecated in 3.12
+
+# Используйте:
+datetime.now(timezone.utc)
+datetime.fromtimestamp(ts, timezone.utc)
+
+
+
+	--- ПОЛЕЗНОЕ ---
+
+ = День недели:
+
+- Методы:
+
+dt.weekday()					# 0 — понедельник, 6 — воскресенье
+dt.isoweekday()					# 1 — понедельник, 7 — воскресенье
+dt.strftime('%A')				# название дня
+
+
+ = ISO календарь:
+
+- isocalendar():
+
+dt.isocalendar()				# (year, week, weekday)
+dt.isocalendar().week
+dt.isocalendar().weekday
+
+
+ = Начало и конец дня:
+
+- Комбинации:
+
+datetime.combine(dt.date(), time.min)
+datetime.combine(dt.date(), time.max)
+dt.replace(hour=0, minute=0, second=0, microsecond=0)
+
+
+ = Сумма и разница:
+
+- Агрегация:
+
+sum(timedeltas, timedelta())
+min(dt1, dt2)
+max(dt1, dt2)
+
+
+ = Форматирование с локалью:
+
+- locale:
+
+import locale
+locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
+dt.strftime('%A, %d %B %Y')
+
+
+
+	--- ПРИМЕЧАНИЯ ---
+
+ = Совместимость:
+
+- Версии Python:
+
+# Python 3.9+: zoneinfo
+# Python 3.11+: datetime.UTC
+# Python 3.12: utcnow() и utcfromtimestamp() deprecated
+
+
+ = Частые ошибки:
+
+- Сравнение naive и aware:
+
+# TypeError: can't compare offset-naive and offset-aware datetimes
+
+
+- timestamp() для naive:
+
+# Зависит от локального часового пояса
+
+
+- Забыли tzdata на Windows:
+
+# ZoneInfoNotFoundError
+
+
+ = Рекомендации:
+
+- Храните время в UTC:
+
+datetime.now(timezone.utc)
+
+
+- Переводите в локальное только для отображения:
+
+dt.astimezone()
+
+
+- Для IANA-поясов используйте ZoneInfo:
+
+from zoneinfo import ZoneInfo
+
+
+- Для календарных дат без времени используйте date:
+
+date.today()

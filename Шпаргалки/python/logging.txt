@@ -1,0 +1,692 @@
+	--- ОСНОВЫ LOGGING ---
+
+ = Назначение:
+
+- Логирование событий:
+
+# Модуль logging — стандартный фреймворк для ведения журналов
+# Позволяет писать сообщения разных уровней важности
+# в файл, консоль, сеть и другие приёмники
+# Входит в стандартную библиотеку Python
+
+
+ = Импорт:
+
+- Стандартный:
+
+import logging
+
+
+ = Быстрый старт:
+
+- Простейший пример:
+
+import logging
+
+logging.warning("Это предупреждение")
+logging.info("Это не покажется — по умолчанию уровень WARNING")
+
+# По умолчанию вывод в stderr, уровень WARNING
+
+
+- Настройка уровня:
+
+logging.basicConfig(level=logging.DEBUG)
+logging.debug("Теперь видно")
+
+
+
+	--- УРОВНИ ЛОГИРОВАНИЯ ---
+
+ = Встроенные уровни:
+
+- По возрастанию важности:
+
+logging.DEBUG		# 10 — отладочная информация
+logging.INFO		# 20 — обычные события
+logging.WARNING		# 30 — предупреждение (по умолчанию)
+logging.ERROR		# 40 — ошибка
+logging.CRITICAL	# 50 — критическая ошибка
+
+
+
+ = Функции логирования:
+
+- Удобные вызовы:
+
+logging.debug("сообщение")
+logging.info("сообщение")
+logging.warning("сообщение")
+logging.error("сообщение")
+logging.critical("сообщение")
+
+
+ = Кастомный уровень:
+
+- addLevelName:
+
+logging.addLevelName(25, "NOTICE")
+logging.log(25, "Сообщение уровня NOTICE")
+
+
+
+	--- LOGGER ---
+
+ = Создание логгера:
+
+- getLogger:
+
+import logging
+
+logger = logging.getLogger(__name__)	# по имени модуля (рекомендуется)
+logger = logging.getLogger("myapp")		# именованный
+logger = logging.getLogger()			# корневой
+
+
+
+ = Иерархия:
+
+- Дочерние логгеры:
+
+# logging.getLogger('a.b.c') — дочерний к 'a.b' и 'a'
+# Сообщения передаются наверх к родителям, если propagate=True
+# Корневой логгер — 'root', имя пустое
+
+
+ = Основные методы:
+
+- Логирование:
+
+logger.debug("отладка")
+logger.info("информация")
+logger.warning("предупреждение")
+logger.error("ошибка")
+logger.critical("критично")
+logger.exception("ошибка с traceback")		# только в except
+logger.log(logging.INFO, "через log()")
+
+
+- Проверка уровня:
+
+if logger.isEnabledFor(logging.DEBUG):
+	logger.debug(f"Тяжёлое вычисление: {expensive()}")
+
+
+- Управление:
+
+logger.setLevel(logging.DEBUG)			# уровень
+logger.addHandler(handler)				# добавить обработчик
+logger.removeHandler(handler)			# убрать обработчик
+logger.addFilter(filter)				# добавить фильтр
+logger.removeFilter(filter)				# убрать фильтр
+
+
+
+	--- BASICCONFIG ---
+
+ = Настройка по умолчанию:
+
+- Параметры:
+
+logging.basicConfig(
+	level=logging.INFO,						# уровень корневого логгера
+	filename='app.log',						# файл (по умолчанию stderr)
+	filemode='a',							# 'a' — дозапись, 'w' — перезапись
+	format='%(asctime)s %(levelname)s %(message)s',
+	datefmt='%Y-%m-%d %H:%M:%S',
+	style='%',								# '%', '{' или '$'
+	handlers=[...],							# список обработчиков
+	force=True,								# сбросить прежние настройки
+)
+
+
+- Пример:
+
+logging.basicConfig(
+	level=logging.DEBUG,
+	format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
+	datefmt='%H:%M:%S',
+)
+
+# basicConfig() действует один раз — повторные вызовы без force игнорируются
+
+
+
+	--- HANDLERS ---
+
+ = StreamHandler:
+
+- Вывод в поток:
+
+import logging
+import sys
+
+handler = logging.StreamHandler(sys.stdout)	# по умолчанию stderr
+handler.setLevel(logging.INFO)
+handler.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
+
+logger = logging.getLogger(__name__)
+logger.addHandler(handler)
+
+
+ = FileHandler:
+
+- Запись в файл:
+
+handler = logging.FileHandler('app.log', mode='a', encoding='utf-8')
+handler.setLevel(logging.DEBUG)
+logger.addHandler(handler)
+
+
+ = RotatingFileHandler:
+
+- Ротация по размеру:
+
+from logging.handlers import RotatingFileHandler
+
+handler = RotatingFileHandler(
+	'app.log',
+	maxBytes=10_000_000,		# 10 МБ
+	backupCount=5,				# 5 архивных файлов
+	encoding='utf-8',
+)
+logger.addHandler(handler)
+
+
+ = TimedRotatingFileHandler:
+
+- Ротация по времени:
+
+from logging.handlers import TimedRotatingFileHandler
+
+handler = TimedRotatingFileHandler(
+	'app.log',
+	when='midnight',			# 'S', 'M', 'H', 'D', 'midnight', 'W0'–'W6'
+	interval=1,
+	backupCount=7,
+	encoding='utf-8',
+)
+logger.addHandler(handler)
+
+
+ = SysLogHandler, HTTPHandler и другие:
+
+- Сетевые обработчики:
+
+from logging.handlers import SysLogHandler, HTTPHandler, SocketHandler
+
+syslog = SysLogHandler(address='/dev/log')
+http = HTTPHandler(host='example.com', url='/log', method='POST')
+sock = SocketHandler('localhost', 9999)
+
+
+ = NullHandler:
+
+- Заглушка:
+
+handler = logging.NullHandler()
+logger.addHandler(handler)
+
+# Используется в библиотеках, чтобы не выводить ничего без настройки пользователя
+
+
+ = QueueHandler и QueueListener:
+
+- Асинхронное логирование:
+
+from logging.handlers import QueueHandler, QueueListener
+from queue import Queue
+
+queue = Queue()
+handler = QueueHandler(queue)
+logger.addHandler(handler)
+
+# В другом потоке:
+# listener = QueueListener(queue, *other_handlers)
+# listener.start()
+
+
+
+	--- FORMATTER ---
+
+ = Создание:
+
+- Formatter:
+
+formatter = logging.Formatter(
+	'%(asctime)s [%(levelname)s] %(name)s: %(message)s',
+	datefmt='%Y-%m-%d %H:%M:%S',
+)
+
+
+- Стиль:
+
+formatter = logging.Formatter(
+	'{asctime} [{levelname}] {name}: {message}',
+	style='{',
+	datefmt='%H:%M:%S',
+)
+
+
+- Стиль $ (string.Template):
+
+formatter = logging.Formatter(
+	'${asctime} [${levelname}] ${message}',
+	style='$',
+)
+
+
+ = Поля формата:
+
+- Основные:
+
+%(name)s			# имя логгера
+%(levelno)s			# числовой уровень
+%(levelname)s		# название уровня
+%(pathname)s		# путь к файлу
+%(filename)s		# имя файла
+%(module)s			# имя модуля
+%(funcName)s		# имя функции
+%(lineno)d			# номер строки
+%(created)f			# timestamp (time.time())
+%(asctime)s			# дата и время
+%(msecs)d			# миллисекунды
+%(relativeCreated)d	# миллисекунды с момента загрузки logging
+%(thread)d			# ID потока
+%(threadName)s		# имя потока
+%(process)d			# ID процесса
+%(processName)s		# имя процесса
+%(message)s			# сообщение
+
+
+- Пример:
+
+formatter = logging.Formatter(
+	'%(asctime)s %(levelname)-8s %(name)s:%(lineno)d — %(message)s',
+	datefmt='%Y-%m-%d %H:%M:%S',
+)
+
+
+
+	--- ФИЛЬТРЫ ---
+
+ = Создание:
+
+- Filter:
+
+class OnlyErrors(logging.Filter):
+	def filter(self, record: logging.LogRecord) -> bool:
+		return record.levelno >= logging.ERROR
+
+
+logger.addFilter(OnlyErrors())
+
+
+ = По имени логгера:
+
+- Фильтр по префиксу:
+
+f = logging.Filter('myapp.db')		# пропускает 'myapp.db', 'myapp.db.pool'
+
+logger.addFilter(f)
+
+
+
+	--- LOGGERADAPTER ---
+
+ = Добавление контекста:
+
+- LoggerAdapter:
+
+import logging
+
+logger = logging.getLogger(__name__)
+
+adapter = logging.LoggerAdapter(logger, {'user': 'alice'})
+adapter.info("Пользователь вошёл")
+
+# В формат можно добавить: %(user)s
+
+
+ = Кастомный адаптер:
+
+- Переопределение process():
+
+class ContextAdapter(logging.LoggerAdapter):
+	def process(self, msg, kwargs):
+		return f"[{self.extra['request_id']}] {msg}", kwargs
+
+
+
+	--- КОНФИГУРАЦИЯ ---
+
+ = dictConfig:
+
+- Словарь:
+
+import logging.config
+
+logging.config.dictConfig({
+	'version': 1,
+	'disable_existing_loggers': False,
+	'formatters': {
+		'default': {
+			'format': '%(asctime)s [%(levelname)s] %(name)s: %(message)s',
+			'datefmt': '%Y-%m-%d %H:%M:%S',
+		},
+	},
+	'handlers': {
+		'console': {
+			'class': 'logging.StreamHandler',
+			'level': 'INFO',
+			'formatter': 'default',
+			'stream': 'ext://sys.stdout',
+		},
+		'file': {
+			'class': 'logging.handlers.RotatingFileHandler',
+			'level': 'DEBUG',
+			'formatter': 'default',
+			'filename': 'app.log',
+			'maxBytes': 10_000_000,
+			'backupCount': 5,
+			'encoding': 'utf-8',
+		},
+	},
+	'loggers': {
+		'myapp': {
+			'level': 'DEBUG',
+			'handlers': ['console', 'file'],
+			'propagate': False,
+		},
+	},
+	'root': {
+		'level': 'WARNING',
+		'handlers': ['console'],
+	},
+})
+
+
+ = fileConfig:
+
+- INI-файл:
+
+logging.config.fileConfig('logging.ini')
+
+
+ = INI-пример:
+
+- logging.ini:
+
+[loggers]
+keys=root,myapp
+
+[handlers]
+keys=console,file
+
+[formatters]
+keys=default
+
+[logger_root]
+level=WARNING
+handlers=console
+
+[logger_myapp]
+level=DEBUG
+handlers=console,file
+qualname=myapp
+propagate=0
+
+[handler_console]
+class=StreamHandler
+level=INFO
+formatter=default
+args=(sys.stdout,)
+
+[handler_file]
+class=handlers.RotatingFileHandler
+level=DEBUG
+formatter=default
+args=('app.log', 'a', 10000000, 5)
+
+[formatter_default]
+format=%(asctime)s [%(levelname)s] %(name)s: %(message)s
+datefmt=%Y-%m-%d %H:%M:%S
+
+
+ = listen():
+
+- Динамическая переконфигурация:
+
+import logging.config
+
+logging.config.listen(9999)		# слушает сокет для dictConfig
+
+# Отправить новую конфигурацию:
+# import socket, json
+# sock = socket.socket()
+# sock.connect(('localhost', 9999))
+# sock.send(json.dumps(config).encode())
+
+
+
+	--- LOGRECORD ---
+
+ = Атрибуты:
+
+- Поля записи:
+
+record.name			# имя логгера
+record.levelno		# числовой уровень
+record.levelname	# название уровня
+record.pathname		# путь к файлу
+record.filename		# имя файла
+record.module		# имя модуля
+record.lineno		# номер строки
+record.funcName		# имя функции
+record.created		# timestamp
+record.asctime		# строка даты
+record.message		# сообщение (после форматирования)
+record.msg			# исходное сообщение
+record.args			# аргументы
+record.exc_info		# информация об исключении
+record.exc_text		# traceback строкой
+record.stack_info	# информация о стеке
+record.thread		# ID потока
+record.threadName	# имя потока
+record.process		# ID процесса
+
+
+ = Ленивое форматирование:
+
+- Правильно:
+
+logger.info("Пользователь %s вошёл", username)
+
+# НЕ так:
+# logger.info(f"Пользователь {username} вошёл")
+
+# Ленивое форматирование дешевле — строка собирается только при выводе
+
+
+
+	--- ИСКЛЮЧЕНИЯ ---
+
+ = logger.exception:
+
+- Логирование в блоке except:
+
+try:
+	1 / 0
+except ZeroDivisionError:
+	logger.exception("Ошибка деления")
+
+# Уровень ERROR + traceback автоматически
+
+
+ = exc_info вручную:
+
+- Явно:
+
+logger.error("Ошибка", exc_info=True)
+
+
+- Передать кортеж:
+
+import sys
+
+try:
+	1 / 0
+except Exception:
+	logger.error("Ошибка", exc_info=sys.exc_info())
+
+
+ = stack_info:
+
+- Информация о стеке:
+
+logger.info("Событие", stack_info=True)
+
+
+	--- ПОЛЕЗНОЕ ---
+
+ = Логирование в JSON:
+
+- Кастомный Formatter:
+
+import json
+import logging
+
+class JSONFormatter(logging.Formatter):
+	def format(self, record: logging.LogRecord) -> str:
+		data = {
+			'time': self.formatTime(record),
+			'level': record.levelname,
+			'name': record.name,
+			'message': record.getMessage(),
+		}
+		if record.exc_info:
+			data['exc'] = self.formatException(record.exc_info)
+		return json.dumps(data, ensure_ascii=False)
+
+
+- Подключение:
+
+handler = logging.StreamHandler()
+handler.setFormatter(JSONFormatter())
+logger.addHandler(handler)
+
+
+ = Цветной вывод:
+
+- Простой вариант:
+
+class ColorFormatter(logging.Formatter):
+	COLORS = {
+		'DEBUG': '\033[36m',
+		'INFO': '\033[32m',
+		'WARNING': '\033[33m',
+		'ERROR': '\033[31m',
+		'CRITICAL': '\033[35m',
+	}
+	RESET = '\033[0m'
+
+	def format(self, record):
+		color = self.COLORS.get(record.levelname, '')
+		msg = super().format(record)
+		return f"{color}{msg}{self.RESET}"
+
+
+- С rich:
+
+from rich.logging import RichHandler
+
+logging.basicConfig(
+	level=logging.INFO,
+	format='%(message)s',
+	datefmt='[%X]',
+	handlers=[RichHandler(rich_tracebacks=True)],
+)
+
+
+ = disable:
+
+- Отключить логгер:
+
+logging.disable(logging.CRITICAL)		# отключить всё до CRITICAL
+logging.disable(logging.NOTSET)			# включить обратно
+
+
+ = shutdown:
+
+- Корректное завершение:
+
+logging.shutdown()
+
+# Закрывает все handlers, сбрасывает буферы
+# Вызывается автоматически при выходе из интерпретатора
+
+
+
+	--- ПРИМЕЧАНИЯ ---
+
+ = Рекомендации:
+
+- Один логгер на модуль:
+
+logger = logging.getLogger(__name__)
+
+
+- Не используйте root для библиотек:
+
+# Библиотеки должны добавлять NullHandler
+logger.addHandler(logging.NullHandler())
+
+
+- Не логируйте через basicConfig в библиотеках:
+
+# Пусть настройка — задача приложения
+
+
+- Не используйте f-strings:
+
+logger.info("Значение: %s", value)		# правильно
+logger.info(f"Значение: {value}")		# неправильно
+
+
+ = Частые ошибки:
+
+- basicConfig не работает повторно:
+
+# Вызывайте один раз или используйте force=True
+
+
+- propagate=True в дочерних:
+
+# Сообщения дублируются, если обработчики и на родителе, и на ребёнке
+
+
+- Логирование секретов:
+
+# Не пишите пароли, токены, персональные данные
+
+
+ = Уровни для окружений:
+
+- Development:
+
+# DEBUG
+
+
+- Testing:
+
+# INFO
+
+
+- Staging:
+
+# WARNING
+
+
+- Production:
+
+# ERROR или WARNING

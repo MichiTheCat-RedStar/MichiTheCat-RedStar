@@ -1,0 +1,256 @@
+	--- ОСНОВЫ TIME ---
+
+ = Назначение:
+
+- Работа со временем:
+
+# Модуль time предоставляет функции для получения времени,
+# задержек, форматирования и парсинга дат
+# Входит в стандартную библиотеку Python
+
+
+ = Импорт:
+
+- Стандартный:
+
+import time
+
+
+
+	--- ПОЛУЧЕНИЕ ВРЕМЕНИ ---
+
+ = Текущее время:
+
+- time.time():
+
+time.time()			# секунды с начала эпохи (Unix time), float
+time.time_ns()		# то же, но в наносекундах, int
+
+
+- time.perf_counter():
+
+time.perf_counter()	# высокоточный счётчик для бенчмарков
+					# включает время сна, не зависит от системных часов
+
+
+- time.process_time():
+
+time.process_time()	# CPU время процесса
+					# не включает время сна
+
+
+- time.monotonic():
+
+time.monotonic()	# монотонные часы, не идут назад
+					# не зависит от системного времени
+
+
+- time.clock_gettime(clk_id):
+
+time.clock_gettime(time.CLOCK_REALTIME)				# системное время
+time.clock_gettime(time.CLOCK_MONOTONIC)			# монотонное время
+time.clock_gettime(time.CLOCK_PROCESS_CPUTIME_ID)	# CPU процесса
+time.clock_gettime(time.CLOCK_THREAD_CPUTIME_ID)	# CPU потока
+# Доступно только на Unix
+
+
+ = Информация о часах:
+
+- time.get_clock_info(name):
+
+time.get_clock_info('time')			# информация о time()
+time.get_clock_info('perf_counter')	# информация о perf_counter()
+time.get_clock_info('monotonic')	# информация о monotonic()
+# Возвращает named tuple: adjustable, implementation,
+# monotonic, resolution
+
+
+
+	--- ЗАДЕРЖКИ ---
+
+ = time.sleep(secs):
+
+- Приостановка выполнения:
+
+time.sleep(2)			# пауза 2 секунды
+time.sleep(0.5)			# пауза 0.5 секунды
+# На Windows точность ~15 мс, на Unix точнее
+
+
+
+	--- STRUCT_TIME ---
+
+ = Получение struct_time:
+
+- time.gmtime([secs]):
+
+time.gmtime()			# текущее время в UTC
+time.gmtime(0)			# начало эпохи (1970-01-01 00:00:00 UTC)
+
+
+- time.localtime([secs]):
+
+time.localtime()			# текущее локальное время
+time.localtime(1700000000)	# локальное время для указанной метки
+
+
+ = Преобразование struct_time:
+
+- time.mktime(t):
+
+time.mktime(time.localtime())	# struct_time -> секунды (локальное время)
+
+
+- time.asctime([t]):
+
+time.asctime()					# строковое представление
+time.asctime(time.gmtime())		# 'Thu Sep 29 12:34:56 2026'
+
+
+- time.ctime([secs]):
+
+time.ctime()					# текущее время строкой
+time.ctime(1700000000)			# 'Tue Nov 14 22:13:20 2023'
+
+
+ = Поля struct_time:
+
+- Доступные атрибуты:
+
+tm_year		# год, например 2026
+tm_mon		# месяц, 1–12
+tm_mday		# день месяца, 1–31
+tm_hour		# часы, 0–23
+tm_min		# минуты, 0–59
+tm_sec		# секунды, 0–61 (60, 61 для високосных)
+tm_wday		# день недели, 0 — понедельник
+tm_yday		# день года, 1–366
+tm_isdst	# флаг летнего времени: 1, 0 или -1
+
+
+
+	--- ФОРМАТИРОВАНИЕ И ПАРСИНГ ---
+
+ = strftime:
+
+- Форматирование struct_time в строку:
+
+time.strftime("%Y-%m-%d %H:%M:%S")					# текущее время
+time.strftime("%Y-%m-%d", time.gmtime())			# только дата
+time.strftime("%A, %B %d, %Y", time.localtime())	# полный формат
+
+
+ = strptime:
+
+- Парсинг строки в struct_time:
+
+time.strptime("2026-09-29", "%Y-%m-%d")
+time.strptime("29/09/2026 12:34", "%d/%m/%Y %H:%M")
+# Возвращает struct_time
+
+
+ = Форматы strftime:
+
+- Основные директивы:
+
+%Y		# год, 4 цифры
+%y		# год, 2 цифры
+%m		# месяц, 01–12
+%d		# день месяца, 01–31
+%H		# часы, 00–23
+%I		# часы, 01–12
+%M		# минуты, 00–59
+%S		# секунды, 00–61
+%f		# микросекунды, 000000–999999
+%j		# день года, 001–366
+%a		# сокращённое название дня недели
+%A		# полное название дня недели
+%b		# сокращённое название месяца
+%B		# полное название месяца
+%p		# AM или PM
+%U		# номер недели, воскресенье — первый день
+%W		# номер недели, понедельник — первый день
+%w		# день недели, 0 — воскресенье
+%z		# смещение UTC, например +0300
+%Z		# название часового пояса
+%c		# локальные дата и время
+%x		# локальная дата
+%X		# локальное время
+%%		# символ %
+
+
+
+	--- КОНСТАНТЫ ---
+
+ = Часовой пояс:
+
+- time.timezone:
+
+time.timezone		# смещение местного времени от UTC в секундах
+					# западнее UTC — положительное
+
+
+- time.altzone:
+
+time.altzone		# смещение для летнего времени
+
+
+- time.daylight:
+
+time.daylight		# ненулевое, если определено летнее время
+
+
+- time.tzname:
+
+time.tzname			# кортеж из двух строк: стандартное и летнее название
+
+
+ = Константы для clock_gettime:
+
+- Идентификаторы часов:
+
+time.CLOCK_REALTIME				# системное время
+time.CLOCK_MONOTONIC			# монотонное время
+time.CLOCK_PROCESS_CPUTIME_ID	# CPU процесса
+time.CLOCK_THREAD_CPUTIME_ID	# CPU потока
+# Доступны только на Unix
+
+
+
+	--- ПРИМЕЧАНИЯ ---
+
+ = Совместимость:
+
+- Windows:
+
+# time.sleep() имеет точность ~15 мс
+# clock_gettime() недоступна
+
+
+- Unix:
+
+# clock_gettime() и clock_settime() доступны
+# time.sleep() точнее
+
+
+ = Устаревшие функции:
+
+- time.clock():
+
+# Удалена в Python 3.8
+# Используйте time.perf_counter() или time.process_time()
+
+
+ = Рекомендации:
+
+- Для бенчмарков:
+
+# Используйте time.perf_counter()
+
+- Для задержек:
+
+# Используйте time.sleep()
+
+- Для календарных дат:
+
+# Используйте time.localtime(), time.strftime()

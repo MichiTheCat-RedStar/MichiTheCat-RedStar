@@ -1,0 +1,563 @@
+	--- ОСНОВЫ TYPING ---
+
+ = Назначение:
+
+- Аннотации типов:
+
+# Модуль typing предоставляет поддержку аннотаций типов (PEP 484)
+# Входит в стандартную библиотеку Python 3.5+
+# Помогает статическим анализаторам (mypy, pyright) и IDE
+# Не влияет на выполнение во время исполнения (кроме get_type_hints и т.п.)
+
+
+ = Импорт:
+
+- Стандартный:
+
+from typing import List, Dict, Optional, Union, Any, Callable, Tuple, Set
+
+
+- Все:
+
+import typing
+
+
+
+	--- ПРОСТЫЕ ТИПЫ ---
+
+ = Базовые:
+
+- Встроенные типы:
+
+int				# целое число
+float			# число с плавающей запятой
+str				# строка
+bool			# булево
+bytes			# байты
+bytearray		# изменяемые байты
+None			# NoneType
+
+
+- Аннотация переменной:
+
+x: int = 10
+name: str = "Alice"
+flag: bool = True
+
+
+- Аннотация функции:
+
+def add(a: int, b: int) -> int:
+	return a + b
+
+
+
+	--- КОЛЛЕКЦИИ ---
+
+ = Списки, кортежи, множества:
+
+- List:
+
+List[int]				# список целых
+List[str]				# список строк
+list[int]				# Python 3.9+ (встроенный generic)
+
+
+- Tuple:
+
+Tuple[int, str]			# кортеж из двух элементов: int и str
+Tuple[int, ...]			# кортеж произвольной длины из int
+tuple[int, str]			# Python 3.9+
+
+
+- Set и FrozenSet:
+
+Set[int]				# множество целых
+FrozenSet[str]			# неизменяемое множество строк
+set[int]				# Python 3.9+
+
+
+ = Словари:
+
+- Dict:
+
+Dict[str, int]			# словарь: ключ — строка, значение — int
+dict[str, int]			# Python 3.9+
+
+
+ = Абстрактные коллекции:
+
+- Sequence, Mapping, Iterable:
+
+Sequence[int]				# последовательность (list, tuple, str)
+Mapping[str, int]			# отображение (dict)
+MutableMapping[str, int]	# изменяемое отображение
+Iterable[int]				# итерируемый объект
+Iterator[int]				# итератор
+Generator[int, None, None]	# генератор: yield int, send None, return None
+Reversible[int]				# можно перебирать в обратном порядке
+Container[int]				# поддерживает in
+Collection[int]				# Container + Iterable + Sized
+
+
+
+	--- ОБЪЕДИНЕНИЯ И ОПЦИОНАЛЬНЫЕ ---
+
+ = Union:
+
+- Объединение типов:
+
+Union[int, str]			# int или str
+Union[int, str, None]	# int, str или None
+int | str				# Python 3.10+
+
+
+ = Optional:
+
+- Может быть None:
+
+Optional[int]			# int или None (эквивалент Union[int, None])
+Optional[str]			# str или None
+
+
+ = Any:
+
+- Любой тип:
+
+Any						# отключает проверку типа для этого значения
+
+
+ = NoReturn и Never:
+
+- Функция не возвращает управление:
+
+NoReturn				# функция всегда выбрасывает исключение
+Never					# Python 3.11+ (синоним NoReturn)
+
+
+
+	--- ОБОБЩЁННЫЕ ТИПЫ ---
+
+ = TypeVar:
+
+- Объявление переменной типа:
+
+from typing import TypeVar
+
+T = TypeVar('T')				# любой тип
+T = TypeVar('T', int, str)		# ограничен int или str
+T = TypeVar('T', bound=Number)	# ограничен Number или его наследниками
+
+
+- Использование:
+
+def first(items: List[T]) -> T:
+	return items[0]
+
+
+ = Generic:
+
+- Обобщённый класс:
+
+from typing import Generic, TypeVar
+
+T = TypeVar('T')
+
+class Box(Generic[T]):
+	def __init__(self, item: T):
+		self.item = item
+
+	def get(self) -> T:
+		return self.item
+
+
+- Наследование:
+
+class IntBox(Box[int]):
+	pass
+
+
+ = ParamSpec (Python 3.10+):
+
+- Сохранение сигнатуры:
+
+from typing import ParamSpec, Callable, TypeVar
+
+P = ParamSpec('P')
+R = TypeVar('R')
+
+def decorator(func: Callable[P, R]) -> Callable[P, R]:
+	def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+		return func(*args, **kwargs)
+	return wrapper
+
+
+ = Concatenate (Python 3.10+):
+
+- Добавление аргументов:
+
+from typing import Concatenate, ParamSpec, Callable
+
+P = ParamSpec('P')
+R = TypeVar('R')
+
+def with_logging(func: Callable[Concatenate[str, P], R]) -> Callable[P, R]:
+	def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+		print(f"Вызов с аргументами: {args}")
+		return func(*args, **kwargs)
+	return wrapper
+
+
+
+	--- PROTOCOL ---
+
+ = Определение:
+
+- Структурная типизация (утиная типизация):
+
+from typing import Protocol
+
+class SupportsClose(Protocol):
+	def close(self) -> None: ...
+
+# Любой объект с методом close() удовлетворяет этому протоколу
+
+
+ = runtime_checkable:
+
+- Проверка во время выполнения:
+
+from typing import Protocol, runtime_checkable
+
+@runtime_checkable
+class SupportsClose(Protocol):
+	def close(self) -> None: ...
+
+isinstance(obj, SupportsClose)		# работает только для методов
+
+
+ = Пример:
+
+- Использование:
+
+def close_all(items: list[SupportsClose]) -> None:
+	for item in items:
+		item.close()
+
+
+
+	--- TYPEDDICT ---
+
+ = Определение:
+
+- Словарь с фиксированными ключами:
+
+from typing import TypedDict
+
+class Movie(TypedDict):
+	title: str
+	year: int
+
+
+- Использование:
+
+movie: Movie = {'title': 'Inception', 'year': 2010}
+
+
+ = Обязательные и необязательные поля:
+
+- total=False:
+
+class Movie(TypedDict, total=False):
+	title: str
+	year: int
+	rating: float
+
+# Все поля необязательные
+
+
+- Required и NotRequired (Python 3.11+):
+
+from typing import TypedDict, Required, NotRequired
+
+class Movie(TypedDict):
+	title: Required[str]
+	year: NotRequired[int]
+
+
+
+	--- NAMEDTUPLE ---
+
+ = Определение:
+
+- Именованный кортеж:
+
+from typing import NamedTuple
+
+class Point(NamedTuple):
+	x: int
+	y: int
+
+p = Point(1, 2)
+p.x, p.y
+
+
+- С значениями по умолчанию:
+
+class Point(NamedTuple):
+	x: int = 0
+	y: int = 0
+
+
+- Методы:
+
+class Point(NamedTuple):
+	x: int
+	y: int
+
+	def distance(self) -> float:
+		return (self.x**2 + self.y**2) ** 0.5
+
+
+
+	--- LITERAL, FINAL, CLASSVAR ---
+
+ = Literal:
+
+- Конкретные значения:
+
+from typing import Literal
+
+def set_mode(mode: Literal['r', 'w', 'a']) -> None: ...
+
+set_mode('r')		# ok
+set_mode('x')		# ошибка типа
+
+
+ = Final:
+
+- Нельзя переопределить:
+
+from typing import Final
+
+MAX_SIZE: Final = 100
+MAX_SIZE = 200		# ошибка типа
+
+
+- Final в классе:
+
+class Config:
+	VERSION: Final[str] = '1.0'
+
+
+ = ClassVar:
+
+- Атрибут класса, не экземпляра:
+
+from typing import ClassVar
+
+class Counter:
+	count: ClassVar[int] = 0
+
+	def __init__(self):
+		self.value = 0	# атрибут экземпляра
+
+
+
+	--- CALLABLE ---
+
+ = Аннотация функций:
+
+- Базовый:
+
+Callable[[int, str], bool]		# функция (int, str) -> bool
+Callable[..., int]				# любые аргументы -> int
+Callable[[], None]				# без аргументов -> None
+
+
+- Пример:
+
+def apply(func: Callable[[int], int], value: int) -> int:
+	return func(value)
+
+
+ = Callable с ParamSpec:
+
+- Сохранение типов:
+
+from typing import Callable, ParamSpec, TypeVar
+
+P = ParamSpec('P')
+R = TypeVar('R')
+
+def call_with_log(func: Callable[P, R], *args: P.args, **kwargs: P.kwargs) -> R:
+	print(f"Вызов {func.__name__}")
+	return func(*args, **kwargs)
+
+
+
+	--- ANY, NEVER, NORETURN ---
+
+ = Any:
+
+- Отключает проверку:
+
+from typing import Any
+
+def process(data: Any) -> Any:
+	return data
+
+
+ = NoReturn:
+
+- Функция не возвращает управление:
+
+from typing import NoReturn
+
+def fail(message: str) -> NoReturn:
+	raise RuntimeError(message)
+
+
+ = Never (Python 3.11+):
+
+- Синоним NoReturn:
+
+from typing import Never
+
+def fail(message: str) -> Never:
+	raise RuntimeError(message)
+
+
+
+	--- OVERLOAD, CAST, NEWTYPE ---
+
+ = overload:
+
+- Перегрузка функций:
+
+from typing import overload
+
+@overload
+def double(x: int) -> int: ...
+@overload
+def double(x: str) -> str: ...
+
+def double(x):
+	return x * 2
+
+
+ = cast:
+
+- Приведение типа:
+
+from typing import cast
+
+value = cast(int, some_value)	# говорит анализатору, что some_value — int
+
+
+ = NewType:
+
+- Новый тип на основе существующего:
+
+from typing import NewType
+
+UserId = NewType('UserId', int)
+
+user_id = UserId(42)
+# UserId — подтип int, но не наоборот
+
+
+
+	--- ПРОВЕРКА ТИПОВ И УТИЛИТЫ ---
+
+ = get_type_hints:
+
+- Получить аннотации:
+
+from typing import get_type_hints
+
+def func(a: int, b: str) -> bool: ...
+
+hints = get_type_hints(func)
+# {'a': int, 'b': str, 'return': bool}
+
+
+ = get_args и get_origin:
+
+- Разбор обобщённых типов:
+
+from typing import get_args, get_origin, List, Union
+
+get_origin(List[int])		# list
+get_args(List[int])			# (int,)
+get_origin(Union[int, str])	# typing.Union
+get_args(Union[int, str])	# (int, str)
+
+
+ = TypeAlias (Python 3.10+):
+
+- Явное объявление псевдонима:
+
+from typing import TypeAlias
+
+Vector: TypeAlias = list[float]
+Matrix: TypeAlias = list[Vector]
+
+
+ = Self (Python 3.11+):
+
+- Возврат собственного типа:
+
+from typing import Self
+
+class Builder:
+	def set_name(self, name: str) -> Self:
+		self.name = name
+		return self
+
+
+
+	--- ПРИМЕЧАНИЯ ---
+
+ = Совместимость:
+
+- Версии Python:
+
+# Python 3.5: typing введён
+# Python 3.9: встроенные generic (list[int], dict[str, int])
+# Python 3.10: | для Union, ParamSpec, Concatenate, TypeAlias
+# Python 3.11: Self, Never, Required, NotRequired, LiteralString
+
+
+- Обратная совместимость:
+
+from __future__ import annotations
+# Позволяет использовать новые синтаксисы в старых версиях
+
+
+ = Рекомендации:
+
+- Используйте встроенные generic:
+
+list[int] вместо List[int]		# Python 3.9+
+dict[str, int] вместо Dict[str, int]
+
+
+- Избегайте Any:
+
+# Any отключает проверку типов, используйте конкретные типы
+
+
+- Для словарей с фиксированными ключами:
+
+# Используйте TypedDict
+
+
+- Для структурной типизации:
+
+# Используйте Protocol
+
+
+- Для новых типов на основе существующих:
+
+# Используйте NewType, а не type alias

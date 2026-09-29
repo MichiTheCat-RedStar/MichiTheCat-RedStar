@@ -1,0 +1,202 @@
+	--- ОСНОВЫ COLORAMA ---
+
+ = Установка:
+
+- Через pip:
+
+pip install colorama
+
+
+- Через conda:
+
+conda install -c anaconda colorama
+
+
+ = Назначение:
+
+- Кроссплатформенный цветной вывод:
+
+# ANSI escape-последовательности работают на Unix и macOS
+# Colorama заставляет их работать и на Windows
+# На других платформах библиотека ничего не делает
+
+
+ = Инициализация:
+
+- Базовая:
+
+from colorama import init
+init()
+
+# На Windows перехватывает ANSI-коды и заменяет их на Win32-вызовы
+# На других платформах не делает ничего
+
+
+- С автоматическим сбросом стиля:
+
+from colorama import init
+init(autoreset=True)
+
+# После каждого print цвет и стиль сбрасываются автоматически
+
+
+ = Отключение и повторное включение:
+
+- Остановить Colorama:
+
+colorama.deinit()
+
+# Возвращает stdout и stderr в исходное состояние
+
+
+- Возобновить работу:
+
+colorama.reinit()
+
+# Дешевле, чем повторный init()
+
+
+
+	--- ЦВЕТА И СТИЛИ ---
+
+ = Константы переднего плана (Fore):
+
+- Основные цвета:
+
+Fore.BLACK			# чёрный
+Fore.RED			# красный
+Fore.GREEN			# зелёный
+Fore.YELLOW			# жёлтый
+Fore.BLUE			# синий
+Fore.MAGENTA		# пурпурный
+Fore.CYAN			# голубой
+Fore.WHITE			# белый
+Fore.RESET			# сброс цвета
+
+
+ = Константы фона (Back):
+
+- Основные цвета:
+
+Back.BLACK			# чёрный
+Back.RED			# красный
+Back.GREEN			# зелёный
+Back.YELLOW			# жёлтый
+Back.BLUE			# синий
+Back.MAGENTA		# пурпурный
+Back.CYAN			# голубой
+Back.WHITE			# белый
+Back.RESET			# сброс фона
+
+
+ = Стили (Style):
+
+- Доступные стили:
+
+Style.DIM			# тусклый (на Windows выглядит как обычный)
+Style.NORMAL		# обычный
+Style.BRIGHT		# яркий
+Style.RESET_ALL		# сброс цвета, фона и яркости
+
+
+ = Примеры:
+
+- Простой цветной текст:
+
+from colorama import Fore, Style
+print(Fore.RED + 'красный текст')
+print(Style.RESET_ALL + 'снова обычный')
+
+
+- Цвет текста и фона:
+
+print(Fore.BLUE + Back.YELLOW + 'синий на жёлтом')
+
+
+- Яркий текст:
+
+print(Style.BRIGHT + Fore.GREEN + 'ярко-зелёный')
+
+
+
+	--- ПРОДВИНУТОЕ ИСПОЛЬЗОВАНИЕ ---
+
+ = Ручные ANSI-последовательности:
+
+- Прямая вставка кодов:
+
+print('\033[31m' + 'красный текст')		# 31 = красный
+print('\033[39m')						# сброс цвета
+
+
+ = Совместное использование с другими библиотеками:
+
+- Termcolor:
+
+from colorama import init
+from termcolor import colored
+init()
+print(colored('Hello, World!', 'green', 'on_red'))
+
+
+ = Позиционирование курсора:
+
+- ANSI-коды:
+
+# Colorama поддерживает ANSI-последовательности для перемещения курсора
+# Подробности смотрите в демо-скрипте demos/demo06.py
+
+
+ = Аргументы init():
+
+- autoreset:
+
+init(autoreset=True)	# автоматический сброс после каждого print
+
+
+- strip:
+
+init(strip=True)	# принудительно удалять ANSI-коды
+init(strip=False)	# не удалять ANSI-коды
+
+
+- convert:
+
+init(convert=True)	# принудительно конвертировать ANSI в Win32
+init(convert=False)	# не конвертировать
+
+
+- wrap:
+
+init(wrap=False)	# отключить обёртку stdout и stderr
+
+
+
+	--- ПРИМЕЧАНИЯ ---
+
+ = Совместимость:
+
+- Протестировано:
+
+# CPython 3.9, 3.10, 3.11, 3.12, 3.13
+# PyPy 3.11
+
+
+- Требования:
+
+# Только стандартная библиотека Python
+# Никаких внешних зависимостей
+
+
+ = Ограничения:
+
+- Windows:
+
+# ANSI 'dim text' не поддерживается — выглядит как обычный текст
+# Для работы в старых консолях может потребоваться init()
+
+
+- Другие платформы:
+
+# Colorama не делает ничего, кроме опционального autoreset
+# ANSI-коды работают нативно без неё

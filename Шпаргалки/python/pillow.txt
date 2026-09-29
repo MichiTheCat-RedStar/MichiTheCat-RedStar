@@ -1,0 +1,777 @@
+	--- ОСНОВЫ PILLOW ---
+
+ = Назначение:
+
+- Обработка изображений:
+
+# Pillow — библиотека для работы с изображениями
+# Форк PIL (Python Imaging Library), развитие которого прекратилось
+# Поддерживает открытие, создание, редактирование, сохранение
+# Работает с JPEG, PNG, BMP, GIF, TIFF, WebP и другими форматами
+
+
+ = Установка:
+
+- Через pip:
+
+pip install Pillow
+
+
+- Проверка версии:
+
+import PIL
+print(PIL.__version__)
+
+
+ = Импорт:
+
+- Основные модули:
+
+from PIL import Image			# ядро: открытие, создание, сохранение
+from PIL import ImageDraw		# рисование на изображении
+from PIL import ImageFont		# шрифты для текста
+from PIL import ImageFilter		# предопределённые фильтры
+from PIL import ImageEnhance	# яркость, контраст, цвет, резкость
+from PIL import ImageOps		# вспомогательные операции
+from PIL import ImageColor		# преобразование имён цветов в RGB
+from PIL import ExifTags		# теги EXIF
+from PIL import ImageChops		# попиксельная арифметика
+
+
+
+	--- ОТКРЫТИЕ И СОЗДАНИЕ ---
+
+ = Открытие изображения:
+
+- Image.open():
+
+img = Image.open("photo.jpg")
+img = Image.open("photo.png")
+
+# Ленивая операция: данные не читаются до первого доступа
+# Файл остаётся открытым, пока не загружен
+# Рекомендуется использовать контекстный менеджер:
+with Image.open("photo.jpg") as im:
+	im.rotate(45).show()
+
+
+ = Создание нового изображения:
+
+- Image.new():
+
+img = Image.new("RGB", (800, 600))						# чёрный RGB
+img = Image.new("RGB", (800, 600), color="white")		# белый фон
+img = Image.new("RGB", (800, 600), color=(255, 128, 0))	# оранжевый
+img = Image.new("RGBA", (800, 600), (0, 0, 0, 0))		# прозрачный
+img = Image.new("L", (800, 600), 128)					# серый (8-бит)
+
+
+ = Создание из данных:
+
+- frombytes():
+
+img = Image.frombytes("RGB", (w, h), raw_bytes)
+
+
+- fromarray():
+
+import numpy as np
+arr = np.zeros((h, w, 3), dtype=np.uint8)
+img = Image.fromarray(arr, "RGB")
+
+
+ = Копирование:
+
+- copy():
+
+img_copy = img.copy()		# глубокая копия
+
+
+
+	--- СВОЙСТВА ИЗОБРАЖЕНИЯ ---
+
+ = Основные атрибуты:
+
+- img.size:
+
+img.size		# (ширина, высота) в пикселях
+
+
+- img.width / img.height:
+
+img.width		# ширина
+img.height		# высота
+
+
+- img.mode:
+
+img.mode		# цветовой режим: "RGB", "RGBA", "L", "P" и др.
+
+
+- img.format:
+
+img.format		# формат файла: "JPEG", "PNG" и др.
+
+
+- img.info:
+
+img.info		# словарь метаданных
+
+
+- img.filename:
+
+img.filename	# исходное имя файла
+
+
+ = Анимация:
+
+- is_animated / n_frames:
+
+img.is_animated	# True, если GIF анимированный
+img.n_frames	# число кадров
+
+
+- seek():
+
+img.seek(0)		# перейти к кадру 0
+
+
+
+	--- ИЗМЕНЕНИЕ РАЗМЕРА И ОБРЕЗКА ---
+
+ = Изменение размера:
+
+- resize():
+
+img_resized = img.resize((400, 300))				# точные размеры
+img_resized = img.resize((400, 300), Image.LANCZOS)	# высокое качество
+
+
+- Ресемплинг:
+
+# Image.NEAREST — быстро, низкое качество
+# Image.BILINEAR — билинейная
+# Image.BICUBIC — бикубическая
+# Image.LANCZOS — высокое качество (медленно)
+# Image.BOX — усреднение
+
+
+ = Миниатюры:
+
+- thumbnail():
+
+img.thumbnail((128, 128))		# сохраняет пропорции, изменяет на месте
+
+
+ = Обрезка:
+
+- crop():
+
+img_cropped = img.crop((left, upper, right, lower))
+# Координаты: левый верхний (0, 0), правый нижний (width, height)
+
+
+ = Расширение холста:
+
+- expand():
+
+img.expand((w, h))				# расширить холст
+
+
+
+	--- ПОВОРОТ И ОТРАЖЕНИЕ ---
+
+ = Поворот:
+
+- rotate():
+
+img_rotated = img.rotate(45)					# 45° против часовой
+img_rotated = img.rotate(45, expand=True)		# расширить холст
+img_rotated = img.rotate(90, resample=Image.BICUBIC)
+
+
+ = Отражение:
+
+- transpose():
+
+img_flipped = img.transpose(Image.FLIP_LEFT_RIGHT)	# горизонтально
+img_flipped = img.transpose(Image.FLIP_TOP_BOTTOM)	# вертикально
+img_rotated = img.transpose(Image.ROTATE_90)		# поворот на 90°
+img_rotated = img.transpose(Image.ROTATE_180)
+img_rotated = img.transpose(Image.ROTATE_270)
+
+
+ = Транспонирование:
+
+- transpose():
+
+img_t = img.transpose(Image.TRANSPOSE)			# главная диагональ
+img_t = img.transpose(Image.TRANSVERSE)			# побочная диагональ
+
+
+
+	--- ЦВЕТОВЫЕ РЕЖИМЫ ---
+
+ = Конвертация:
+
+- convert():
+
+img_rgb = img.convert("RGB")			# в RGB
+img_gray = img.convert("L")				# в градации серого
+img_rgba = img.convert("RGBA")			# с альфа-каналом
+img_cmyk = img.convert("CMYK")			# для печати
+img_p = img.convert("P")				# палитра
+
+
+ = Режимы:
+
+# "1" — 1-бит, чёрно-белый
+# "L" — 8-бит, градации серого
+# "P" — 8-бит, палитра
+# "RGB" — 3x8-бит, цветной
+# "RGBA" — 4x8-бит, цветной с альфа-каналом
+# "CMYK" — 4x8-бит, для печати
+# "YCbCr" — 3x8-бит, JPEG
+# "LAB" — 3x8-бит, L*a*b*
+# "HSV" — 3x8-бит, Hue, Saturation, Value
+# "I" — 32-бит, целое
+# "F" — 32-бит, с плавающей запятой
+
+
+ = Оттенки серого:
+
+- ImageOps.grayscale():
+
+from PIL import ImageOps
+
+img_gray = ImageOps.grayscale(img)
+
+
+
+	--- ДОСТУП К ПИКСЕЛЯМ ---
+
+ = Отдельные пиксели:
+
+- getpixel() / putpixel():
+
+img.getpixel((x, y))				# получить цвет пикселя
+img.putpixel((x, y), (255, 0, 0))	# установить красный
+
+
+ = Все пиксели:
+
+- load():
+
+pixels = img.load()
+pixels[x, y] = (255, 0, 0)
+
+
+- getdata():
+
+data = list(img.getdata())		# список всех пикселей
+
+
+- putdata():
+
+img.putdata(data)				# записать список пикселей
+
+
+ = NumPy:
+
+- Преобразование в массив:
+
+import numpy as np
+arr = np.array(img)				# PIL -> numpy
+
+# numpy -> PIL:
+img = Image.fromarray(arr)
+
+
+
+	--- РИСОВАНИЕ ---
+
+ = ImageDraw:
+
+- Создание:
+
+from PIL import ImageDraw
+
+draw = ImageDraw.Draw(img)
+
+
+- Линия:
+
+draw.line((x1, y1, x2, y2), fill="red", width=2)
+draw.line([(x1, y1), (x2, y2), (x3, y3)], fill="blue", width=3)
+
+
+- Прямоугольник:
+
+draw.rectangle((x1, y1, x2, y2), fill="blue", outline="red", width=2)
+
+
+- Эллипс:
+
+draw.ellipse((x1, y1, x2, y2), fill="green", outline="black")
+
+
+- Многоугольник:
+
+draw.polygon([(x1, y1), (x2, y2), (x3, y3)], fill="yellow", outline="red")
+
+
+- Точка:
+
+draw.point((x, y), fill="white")
+
+
+ = Текст:
+
+- draw.text():
+
+from PIL import ImageFont
+
+font = ImageFont.truetype("arial.ttf", 24)
+draw.text((10, 10), "Hello", fill="white", font=font)
+
+
+- Выравнивание:
+
+draw.text((x, y), "Text", fill="white", font=font, anchor="mm")
+# anchor: "la" — левый верх, "mm" — центр, "ra" — правый верх и т.д.
+
+
+- Размер текста:
+
+bbox = draw.textbbox((0, 0), "Text", font=font)
+width = bbox[2] - bbox[0]
+height = bbox[3] - bbox[1]
+
+
+
+	--- ФИЛЬТРЫ ---
+
+ = ImageFilter:
+
+- Применение:
+
+from PIL import ImageFilter
+
+img_blur = img.filter(ImageFilter.BLUR)
+img_sharp = img.filter(ImageFilter.SHARPEN)
+img_edges = img.filter(ImageFilter.FIND_EDGES)
+
+
+- Доступные фильтры:
+
+ImageFilter.BLUR				# размытие
+ImageFilter.CONTOUR				# контуры
+ImageFilter.DETAIL				# детализация
+ImageFilter.EDGE_ENHANCE		# подчёркивание краёв
+ImageFilter.EDGE_ENHANCE_MORE	# сильнее
+ImageFilter.EMBOSS				# тиснение
+ImageFilter.FIND_EDGES			# выделение краёв
+ImageFilter.SMOOTH				# сглаживание
+ImageFilter.SMOOTH_MORE			# сильнее
+ImageFilter.SHARPEN				# резкость
+
+
+- Гауссово размытие:
+
+img_blur = img.filter(ImageFilter.GaussianBlur(radius=5))
+
+
+- Кастомный фильтр:
+
+img_filtered = img.filter(ImageFilter.Kernel(
+	size=(3, 3),
+	kernel=(1, 1, 1, 1, 1, 1, 1, 1, 1),
+	scale=9,
+	offset=0,
+))
+
+
+
+	--- УЛУЧШЕНИЕ ---
+
+ = ImageEnhance:
+
+- Яркость:
+
+from PIL import ImageEnhance
+
+enhancer = ImageEnhance.Brightness(img)
+img_bright = enhancer.enhance(1.5)		# 1.0 — оригинал
+img_dark = enhancer.enhance(0.5)
+
+
+- Контраст:
+
+enhancer = ImageEnhance.Contrast(img)
+img_contrast = enhancer.enhance(2.0)
+
+
+- Цвет:
+
+enhancer = ImageEnhance.Color(img)
+img_saturated = enhancer.enhance(1.5)
+img_desaturated = enhancer.enhance(0.0)	# ч/б
+
+
+- Резкость:
+
+enhancer = ImageEnhance.Sharpness(img)
+img_sharp = enhancer.enhance(2.0)
+img_blur = enhancer.enhance(0.0)
+
+
+
+	--- ОПЕРАЦИИ ---
+
+ = ImageOps:
+
+- Автоконтраст:
+
+from PIL import ImageOps
+
+img_auto = ImageOps.autocontrast(img)
+
+
+- Выравнивание гистограммы:
+
+img_eq = ImageOps.equalize(img)
+
+
+- Инверсия:
+
+img_inv = ImageOps.invert(img)		# только для "L" и "RGB"
+
+
+- Оттенки серого:
+
+img_gray = ImageOps.grayscale(img)
+
+
+- Постеризация:
+
+img_post = ImageOps.posterize(img, bits=4)	# 4 бита на канал
+
+
+- Соляризация:
+
+img_solar = ImageOps.solarize(img, threshold=128)
+
+
+- Рамка:
+
+img_border = ImageOps.expand(img, border=10, fill="black")
+
+
+ = ImageChops:
+
+- Разница:
+
+from PIL import ImageChops
+
+diff = ImageChops.difference(img1, img2)
+
+
+- Сложение:
+
+sum_img = ImageChops.add(img1, img2)
+
+
+- Вычитание:
+
+diff_img = ImageChops.subtract(img1, img2)
+
+
+- Умножение:
+
+mult_img = ImageChops.multiply(img1, img2)
+
+
+- Инверсия:
+
+inv = ImageChops.invert(img)
+
+
+
+	--- СОСТАВЛЕНИЕ ---
+
+ = Вставка:
+
+- paste():
+
+img.paste(other_img, (x, y))
+img.paste(other_img, (x, y), mask=other_img)	# с маской
+
+
+ = Наложение:
+
+- alpha_composite():
+
+base = Image.new("RGBA", (800, 600), (0, 0, 0, 0))
+overlay = Image.new("RGBA", (800, 600), (255, 0, 0, 128))
+result = Image.alpha_composite(base, overlay)
+
+
+ = Смешивание:
+
+- blend():
+
+result = Image.blend(img1, img2, alpha=0.5)
+
+
+ = Маска:
+
+- composite():
+
+result = Image.composite(img1, img2, mask)
+
+
+
+	--- СОХРАНЕНИЕ И ФОРМАТЫ ---
+
+ = Сохранение:
+
+- save():
+
+img.save("output.png")
+img.save("output.jpg", "JPEG", quality=85)
+img.save("output.webp", "WEBP", quality=80, method=6)
+img.save("output.png", "PNG", optimize=True)
+
+
+ = Параметры JPEG:
+
+img.save("out.jpg", "JPEG", quality=85, optimize=True, progressive=True)
+# quality: 0–100 (выше — лучше качество, больше файл)
+# optimize: True — оптимизация Хаффмана
+# progressive: True — прогрессивный JPEG
+
+
+ = Параметры PNG:
+
+img.save("out.png", "PNG", optimize=True, compress_level=9)
+# compress_level: 0–9 (9 — максимальное сжатие)
+
+
+ = Параметры WebP:
+
+img.save("out.webp", "WEBP", quality=80, method=6, lossless=False)
+# method: 0–6 (6 — максимальное сжатие, медленно)
+
+
+ = Конвертация формата:
+
+img = Image.open("input.png")
+img.convert("RGB").save("output.jpg", "JPEG", quality=85)
+
+# JPEG не поддерживает прозрачность — нужен convert("RGB")
+
+
+
+	--- EXIF ---
+
+ = Чтение:
+
+- _getexif():
+
+exif = img._getexif()
+if exif:
+	for tag_id, value in exif.items():
+		tag = ExifTags.TAGS.get(tag_id, tag_id)
+		print(f"{tag}: {value}")
+
+
+ = Запись:
+
+- Сохранение EXIF:
+
+exif = img.info.get("exif")
+img.save("out.jpg", exif=exif)
+
+
+ = Ориентация:
+
+- exif_transpose():
+
+from PIL import ImageOps
+
+img_fixed = ImageOps.exif_transpose(img)
+# Автоматически поворачивает по EXIF Orientation
+
+
+
+	--- NUMPY ---
+
+ = Преобразование:
+
+- PIL -> NumPy:
+
+import numpy as np
+
+arr = np.array(img)				# shape: (h, w, channels)
+arr = np.asarray(img)			# без копирования, если возможно
+
+
+- NumPy -> PIL:
+
+img = Image.fromarray(arr)
+img = Image.fromarray(arr.astype(np.uint8))
+
+
+ = Типы:
+
+# NumPy: uint8 — для RGB, L
+# NumPy: float32 — для F
+# Диапазон: 0–255 для uint8
+
+
+ = Пример:
+
+import numpy as np
+from PIL import Image
+
+arr = np.zeros((200, 200, 3), dtype=np.uint8)
+arr[50:150, 50:150] = [255, 0, 0]		# красный квадрат
+img = Image.fromarray(arr)
+img.save("square.png")
+
+
+	--- GIF ---
+
+ = Чтение кадров:
+
+img = Image.open("animation.gif")
+for frame in range(img.n_frames):
+	img.seek(frame)
+	img.convert("RGB").save(f"frame_{frame}.png")
+
+
+ = Создание GIF:
+
+frames = [Image.open(f"frame_{i}.png") for i in range(10)]
+frames[0].save(
+	"animation.gif",
+	save_all=True,
+	append_images=frames[1:],
+	duration=100,			# миллисекунд на кадр
+	loop=0,					# 0 — бесконечный цикл
+	optimize=True,
+)
+
+
+
+	--- ПРОИЗВОДИТЕЛЬНОСТЬ ---
+
+ = Оптимизация:
+
+- Ленивая загрузка:
+
+# Image.open() не читает данные сразу
+# Данные читаются при первом доступе
+# Для принудительной загрузки: img.load()
+
+
+- Ресемплинг:
+
+# LANCZOS — лучшее качество, медленно
+# BILINEAR — компромисс
+# NEAREST — быстро, для пиксель-арта
+
+
+- Пакетная обработка:
+
+for filename in glob.glob("*.jpg"):
+	with Image.open(filename) as im:
+		im.thumbnail((128, 128))
+		im.save(f"thumb_{filename}")
+
+
+- Кэширование:
+
+# Избегайте повторных открытий
+# Используйте copy() для копий
+
+
+
+	--- ПРИМЕЧАНИЯ ---
+
+ = Совместимость:
+
+- Версии Python:
+
+# Pillow 12: Python 3.10–3.14
+# Pillow 11: Python 3.9–3.13
+# Pillow 10.1–10.4: Python 3.8–3.12
+# Pillow 10.0: Python 3.8–3.11
+# Pillow 9.3–9.5: Python 3.7–3.11
+# Полная таблица: pillow.readthedocs.io/en/stable/installation/python-support.html
+
+
+- Зависимости:
+
+# Pillow не требует внешних библиотек для базовых форматов
+# Для WebP может потребоваться libwebp
+# Для JPEG 2000 — openjpeg
+
+
+ = Частые ошибки:
+
+- Забыли convert("RGB"):
+
+# JPEG не поддерживает RGBA
+# Ошибка: cannot write mode RGBA as JPEG
+
+
+- Ресурсы не освобождены:
+
+# Используйте with Image.open() as im:
+
+
+- Большие изображения:
+
+# Image.open() ленив, но load() читает всё в память
+# Для огромных изображений используйте draft()
+
+
+- Потеря EXIF:
+
+# При сохранении EXIF не передаётся автоматически
+# Сохраняйте вручную: img.save("out.jpg", exif=img.info.get("exif"))
+
+
+ = Рекомендации:
+
+- Используйте контекстные менеджеры:
+
+with Image.open("photo.jpg") as im:
+	im.rotate(45).save("out.jpg")
+
+
+- Для высокого качества ресемплинга:
+
+# Image.LANCZOS
+
+
+- Для миниатюр:
+
+# thumbnail() вместо resize() — сохраняет пропорции
+
+
+- Для пакетной обработки:
+
+# Обрабатывайте файлы по одному, не загружайте все сразу
+
+
+- Для NumPy:
+
+# np.array(img) — копирует данные
+# np.asarray(img) — без копирования, если возможно
+
+
+- Для EXIF:
+
+# ImageOps.exif_transpose(img) перед любой обработкой

@@ -1,0 +1,611 @@
+	--- ОСНОВЫ TYPER ---
+
+ = Назначение:
+
+- Создание CLI на основе типов:
+
+# Typer — библиотека для создания командных интерфейсов
+# Строится на основе type hints (PEP 484)
+# Работает поверх Click
+# Входит в экосистему FastAPI (тот же автор — Себастьян Рамирес)
+# Минимум boilerplate: команды, опции и аргументы выводятся из аннотаций
+
+
+ = Установка:
+
+- Через pip:
+
+pip install typer
+
+# Typer устанавливает rich и shellingham как зависимости
+# rich — для красивого вывода и прогресс-баров
+# shellingham — для автодополнения в оболочках
+
+
+- Slim-версия (без rich и shellingham):
+
+pip install typer-slim
+
+
+ = Импорт:
+
+- Стандартный:
+
+import typer
+
+
+
+	--- ПЕРВЫЙ ЗАПУСК ---
+
+ = Простейший скрипт:
+
+- Без Typer внутри:
+
+def main(name: str):
+	print(f"Hello {name}")
+
+# Запуск через typer:
+# typer main.py run Camila
+
+
+ = Использование typer.run():
+
+- Минимальный пример:
+
+import typer
+
+def main(name: str):
+	print(f"Hello {name}")
+
+if __name__ == "__main__":
+	typer.run(main)
+
+# typer.run() создаёт typer.Typer(), добавляет команду и вызывает app()
+# python main.py --help — автоматическая справка
+# python main.py Camila — вывод Hello Camila
+
+
+ = Явное приложение:
+
+- typer.Typer() + @app.command():
+
+import typer
+
+app = typer.Typer()
+
+@app.command()
+def main(name: str):
+	print(f"Hello {name}")
+
+if __name__ == "__main__":
+	app()
+
+# Рекомендуется для более сложных приложений
+# Даёт доступ к --install-completion и --show-completion
+
+
+
+	--- ПОЛНАЯ ШПАРГАЛКА ПО TYPER ---
+
+ = CLI аргументы:
+
+- Базовый аргумент:
+
+import typer
+
+def main(name: str):
+	print(f"Hello {name}")
+
+# Аргументы обязательны по умолчанию
+# Порядок важен: python main.py Camila
+
+
+- Несколько аргументов:
+
+def main(name: str, lastname: str):
+	print(f"Hello {name} {lastname}")
+
+# python main.py Camila Gutiérrez
+
+
+- Опциональный аргумент:
+
+from typing import Optional
+
+def main(name: str, lastname: Optional[str] = None):
+	if lastname:
+		print(f"Hello {name} {lastname}")
+	else:
+		print(f"Hello {name}")
+
+# python main.py Camila
+# python main.py Camila Gutiérrez
+
+
+- Аннотированный аргумент:
+
+from typing import Annotated
+
+def main(name: Annotated[str, typer.Argument()]):
+	print(f"Hello {name}")
+
+
+ = CLI опции:
+
+- Базовая опция:
+
+def main(name: str = typer.Option("World")):
+	print(f"Hello {name}")
+
+# python main.py --name Camila
+# python main.py — по умолчанию World
+
+
+- Опция с обязательным значением:
+
+def main(name: str = typer.Option(...)):
+	print(f"Hello {name}")
+
+# ... означает, что опция обязательна
+# python main.py --name Camila
+
+
+- Аннотированная опция (рекомендуется):
+
+from typing import Annotated
+
+def main(name: Annotated[str, typer.Option()] = "World"):
+	print(f"Hello {name}")
+
+
+ = Параметры typer.Option():
+
+- Основные:
+
+typer.Option(
+	default,						# значение по умолчанию
+	*param_decls,					# имена опций (--name, -n)
+	help="Текст справки",			# описание
+	prompt="Введите имя",			# запрос ввода
+	confirmation_prompt=True,		# подтверждение ввода
+	password=True,					# скрыть ввод
+	hidden=True,					# скрыть из справки
+	envvar="MY_VAR",				# переменная окружения
+	show_default=True,				# показать default в справке
+)
+
+
+- Типы:
+
+typer.Option(..., is_flag=True)			# boolean-флаг
+typer.Option(..., count=True)			# считать вхождения (-vvv)
+typer.Option(..., multiple=True)		# несколько значений
+typer.Option(..., nargs=2)				# ровно 2 значения
+
+
+ = Параметры typer.Argument():
+
+- Основные:
+
+typer.Argument(
+	default,						# значение по умолчанию
+	help="Текст справки",			# описание
+	metavar="NAME",					# имя в справке
+	envvar="MY_VAR",				# переменная окружения
+)
+
+
+ = Типы параметров:
+
+- Числовые:
+
+from typing import Annotated
+
+def main(
+	age: Annotated[int, typer.Argument(min=0, max=150)],
+	count: Annotated[int, typer.Option(min=1)] = 1,
+	rate: float = 1.0,
+):
+	pass
+
+# Валидация: min, max для int и float
+# clamp=True — ограничить вместо ошибки
+
+
+- Выбор из списка:
+
+from typing import Literal
+
+def main(
+	mode: Literal["r", "w", "a"] = "r",
+):
+	pass
+
+# Python 3.8+: typing_extensions.Literal
+# В справке показываются допустимые значения
+
+
+- Enum:
+
+from enum import Enum
+import typer
+
+class Color(str, Enum):
+	RED = "red"
+	GREEN = "green"
+	BLUE = "blue"
+
+def main(color: Color = Color.RED):
+	print(f"Color: {color.value}")
+
+
+- Путь:
+
+from pathlib import Path
+
+def main(file: Path):
+	print(file.read_text())
+
+
+- Файл:
+
+from typing import Annotated, TextIO
+
+def main(file: Annotated[TextIO, typer.FileText()]):
+	print(file.read())
+
+# typer.FileText() — для чтения текста
+# typer.FileTextWrite() — для записи
+# typer.FileBinaryRead() — для чтения байтов
+# typer.FileBinaryWrite() — для записи байтов
+
+
+- Дата и время:
+
+import datetime
+
+def main(
+	date: datetime.datetime,
+):
+	pass
+
+
+- UUID:
+
+import uuid
+
+def main(id: uuid.UUID):
+	pass
+
+
+ = Группы команд:
+
+- Создание группы:
+
+import typer
+
+app = typer.Typer()
+
+@app.command()
+def create(username: str):
+	print(f"Creating user: {username}")
+
+@app.command()
+def delete(username: str):
+	print(f"Deleting user: {username}")
+
+if __name__ == "__main__":
+	app()
+
+# python main.py create Camila
+# python main.py delete Camila
+# python main.py --help
+
+
+- Вложенные группы:
+
+app = typer.Typer()
+
+@app.command()
+def create(username: str):
+	print(f"Creating user: {username}")
+
+@app.command()
+def delete(username: str):
+	print(f"Deleting user: {username}")
+
+# Команды сортируются в порядке объявления
+
+
+ = Callback:
+
+- Callback приложения:
+
+app = typer.Typer()
+
+@app.callback()
+def main():
+	"""Управление пользователями."""
+
+# Вызывается перед командой
+# docstring используется как описание приложения
+
+
+- Callback с опциями:
+
+@app.callback()
+def main(
+	verbose: bool = typer.Option(False, "--verbose", "-v"),
+):
+	if verbose:
+		print("Verbose mode")
+
+
+- no_args_is_help:
+
+app = typer.Typer(no_args_is_help=True)
+
+# Показывает справку, если не передано ни одной команды
+
+
+ = Контекст:
+
+- typer.Context:
+
+import typer
+
+app = typer.Typer()
+
+@app.callback()
+def main(ctx: typer.Context):
+	ctx.obj = {"config": load_config()}
+
+@app.command()
+def show(ctx: typer.Context):
+	config = ctx.obj["config"]
+	print(config)
+
+# ctx.obj — общий объект для передачи состояния между callback и командами
+
+
+- Атрибуты Context:
+
+ctx.obj					# пользовательский объект
+ctx.parent				# родительский контекст
+ctx.command				# текущая команда
+ctx.info_name			# имя команды
+ctx.invoked_subcommand	# имя вызванной подкоманды
+ctx.params				# параметры команды
+
+
+
+ = Вывод и цвета:
+
+- typer.echo():
+
+typer.echo("Текст")						# с переводом строки
+typer.echo("Текст", nl=False)			# без перевода строки
+typer.echo("Ошибка", err=True)			# в stderr
+
+
+- typer.style():
+
+styled = typer.style("Text", fg=typer.colors.RED, bold=True)
+typer.echo(styled)
+
+
+- typer.secho():
+
+typer.secho("Hello", fg=typer.colors.GREEN)
+typer.secho("Error", fg=typer.colors.RED, bold=True)
+typer.secho("Warning", fg=typer.colors.YELLOW, bg=typer.colors.BLUE)
+
+
+- Доступные цвета:
+
+typer.colors.BLACK
+typer.colors.RED
+typer.colors.GREEN
+typer.colors.YELLOW
+typer.colors.BLUE
+typer.colors.MAGENTA
+typer.colors.CYAN
+typer.colors.WHITE
+typer.colors.BRIGHT_BLACK
+typer.colors.BRIGHT_RED
+typer.colors.BRIGHT_GREEN
+typer.colors.BRIGHT_YELLOW
+typer.colors.BRIGHT_BLUE
+typer.colors.BRIGHT_MAGENTA
+typer.colors.BRIGHT_CYAN
+typer.colors.BRIGHT_WHITE
+
+
+
+ = Завершение:
+
+- typer.Exit:
+
+raise typer.Exit()						# код 0, без ошибки
+raise typer.Exit(code=1)				# код 1, ошибка
+raise typer.Exit(code=2)				# код 2, ошибка использования
+
+
+- typer.Abort:
+
+raise typer.Abort()						# прерывание (Ctrl+C)
+
+
+ = Ввод пользователя:
+
+- typer.prompt():
+
+name = typer.prompt("Введите имя")
+age = typer.prompt("Возраст", type=int)
+password = typer.prompt("Пароль", hide_input=True)
+confirm = typer.prompt(
+	"Пароль",
+	hide_input=True,
+	confirmation_prompt=True,
+)
+
+
+- typer.confirm():
+
+if typer.confirm("Продолжить?"):
+	typer.echo("Продолжаем")
+else:
+	raise typer.Abort()
+
+
+ = Прогресс-бар:
+
+- typer.progressbar():
+
+import time
+import typer
+
+def main():
+	with typer.progressbar(range(100), label="Обработка") as progress:
+		for item in progress:
+			time.sleep(0.01)
+
+# label — подпись
+# length — длина (если нет len())
+# show_pos=True — показать позицию
+# fill_char="#" — символ заполнения
+
+
+- С Rich:
+
+from rich.progress import track
+
+def main():
+	for item in track(range(100), description="Обработка..."):
+		time.sleep(0.01)
+
+# Typer использует Rich автоматически, если он установлен
+
+
+ = Приложение и файлы:
+
+- typer.get_app_dir():
+
+app_dir = typer.get_app_dir("MyApp")
+# Linux: ~/.config/MyApp
+# macOS: ~/Library/Application Support/MyApp
+# Windows: %APPDATA%\MyApp
+
+
+- typer.launch():
+
+typer.launch("https://example.com")				# открыть URL
+typer.launch("/path/to/file")					# открыть файл
+typer.launch("/path/to/dir", locate=True)		# открыть в файловом менеджере
+
+
+- typer.edit():
+
+result = typer.edit("Текст для редактирования")
+# Открывает $EDITOR и возвращает результат
+
+
+ = Тестирование:
+
+- CliRunner:
+
+from typer.testing import CliRunner
+from myapp.main import app
+
+runner = CliRunner()
+
+def test_app():
+	result = runner.invoke(app, ["Camila", "--city", "Berlin"])
+	assert result.exit_code == 0
+	assert "Hello Camila" in result.output
+
+
+- Атрибуты Result:
+
+result.exit_code		# код возврата (0 — успех)
+result.output			# stdout + stderr
+result.stdout			# только stdout
+result.stderr			# только stderr
+result.exception		# необработанное исключение
+
+
+- Ввод в тестах:
+
+result = runner.invoke(app, ["Camila"], input="camila@example.com\n")
+assert result.exit_code == 0
+assert "camila@example.com" in result.output
+
+# \n имитирует нажатие Enter
+# Несколько ответов — каждый на своей строке
+
+
+- Тестирование typer.run():
+
+import typer
+from typer.testing import CliRunner
+
+def main(name: str = "World"):
+	typer.echo(f"Hello {name}")
+
+def test_main():
+	app = typer.Typer()
+	app.command()(main)
+	runner = CliRunner()
+	result = runner.invoke(app, ["Camila"])
+	assert result.exit_code == 0
+
+
+- Тестирование Exit:
+
+def test_exit_code():
+	result = runner.invoke(app, ["--bad-option"])
+	assert result.exit_code != 0
+
+
+ = Упаковка:
+
+- pyproject.toml:
+
+[project.scripts]
+my-cli = "myapp.main:app"
+
+# После установки:
+# my-cli --help
+
+
+- setup.cfg:
+
+[options.entry_points]
+console_scripts =
+	my-cli = myapp.main:app
+
+
+ = Примечания:
+
+- Совместимость:
+
+# Typer 0.19.1 — последняя версия с поддержкой Python 3.7
+# Typer 0.20+ требует Python 3.8+
+# Рекомендуется Python 3.10+ для использования Annotated
+
+
+- Отличия от Click:
+
+# Typer строит CLI из type hints
+# Click использует декораторы с явными параметрами
+# Typer — обёртка над Click, совместим с Click-плагинами
+
+
+- Рекомендации:
+
+# Используйте Annotated вместо значений по умолчанию
+# Разделяйте CLI и логику: команды только парсят аргументы
+# Используйте typer.Context для передачи состояния
+# Тестируйте через CliRunner, а не subprocess
+# Для сложных приложений используйте явный typer.Typer()
+# Для простых скриптов достаточно typer.run()
