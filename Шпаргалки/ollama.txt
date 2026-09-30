@@ -1,0 +1,823 @@
+	--- КРАТКАЯ ШПАРГАЛКА OLLAMA ---
+
+ = Основные команды CLI:
+
+- ollama run:
+
+ollama run <model>					# запуск модели в интерактивном режиме
+ollama run <model> "промпт"			# сразу с промптом
+ollama run hf.co/user/repo:Q4_0		# запуск GGUF с Hugging Face
+
+
+- ollama list (ls):
+
+ollama list							# список локальных моделей: имя, размер, дата
+ollama ls							# алиас
+
+
+- ollama pull:
+
+ollama pull <model>					# скачать модель из реестра Ollama
+ollama pull hf.co/user/repo:Q4_K_M	# скачать с Hugging Face
+
+
+- ollama rm:
+
+ollama rm <model>					# удалить модель
+ollama rm model1 model2 model3		# несколько аргументов сразу
+
+
+- ollama ps:
+
+ollama ps							# модели, загруженные в память сейчас
+
+
+- ollama stop:
+
+ollama stop <model>					# выгрузить модель из памяти
+
+
+
+	--- CLI ШПАРГАЛКА OLLAMA ---
+
+ = Полный список команд:
+
+- ollama serve:
+
+ollama serve						# запуск API-сервера (по умолчанию :11434)
+ollama serve --help					# переменные окружения
+
+
+- ollama create:
+
+ollama create <name> -f Modelfile	# создать модель из Modelfile
+
+
+- ollama show:
+
+ollama show <model>					# параметры, системный промпт, шаблон
+ollama show <model> --modelfile		# показать сгенерированный Modelfile
+
+
+- ollama push:
+
+ollama signin						# вход в аккаунт Ollama
+ollama push <user>/<model>			# загрузить модель в реестр
+
+
+- ollama cp:
+
+ollama cp <source> <dest>			# копия модели под новым именем
+									# полезно перед push для имени user/model
+
+
+- ollama signin / signout:
+
+ollama signin						# вход
+ollama signout						# выход
+
+
+- ollama launch:
+
+ollama launch						# интерактивный запуск интеграций
+									# (OpenCode, Claude Code, Codex, VS Code, Droid)
+
+
+ = Хранение моделей:
+
+- macOS:
+
+~/.ollama/models
+
+
+- Linux (systemd, пользователь ollama):
+
+/usr/share/ollama/.ollama/models
+
+
+- Linux (запуск от текущего пользователя):
+
+~/.ollama/models
+
+
+- Windows:
+
+%USERPROFILE%\.ollama\models
+
+
+- Смена директории:
+
+OLLAMA_MODELS=/path/to/models		# переменная окружения
+
+
+ = Загрузка моделей с Hugging Face:
+
+- Прямой pull без Modelfile:
+
+ollama run hf.co/{user}/{repo}:{quant}	# quant: Q4_K_M, Q8_0 и т.д.
+
+
+- Через Modelfile (локальный GGUF):
+
+FROM /path/to/model.gguf				# в Modelfile
+ollama create my-model -f Modelfile		# затем создать
+
+
+- Для split GGUF (несколько шардов):
+
+FROM /path/to/model-*.gguf				# в Modelfile
+
+
+ = Modelfile:
+
+- Минимальный Modelfile:
+
+FROM gemma4								# базовая модель
+SYSTEM """Ты — полезный ассистент."""	# системный промпт
+
+
+- Ключевые директивы:
+
+FROM		# базовая модель или путь к GGUF/Safetensors
+SYSTEM		# системный промпт
+PARAMETER	# temperature, num_ctx, top_p и др.
+TEMPLATE	# шаблон чата
+
+
+- Создание кастомной модели:
+
+ollama create my-custom-model -f Modelfile
+
+
+
+	--- OLLAMA PYTHON ---
+
+ = Установка и импорт:
+
+- Установка:
+
+pip install ollama
+
+
+- Импорт:
+
+import ollama
+from ollama import chat, generate, Client, ResponseError
+
+
+ = Базовый chat:
+
+- Простой запрос:
+
+response = ollama.chat(
+	model='gemma3',
+	messages=[{'role': 'user', 'content': 'Почему небо голубое?'}]
+)
+print(response.message.content)
+
+
+- Структура ответа:
+
+response.message.role			# 'assistant'
+response.message.content		# текст ответа
+response.message.thinking		# reasoning-модели
+response.message.tool_calls		# вызовы инструментов
+
+
+ = Роли:
+
+- Три основные роли:
+
+system		# поведение и правила
+user		# сообщения пользователя
+assistant	# предыдущие ответы модели
+
+
+- Пример с system:
+
+messages = [
+	{'role': 'system', 'content': 'Ты — пират.'},
+	{'role': 'user', 'content': 'Как дела?'},
+]
+response = ollama.chat(model='gemma3', messages=messages)
+
+
+ = История диалога:
+
+- Ручное управление:
+
+messages = []
+while True:
+	user_input = input("Вы: ")
+	if user_input == "exit":
+		break
+	messages.append({'role': 'user', 'content': user_input})
+	response = ollama.chat(model='gemma3', messages=messages)
+	messages.append(response.message)
+	print(f"AI: {response.message.content}")
+
+# история — просто накопление списка messages
+
+
+ = Streaming:
+
+- Включение:
+
+stream = ollama.chat(
+	model='qwen3',
+	messages=[{'role': 'user', 'content': 'Что такое 17 × 23?'}],
+	stream=True,
+)
+for chunk in stream:
+	print(chunk.message.content, end='', flush=True)
+
+# в SDK streaming отключён по умолчанию (в REST — включён)
+
+
+- Обработка thinking:
+
+for chunk in stream:
+	if chunk.message.thinking:
+		print(chunk.message.thinking, end='', flush=True)
+	elif chunk.message.content:
+		print(chunk.message.content, end='', flush=True)
+
+
+ = Структурированный вывод (format):
+
+- Через JSON Schema (dict):
+
+response = ollama.chat(
+	model='llama3.1',
+	messages=[{'role': 'user', 'content': 'Расскажи о Канаде.'}],
+	format={
+		"type": "object",
+		"properties": {
+			"name": {"type": "string"},
+			"capital": {"type": "string"},
+			"languages": {"type": "array", "items": {"type": "string"}}
+		},
+		"required": ["name", "capital", "languages"]
+	}
+)
+
+
+- Через Pydantic (рекомендуется):
+
+from pydantic import BaseModel
+
+class Country(BaseModel):
+	name: str
+	capital: str
+	languages: list[str]
+
+response = ollama.chat(
+	model='llama3.1',
+	messages=[{'role': 'user', 'content': 'Расскажи о Канаде.'}],
+	format=Country.model_json_schema(),
+)
+country = Country.model_validate_json(response.message.content)
+
+# format принимает "json" (произвольный) или JSON-схему (dict/Pydantic)
+
+
+ = ollama.Client:
+
+- Создание клиента:
+
+from ollama import Client
+
+client = Client(host='http://localhost:11434')
+response = client.chat(
+	model='gemma3',
+	messages=[{'role': 'user', 'content': 'Привет!'}]
+)
+
+
+- Для облака:
+
+client = Client(
+	host='https://ollama.com',
+	headers={'Authorization': 'Bearer YOUR_API_KEY'}
+)
+
+
+ = Generate (не chat):
+
+- Базовый:
+
+response = ollama.generate(model='gemma3', prompt='Почему небо голубое?')
+print(response['response'])
+
+
+- С контекстом:
+
+r1 = ollama.generate(model='gemma3', prompt='Столица Франции?')
+r2 = ollama.generate(
+	model='gemma3',
+	prompt='А её население?',
+	context=r1['context']
+)
+
+
+ = Embeddings:
+
+- Через Python:
+
+response = ollama.embed(
+	model='embeddinggemma',
+	input='Hello world'
+)
+vector = response['embeddings'][0]
+
+# /api/embed возвращает L2-нормализованные векторы
+# для старых моделей — /api/embeddings
+
+
+ = Обработка ошибок:
+
+- ResponseError:
+
+from ollama import ResponseError
+
+try:
+	response = ollama.chat(model='nonexistent', messages=[...])
+except ResponseError as e:
+	print(f"Ошибка: {e.error}")
+	if e.status_code == 404:
+		print("Модель не найдена. Сначала ollama pull.")
+
+
+
+	--- OLLAMA REQUESTS ---
+
+ = Основы:
+
+- Базовый URL:
+
+http://localhost:11434/api			# локальный сервер
+https://ollama.com/api				# облако (нужен API-ключ)
+
+
+- Импорт:
+
+import requests
+import json
+
+BASE = "http://localhost:11434"
+
+
+ = Chat:
+
+- Простой запрос:
+
+response = requests.post(
+	f"{BASE}/api/chat",
+	json={
+		"model": "gemma3",
+		"messages": [
+			{"role": "user", "content": "Почему небо голубое?"}
+		],
+		"stream": False
+	}
+)
+data = response.json()
+print(data["message"]["content"])
+
+
+- С system-ролью:
+
+payload = {
+	"model": "gemma3",
+	"messages": [
+		{"role": "system", "content": "Ты — пират."},
+		{"role": "user", "content": "Как дела?"}
+	],
+	"stream": False
+}
+r = requests.post(f"{BASE}/api/chat", json=payload)
+
+
+ = Streaming через requests:
+
+with requests.post(
+	f"{BASE}/api/chat",
+	json={
+		"model": "gemma3",
+		"messages": [{"role": "user", "content": "Напиши длинную историю."}],
+		"stream": True
+	},
+	stream=True
+) as r:
+	for line in r.iter_lines():
+		if line:
+			chunk = json.loads(line)
+			if "message" in chunk and "content" in chunk["message"]:
+				print(chunk["message"]["content"], end="", flush=True)
+
+# REST API включает streaming по умолчанию
+# каждая строка — отдельный JSON-объект
+
+
+ = Структурированный вывод (format):
+
+payload = {
+	"model": "llama3.1",
+	"messages": [{"role": "user", "content": "Расскажи о Канаде."}],
+	"stream": False,
+	"format": {
+		"type": "object",
+		"properties": {
+			"name": {"type": "string"},
+			"capital": {"type": "string"},
+			"languages": {"type": "array", "items": {"type": "string"}}
+		},
+		"required": ["name", "capital", "languages"]
+	}
+}
+r = requests.post(f"{BASE}/api/chat", json=payload)
+country = r.json()["message"]["content"]
+
+# country — JSON-строка, соответствующая схеме
+
+
+ = Generate:
+
+payload = {
+	"model": "llama3.1",
+	"prompt": "Почему небо голубое?",
+	"stream": False
+}
+r = requests.post(f"{BASE}/api/generate", json=payload)
+print(r.json()["response"])
+
+
+ = Embeddings:
+
+payload = {
+	"model": "embeddinggemma",
+	"input": "Hello world"
+}
+r = requests.post(f"{BASE}/api/embed", json=payload)
+embeddings = r.json()["embeddings"]
+vector = embeddings[0]
+
+
+ = Список моделей:
+
+r = requests.get(f"{BASE}/api/tags")
+models = r.json()["models"]
+for m in models:
+	print(m["name"], m.get("size", "?"))
+
+
+ = Облачный API:
+
+API_KEY = "your_key_here"
+r = requests.post(
+	"https://ollama.com/api/chat",
+	headers={"Authorization": f"Bearer {API_KEY}"},
+	json={
+		"model": "gemma4:31b",
+		"messages": [{"role": "user", "content": "Привет!"}],
+		"stream": False
+	}
+)
+
+
+ = Переменные окружения:
+
+- OLLAMA_HOST:
+
+export OLLAMA_HOST=http://localhost:11434	# Linux/macOS
+set OLLAMA_HOST=http://localhost:11434		# Windows (cmd)
+$env:OLLAMA_HOST="http://localhost:11434"	# Windows (PowerShell)
+
+# по умолчанию http://localhost:11434
+
+
+- OLLAMA_API_KEY:
+
+export OLLAMA_API_KEY=sk-...				# Linux/macOS, ключ облака ollama.com
+set OLLAMA_API_KEY=sk-...					# Windows (cmd)
+$env:OLLAMA_API_KEY="sk-..."				# Windows (PowerShell)
+
+# нужен для облачного API ollama.com
+# для локального сервера не требуется
+
+
+- OLLAMA_MODELS:
+
+export OLLAMA_MODELS=/path/to/models		# Linux/macOS
+set OLLAMA_MODELS=D:\ollama\models			# Windows (cmd)
+$env:OLLAMA_MODELS="D:\ollama\models"		# Windows (PowerShell)
+
+# по умолчанию:
+# macOS/Linux: ~/.ollama/models
+# Linux systemd: /usr/share/ollama/.ollama/models
+# Windows: %USERPROFILE%\.ollama\models
+
+
+
+	--- OLLAMA CURL ---
+
+ = Основы:
+
+- Базовый URL:
+
+http://localhost:11434/api			# локальный сервер
+https://ollama.com/api				# облако (нужен API-ключ)
+
+
+- Проверка версии:
+
+curl http://localhost:11434/api/version
+
+
+- Общие заголовки:
+
+-H "Content-Type: application/json"	# обязателен для POST с JSON
+
+
+ = Chat:
+
+- Простой запрос (streaming по умолчанию):
+
+curl http://localhost:11434/api/chat -d '{
+	"model": "gemma3",
+	"messages": [
+		{"role": "user", "content": "Почему небо голубое?"}
+	]
+}'
+
+
+- Без streaming (один JSON-ответ):
+
+curl http://localhost:11434/api/chat -d '{
+	"model": "gemma3",
+	"messages": [
+		{"role": "user", "content": "Почему небо голубое?"}
+	],
+	"stream": false
+}'
+
+
+- С system-ролью:
+
+curl http://localhost:11434/api/chat -d '{
+	"model": "gemma3",
+	"messages": [
+		{"role": "system", "content": "Ты — пират."},
+		{"role": "user", "content": "Как дела?"}
+	],
+	"stream": false
+}'
+
+
+ = Generate:
+
+- Простой запрос:
+
+curl http://localhost:11434/api/generate -d '{
+	"model": "gemma4",
+	"prompt": "Почему небо голубое?",
+	"stream": false
+}'
+
+
+- С контекстом (продолжение диалога):
+
+curl http://localhost:11434/api/generate -d '{
+	"model": "gemma4",
+	"prompt": "А её население?",
+	"context": [1, 2, 3],
+	"stream": false
+}'
+
+
+ = Список моделей:
+
+- Установленные:
+
+curl http://localhost:11434/api/tags
+
+
+- Загруженные в память:
+
+curl http://localhost:11434/api/ps
+
+
+ = Embeddings:
+
+- Через /api/embed:
+
+curl http://localhost:11434/api/embed -d '{
+	"model": "nomic-embed-text",
+	"input": ["Текст для эмбеддинга", "Ещё один текст"]
+}'
+
+
+- Через /api/embeddings (старый):
+
+curl http://localhost:11434/api/embeddings -d '{
+	"model": "nomic-embed-text",
+	"prompt": "Текст для эмбеддинга"
+}'
+
+
+ = Streaming:
+
+- Базовый (NDJSON, каждая строка — JSON):
+
+curl http://localhost:11434/api/generate -d '{
+	"model": "llama3.2",
+	"prompt": "Почему небо голубое?"
+}'
+
+# ответ — поток строк:
+# {"model":"llama3.2","response":"The","done":false}
+# {"model":"llama3.2","response":" sky","done":false}
+# ...
+# {"model":"llama3.2","response":"","done":true, ...}
+
+
+- Chat streaming:
+
+curl http://localhost:11434/api/chat -d '{
+	"model": "llama3.2",
+	"messages": [{"role": "user", "content": "Почему небо голубое?"}]
+}'
+
+
+- Обработка через jq (только контент):
+
+curl -s http://localhost:11434/api/chat -d '{
+	"model": "gemma3",
+	"messages": [{"role": "user", "content": "Привет!"}]
+}' | jq -r '.message.content'
+
+
+- Только финальный ответ (без streaming):
+
+curl -s http://localhost:11434/api/chat -d '{
+	"model": "gemma3",
+	"messages": [{"role": "user", "content": "Привет!"}],
+	"stream": false
+}' | jq -r '.message.content'
+
+
+ = Структурированный вывод (format):
+
+- Через JSON Schema:
+
+curl http://localhost:11434/api/chat -d '{
+	"model": "llama3.1",
+	"messages": [{"role": "user", "content": "Расскажи о Канаде."}],
+	"stream": false,
+	"format": {
+		"type": "object",
+		"properties": {
+			"name": {"type": "string"},
+			"capital": {"type": "string"},
+			"languages": {"type": "array", "items": {"type": "string"}}
+		},
+		"required": ["name", "capital", "languages"]
+	}
+}'
+
+
+- Через строку "json" (произвольный JSON):
+
+curl http://localhost:11434/api/chat -d '{
+	"model": "llama3.1",
+	"messages": [{"role": "user", "content": "Перечисли 3 языка программирования."}],
+	"format": "json",
+	"stream": false
+}'
+
+
+ = Tool Calling (вызов инструментов):
+
+- Запрос с описанием инструмента:
+
+curl -s http://localhost:11434/api/chat -H "Content-Type: application/json" -d '{
+	"model": "qwen3",
+	"messages": [{"role": "user", "content": "What is the temperature in New York?"}],
+	"stream": false,
+	"tools": [
+		{
+			"type": "function",
+			"function": {
+				"name": "get_temperature",
+				"description": "Get the current temperature for a city",
+				"parameters": {
+					"type": "object",
+					"required": ["city"],
+					"properties": {
+						"city": {"type": "string", "description": "The name of the city"}
+					}
+				}
+			}
+		}
+	]
+}'
+
+
+- Ответ с результатом инструмента:
+
+curl -s http://localhost:11434/api/chat -H "Content-Type: application/json" -d '{
+	"model": "qwen3",
+	"messages": [
+		{"role": "user", "content": "What is the temperature in New York?"},
+		{
+			"role": "assistant",
+			"tool_calls": [
+				{
+					"type": "function",
+					"function": {
+						"index": 0,
+						"name": "get_temperature",
+						"arguments": {"city": "New York"}
+					}
+				}
+			]
+		},
+		{"role": "tool", "tool_name": "get_temperature", "content": "22°C"}
+	],
+	"stream": false
+}'
+
+
+ = Облачный API:
+
+- Требуется API-ключ:
+
+curl https://ollama.com/api/chat \
+	-H "Authorization: Bearer YOUR_API_KEY" \
+	-H "Content-Type: application/json" \
+	-d '{
+		"model": "gemma4:31b",
+		"messages": [{"role": "user", "content": "Привет!"}],
+		"stream": false
+	}'
+
+
+ = Опции генерации (options):
+
+- Настройка sampling и контекста:
+
+curl http://localhost:11434/api/chat -d '{
+	"model": "llama3.1",
+	"messages": [{"role": "user", "content": "Назови три контейнерных рантайма."}],
+	"stream": false,
+	"options": {
+		"temperature": 0.2,
+		"num_ctx": 8192,
+		"num_predict": 200,
+		"seed": 42,
+		"stop": ["\n\n"]
+	}
+}'
+
+# temperature	# ниже — детерминированнее
+# num_ctx		# размер контекстного окна в токенах
+# num_predict	# лимит генерируемых токенов
+# seed			# с temperature=0 даёт повторяемый результат
+# stop			# строки, останавливающие генерацию
+
+
+ = OpenAI-совместимый эндпоинт:
+
+- Чат-комплишены:
+
+curl http://localhost:11434/v1/chat/completions \
+	-H "Content-Type: application/json" \
+	-d '{
+		"model": "llama3.2",
+		"messages": [
+			{"role": "system", "content": "You are a helpful assistant."},
+			{"role": "user", "content": "Привет!"}
+		]
+	}'
+
+
+ = Полезные приёмы:
+
+- Красивый вывод JSON:
+
+curl -s http://localhost:11434/api/tags | jq
+
+
+- Только имена моделей:
+
+curl -s http://localhost:11434/api/tags | jq -r '.models[].name'
+
+
+- Сохранить ответ в файл:
+
+curl -s http://localhost:11434/api/chat -d '{...}' > response.json
+
+
+- Пропустить прогресс-бар:
+
+curl -s								# silent mode

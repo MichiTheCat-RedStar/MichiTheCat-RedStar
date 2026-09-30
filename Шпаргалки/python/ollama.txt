@@ -1,0 +1,950 @@
+	--- OLLAMA PYTHON ---
+
+ = Установка и базовое использование:
+
+- Установка библиотеки:
+
+pip install ollama				# установка официального Python-клиента
+
+
+- Импорт и создание клиента:
+
+import ollama
+
+# Базовое подключение (по умолчанию http://localhost:11434)
+# Для кастомного хоста:
+from ollama import Client
+client = Client(host='http://localhost:11434')
+
+
+ = Чат (многоходовой диалог):
+
+- Базовый чат:
+
+import ollama
+
+response = ollama.chat(
+    model='llama2',
+    messages=[
+        {'role': 'user', 'content': 'Почему небо голубое?'}
+    ]
+)
+print(response['message']['content'])
+
+
+- Чат с системным промптом:
+
+messages = [
+    {'role': 'system', 'content': 'Ты полезный ассистент.'},
+    {'role': 'user', 'content': 'Как прочитать CSV в Python?'}
+]
+response = ollama.chat(model='llama2', messages=messages)
+print(response['message']['content'])
+
+
+- Многоходовой диалог (с сохранением контекста):
+
+messages = [
+    {'role': 'system', 'content': 'Ты полезный ассистент.'},
+    {'role': 'user', 'content': 'Сколько будет 2+2?'}
+]
+response = ollama.chat(model='llama2', messages=messages)
+print(response['message']['content'])
+
+# Добавляем ответ ассистента и следующий вопрос
+messages.append(response['message'])
+messages.append({'role': 'user', 'content': 'А если умножить на 3?'})
+response = ollama.chat(model='llama2', messages=messages)
+print(response['message']['content'])
+
+
+ = Генерация текста:
+
+- Базовый вызов:
+
+import ollama
+
+response = ollama.generate(
+    model='llama2',
+    prompt='Почему небо голубое?'
+)
+print(response['response'])
+
+
+- С параметрами:
+
+response = ollama.generate(
+    model='llama2',
+    prompt='Напиши функцию на Python для реверса строки',
+    options={
+        'temperature': 0.7,
+        'num_predict': 128,		# макс. кол-во токенов
+        'top_p': 0.9,
+        'top_k': 40
+    }
+)
+print(response['response'])
+
+
+- С контекстом (для продолжения):
+
+response1 = ollama.generate(
+    model='llama2',
+    prompt='Столица Франции?'
+)
+print(response1['response'])
+
+response2 = ollama.generate(
+    model='llama2',
+    prompt='А какое население?',
+    context=response1['context']
+)
+print(response2['response'])
+
+
+ = Стриминг ответов:
+
+- Стриминг чата:
+
+import ollama
+
+stream = ollama.chat(
+    model='llama2',
+    messages=[{'role': 'user', 'content': 'Напиши стихотворение'}],
+    stream=True
+)
+
+for chunk in stream:
+    print(chunk['message']['content'], end='', flush=True)
+
+
+- Стриминг генерации:
+
+stream = ollama.generate(
+    model='llama2',
+    prompt='Расскажи длинную историю',
+    stream=True
+)
+
+for chunk in stream:
+    print(chunk['response'], end='', flush=True)
+
+
+ = Эмбеддинги:
+
+- Одиночный эмбеддинг:
+
+import ollama
+
+response = ollama.embeddings(
+    model='llama2',
+    prompt='Небо голубое из-за рассеяния Рэлея'
+)
+print(response['embedding'])
+
+
+- Пакетные эмбеддинги (через embed):
+
+response = ollama.embed(
+    model='nomic-embed-text',
+    input=['Первая строка', 'Вторая строка']
+)
+print(len(response['embeddings'][0]))	# размерность вектора
+
+
+ = Управление моделями:
+
+- Список доступных моделей:
+
+import ollama
+
+models = ollama.list()
+for model in models['models']:
+    print(model['name'])
+
+
+- Загрузка модели (pull):
+
+ollama.pull('llama2')
+# С прогрессом:
+for progress in ollama.pull('llama2', stream=True):
+    print(progress)
+
+
+- Информация о модели (show):
+
+info = ollama.show('llama2')
+print(info)
+
+
+- Удаление модели:
+
+ollama.delete('llama2')
+
+
+- Копирование модели:
+
+ollama.copy('llama2', 'my-llama2')
+
+
+- Создание модели из Modelfile:
+
+modelfile = '''
+FROM llama2
+SYSTEM Ты Марио из Super Mario Bros.
+'''
+ollama.create(model='mario', modelfile=modelfile)
+
+
+ = Кастомный клиент:
+
+- Клиент с кастомным хостом:
+
+from ollama import Client
+
+client = Client(host='http://192.168.1.100:11434')
+response = client.chat(
+    model='llama2',
+    messages=[{'role': 'user', 'content': 'Привет!'}]
+)
+print(response['message']['content'])
+
+
+- Клиент с таймаутом:
+
+client = Client(
+    host='http://localhost:11434',
+    timeout=60.0		# таймаут в секундах
+)
+
+
+- Клиент с заголовками (для аутентификации):
+
+import os
+client = Client(
+    host='https://ollama.com',
+    headers={'Authorization': f'Bearer {os.environ["OLLAMA_API_KEY"]}'}
+)
+
+
+ = Асинхронный клиент:
+
+- Базовый асинхронный чат:
+
+import asyncio
+from ollama import AsyncClient
+
+async def chat():
+    message = {'role': 'user', 'content': 'Почему небо голубое?'}
+    response = await AsyncClient().chat(
+        model='llama2',
+        messages=[message]
+    )
+    print(response['message']['content'])
+
+asyncio.run(chat())
+
+
+- Асинхронный стриминг:
+
+import asyncio
+from ollama import AsyncClient
+
+async def chat():
+    message = {'role': 'user', 'content': 'Напиши стих'}
+    async for part in await AsyncClient().chat(
+        model='llama2',
+        messages=[message],
+        stream=True
+    ):
+        print(part['message']['content'], end='', flush=True)
+
+asyncio.run(chat())
+
+
+ = Обработка ошибок:
+
+- Базовый try-except:
+
+import ollama
+
+try:
+    response = ollama.chat(
+        model='does-not-exist',
+        messages=[{'role': 'user', 'content': 'Привет'}]
+    )
+except ollama.ResponseError as e:
+    print('Ошибка:', e.error)
+    if e.status_code == 404:
+        print('Модель не найдена. Загружаем...')
+        ollama.pull('llama2')
+
+
+- Проверка статуса ответа:
+
+response = ollama.chat(model='llama2', messages=[...])
+if 'error' in response:
+    print('Ошибка:', response['error'])
+
+
+ = Структурированный вывод (JSON Schema):
+
+- С Pydantic:
+
+import json
+from pydantic import BaseModel
+import ollama
+
+class Task(BaseModel):
+    title: str
+    priority: int
+
+schema = Task.model_json_schema()
+
+output = ollama.chat(
+    model='llama2',
+    format=schema,
+    options={'temperature': 0},
+    messages=[{
+        'role': 'user',
+        'content': "Извлеки задачу: 'Исправить баг до пятницы'"
+    }]
+)
+
+task = Task(**json.loads(output['message']['content']))
+print(task.title, task.priority)
+
+
+- С простым JSON-словарём:
+
+schema = {
+    "type": "object",
+    "properties": {
+        "name": {"type": "string"},
+        "age": {"type": "integer"}
+    },
+    "required": ["name", "age"]
+}
+
+output = ollama.chat(
+    model='llama2',
+    format=schema,
+    messages=[{'role': 'user', 'content': 'Данные о человеке: Иван, 30 лет'}]
+)
+print(output['message']['content'])
+
+
+ = Вызов функций (Tool Calling):
+
+- Определение функции-инструмента:
+
+def add_two_numbers(a: int, b: int) -> int:
+    """
+    Сложить два числа
+
+    Args:
+        a: Первое число
+        b: Второе число
+
+    Returns:
+        Сумма двух чисел
+    """
+    return a + b
+
+
+- Передача функции как инструмента:
+
+import ollama
+
+response = ollama.chat(
+    model='llama3.1',
+    messages=[{'role': 'user', 'content': 'Сколько будет 10 + 10?'}],
+    tools=[add_two_numbers]
+)
+
+
+- Вызов функции из ответа модели:
+
+available_functions = {
+    'add_two_numbers': add_two_numbers,
+}
+
+for tool in response.message.tool_calls or []:
+    function_to_call = available_functions.get(tool.function.name)
+    if function_to_call:
+        print('Результат:', function_to_call(**tool.function.arguments))
+    else:
+        print('Функция не найдена:', tool.function.name)
+
+
+- Передача существующих функций (например, requests):
+
+import ollama
+import requests
+
+available_functions = {
+    'request': requests.request,
+}
+
+response = ollama.chat(
+    model='llama3.1',
+    messages=[{
+        'role': 'user',
+        'content': 'Получи страницу ollama.com'
+    }],
+    tools=[requests.request]
+)
+
+for tool in response.message.tool_calls or []:
+    function_to_call = available_functions.get(tool.function.name)
+    if function_to_call == requests.request:
+        resp = function_to_call(
+            method=tool.function.arguments.get('method'),
+            url=tool.function.arguments.get('url')
+        )
+        print(resp.text)
+
+
+
+	--- OLLAMA REST API (REQUESTS) ---
+
+ = Базовое подключение:
+
+- Установка библиотеки:
+
+pip install requests				# установка HTTP-клиента
+
+
+- Базовый URL (по умолчанию):
+
+import requests
+
+OLLAMA_HOST = 'http://localhost:11434'
+BASE_URL = f'{OLLAMA_HOST}/api'
+
+
+- Проверка версии и доступности сервера:
+
+response = requests.get(f'{BASE_URL}/version')
+response.raise_for_status()
+print(response.json()['version'])
+
+
+ = Чат (многоходовой диалог):
+
+- Базовый чат:
+
+import requests
+
+response = requests.post(
+    f'{BASE_URL}/chat',
+    json={
+        'model': 'llama3.1',
+        'messages': [
+            {'role': 'user', 'content': 'Почему небо голубое?'}
+        ],
+        'stream': False		# отключаем стриминг
+    }
+)
+response.raise_for_status()
+data = response.json()
+print(data['message']['content'])
+
+
+- Чат с системным промптом:
+
+response = requests.post(
+    f'{BASE_URL}/chat',
+    json={
+        'model': 'llama3.1',
+        'messages': [
+            {'role': 'system', 'content': 'Ты полезный ассистент.'},
+            {'role': 'user', 'content': 'Как прочитать CSV в Python?'}
+        ],
+        'stream': False
+    }
+)
+print(response.json()['message']['content'])
+
+
+- Многоходовой диалог (с сохранением контекста):
+
+messages = [
+    {'role': 'system', 'content': 'Ты полезный ассистент.'},
+    {'role': 'user', 'content': 'Сколько будет 2+2?'}
+]
+
+response = requests.post(
+    f'{BASE_URL}/chat',
+    json={'model': 'llama3.1', 'messages': messages, 'stream': False}
+)
+data = response.json()
+print(data['message']['content'])
+
+# Добавляем ответ ассистента и следующий вопрос
+messages.append(data['message'])
+messages.append({'role': 'user', 'content': 'А если умножить на 3?'})
+
+response = requests.post(
+    f'{BASE_URL}/chat',
+    json={'model': 'llama3.1', 'messages': messages, 'stream': False}
+)
+print(response.json()['message']['content'])
+
+
+- С параметрами генерации:
+
+response = requests.post(
+    f'{BASE_URL}/chat',
+    json={
+        'model': 'llama3.1',
+        'messages': [{'role': 'user', 'content': 'Напиши функцию реверса строки'}],
+        'stream': False,
+        'options': {
+            'temperature': 0.7,
+            'num_predict': 128,		# макс. кол-во токенов
+            'top_p': 0.9,
+            'top_k': 40
+        }
+    }
+)
+print(response.json()['message']['content'])
+
+
+ = Генерация текста:
+
+- Базовый вызов:
+
+response = requests.post(
+    f'{BASE_URL}/generate',
+    json={
+        'model': 'llama3.1',
+        'prompt': 'Почему небо голубое?',
+        'stream': False
+    }
+)
+print(response.json()['response'])
+
+
+- С контекстом (для продолжения):
+
+response1 = requests.post(
+    f'{BASE_URL}/generate',
+    json={'model': 'llama3.1', 'prompt': 'Столица Франции?', 'stream': False}
+)
+data1 = response1.json()
+print(data1['response'])
+
+response2 = requests.post(
+    f'{BASE_URL}/generate',
+    json={
+        'model': 'llama3.1',
+        'prompt': 'А какое население?',
+        'context': data1['context'],		# передаём контекст
+        'stream': False
+    }
+)
+print(response2.json()['response'])
+
+
+ = Стриминг ответов (NDJSON):
+
+- Стриминг чата:
+
+import json
+
+response = requests.post(
+    f'{BASE_URL}/chat',
+    json={
+        'model': 'llama3.1',
+        'messages': [{'role': 'user', 'content': 'Напиши стихотворение'}],
+        'stream': True
+    },
+    stream=True		# включаем потоковое чтение
+)
+response.raise_for_status()
+
+for line in response.iter_lines():
+    if line:
+        chunk = json.loads(line)
+        print(chunk['message']['content'], end='', flush=True)
+
+
+- Стриминг генерации:
+
+response = requests.post(
+    f'{BASE_URL}/generate',
+    json={
+        'model': 'llama3.1',
+        'prompt': 'Расскажи длинную историю',
+        'stream': True
+    },
+    stream=True
+)
+
+for line in response.iter_lines():
+    if line:
+        chunk = json.loads(line)
+        print(chunk['response'], end='', flush=True)
+
+
+ = Эмбеддинги:
+
+- Одиночный эмбеддинг (старый эндпоинт):
+
+response = requests.post(
+    f'{BASE_URL}/embeddings',
+    json={
+        'model': 'nomic-embed-text',
+        'prompt': 'Небо голубое из-за рассеяния Рэлея'
+    }
+)
+embedding = response.json()['embedding']
+print(len(embedding))		# размерность вектора
+
+
+- Пакетные эмбеддинги (новый эндпоинт):
+
+response = requests.post(
+    f'{BASE_URL}/embed',
+    json={
+        'model': 'nomic-embed-text',
+        'input': ['Первая строка', 'Вторая строка']
+    }
+)
+embeddings = response.json()['embeddings']
+print(len(embeddings[0]))		# размерность вектора
+
+
+ = Управление моделями:
+
+- Список доступных моделей:
+
+response = requests.get(f'{BASE_URL}/tags')
+models = response.json()['models']
+for model in models:
+    print(model['name'])
+
+
+- Информация о модели:
+
+response = requests.post(
+    f'{BASE_URL}/show',
+    json={'model': 'llama3.1'}
+)
+print(response.json())
+
+
+- Загрузка модели (pull):
+
+response = requests.post(
+    f'{BASE_URL}/pull',
+    json={'name': 'llama3.1', 'stream': True},
+    stream=True
+)
+
+for line in response.iter_lines():
+    if line:
+        progress = json.loads(line)
+        print(progress)
+
+
+- Загрузка модели без стриминга:
+
+response = requests.post(
+    f'{BASE_URL}/pull',
+    json={'name': 'llama3.1', 'stream': False}
+)
+print(response.json())
+
+
+- Удаление модели:
+
+response = requests.delete(
+    f'{BASE_URL}/delete',
+    json={'model': 'llama3.1'}
+)
+print(response.status_code)		# 200 — успешно
+
+
+- Копирование модели:
+
+response = requests.post(
+    f'{BASE_URL}/copy',
+    json={'source': 'llama3.1', 'destination': 'my-llama3.1'}
+)
+print(response.status_code)
+
+
+- Создание модели из Modelfile:
+
+modelfile = '''
+FROM llama3.1
+SYSTEM Ты Марио из Super Mario Bros.
+'''
+
+response = requests.post(
+    f'{BASE_URL}/create',
+    json={
+        'model': 'mario',
+        'modelfile': modelfile,
+        'stream': False
+    }
+)
+print(response.json())
+
+
+ = Обработка ошибок:
+
+- Базовый try-except:
+
+import requests
+
+try:
+    response = requests.post(
+        f'{BASE_URL}/chat',
+        json={
+            'model': 'does-not-exist',
+            'messages': [{'role': 'user', 'content': 'Привет'}],
+            'stream': False
+        },
+        timeout=60
+    )
+    response.raise_for_status()
+except requests.ConnectionError:
+    print('Ошибка: не удалось подключиться к Ollama.')
+except requests.Timeout:
+    print('Ошибка: превышено время ожидания.')
+except requests.HTTPError as e:
+    print(f'HTTP-ошибка: {e.response.status_code}')
+    print(e.response.text)
+
+
+- Проверка статуса ответа:
+
+response = requests.post(
+    f'{BASE_URL}/chat',
+    json={
+        'model': 'llama3.1',
+        'messages': [{'role': 'user', 'content': 'Привет'}],
+        'stream': False
+    }
+)
+
+if response.status_code == 200:
+    print(response.json()['message']['content'])
+else:
+    print('Ошибка:', response.json())
+
+
+ = Кастомный хост и таймауты:
+
+- Кастомный хост:
+
+OLLAMA_HOST = 'http://192.168.1.100:11434'
+BASE_URL = f'{OLLAMA_HOST}/api'
+
+
+- Таймаут:
+
+response = requests.post(
+    f'{BASE_URL}/chat',
+    json={
+        'model': 'llama3.1',
+        'messages': [{'role': 'user', 'content': 'Привет'}],
+        'stream': False
+    },
+    timeout=120.0		# таймаут в секундах
+)
+
+
+- Заголовки (для аутентификации на удалённом хосте):
+
+import os
+
+headers = {
+    'Authorization': f'Bearer {os.environ["OLLAMA_API_KEY"]}'
+}
+
+response = requests.post(
+    f'{BASE_URL}/chat',
+    json={
+        'model': 'llama3.1',
+        'messages': [{'role': 'user', 'content': 'Привет'}],
+        'stream': False
+    },
+    headers=headers
+)
+
+
+ = Структурированный вывод (JSON Schema):
+
+- С Pydantic:
+
+import json
+import requests
+from pydantic import BaseModel
+
+class Task(BaseModel):
+    title: str
+    priority: int
+
+schema = Task.model_json_schema()
+
+response = requests.post(
+    f'{BASE_URL}/chat',
+    json={
+        'model': 'llama3.1',
+        'messages': [{
+            'role': 'user',
+            'content': "Извлеки задачу: 'Исправить баг до пятницы'"
+        }],
+        'format': schema,
+        'options': {'temperature': 0},
+        'stream': False
+    }
+)
+
+task = Task(**json.loads(response.json()['message']['content']))
+print(task.title, task.priority)
+
+
+- С простым JSON-словарём:
+
+schema = {
+    'type': 'object',
+    'properties': {
+        'name': {'type': 'string'},
+        'age': {'type': 'integer'}
+    },
+    'required': ['name', 'age']
+}
+
+response = requests.post(
+    f'{BASE_URL}/chat',
+    json={
+        'model': 'llama3.1',
+        'messages': [{
+            'role': 'user',
+            'content': 'Данные о человеке: Иван, 30 лет'
+        }],
+        'format': schema,
+        'stream': False
+    }
+)
+print(response.json()['message']['content'])
+
+
+ = Вызов функций (Tool Calling):
+
+- Определение функции-инструмента:
+
+def add_two_numbers(a: int, b: int) -> int:
+    """
+    Сложить два числа
+
+    Args:
+        a: Первое число
+        b: Второе число
+
+    Returns:
+        Сумма двух чисел
+    """
+    return a + b
+
+
+- Передача функции как инструмента:
+
+import json
+import requests
+
+response = requests.post(
+    f'{BASE_URL}/chat',
+    json={
+        'model': 'llama3.1',
+        'messages': [{'role': 'user', 'content': 'Сколько будет 10 + 10?'}],
+        'tools': [{
+            'type': 'function',
+            'function': {
+                'name': 'add_two_numbers',
+                'description': 'Сложить два числа',
+                'parameters': {
+                    'type': 'object',
+                    'properties': {
+                        'a': {'type': 'integer', 'description': 'Первое число'},
+                        'b': {'type': 'integer', 'description': 'Второе число'}
+                    },
+                    'required': ['a', 'b']
+                }
+            }
+        }],
+        'stream': False
+    }
+)
+
+data = response.json()
+tool_calls = data.get('message', {}).get('tool_calls', [])
+
+available_functions = {
+    'add_two_numbers': add_two_numbers,
+}
+
+for tool in tool_calls:
+    function_to_call = available_functions.get(tool['function']['name'])
+    if function_to_call:
+        args = tool['function']['arguments']
+        if isinstance(args, str):
+            args = json.loads(args)
+        print('Результат:', function_to_call(**args))
+    else:
+        print('Функция не найдена:', tool['function']['name'])
+
+
+- Передача существующих функций (например, requests):
+
+import requests
+
+available_functions = {
+    'request': requests.request,
+}
+
+response = requests.post(
+    f'{BASE_URL}/chat',
+    json={
+        'model': 'llama3.1',
+        'messages': [{
+            'role': 'user',
+            'content': 'Получи страницу ollama.com'
+        }],
+        'tools': [{
+            'type': 'function',
+            'function': {
+                'name': 'request',
+                'description': 'Выполнить HTTP-запрос',
+                'parameters': {
+                    'type': 'object',
+                    'properties': {
+                        'method': {'type': 'string'},
+                        'url': {'type': 'string'}
+                    },
+                    'required': ['method', 'url']
+                }
+            }
+        }],
+        'stream': False
+    }
+)
+
+data = response.json()
+tool_calls = data.get('message', {}).get('tool_calls', [])
+
+for tool in tool_calls:
+    if tool['function']['name'] == 'request':
+        args = tool['function']['arguments']
+        if isinstance(args, str):
+            args = json.loads(args)
+        resp = requests.request(
+            method=args.get('method'),
+            url=args.get('url')
+        )
+        print(resp.text)
