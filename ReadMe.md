@@ -13,6 +13,8 @@
 
 <!-- TeaWrongFormat:End -->
 
+[Обкатать страницу](https://www.funwithcomputervision.com/weball/?url=https%3A%2F%2Fgithub.com%2FMichiTheCat-RedStar)
+
 ---
 
 # Добро пожаловать на мою страницу!!!
