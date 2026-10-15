@@ -1,0 +1,708 @@
+	--- ОСНОВНЫЕ КОМАНДЫ DBEAVER ---
+
+ = Подключение к базе данных:
+
+- Открыть мастер нового подключения:
+
+Ctrl+Shift+N			# или Database -> New Database Connection
+
+
+- Выбрать драйвер:
+
+# в мастере выбрать СУБД (PostgreSQL, MySQL, SQLite и т.д.)
+
+
+- Заполнить основные поля:
+
+Host: localhost			# адрес сервера
+Port: 5432				# порт (зависит от СУБД)
+Database: mydb			# имя базы
+Username: postgres		# логин
+Password: secret		# пароль
+
+
+- Проверить подключение:
+
+# кнопка Test Connection
+
+
+- Сохранить подключение:
+
+# кнопка Finish
+
+
+- Открыть подключение:
+
+F4						# открыть редактор объекта
+
+
+- Отключиться от базы:
+
+# правый клик по подключению -> Disconnect
+
+
+ = Работа с SQL-редактором:
+
+- Создать новый SQL-скрипт:
+
+Ctrl+]					# новый скрипт
+
+
+- Открыть новый SQL-консоль (без файла):
+
+Ctrl+Alt+Enter			# консоль для активного подключения
+
+
+- Открыть существующий скрипт:
+
+F3						# открыть файл .sql
+
+
+- Открыть последний скрипт для подключения:
+
+Ctrl+Enter				# последний SQL-скрипт
+
+
+- Выполнить SQL:
+
+Ctrl+Enter				# выполнить запрос под курсором
+
+
+- Выполнить весь скрипт:
+
+Ctrl+Alt+Shift+Enter	# выполнить всё, что есть в редакторе
+
+
+- Форматирование SQL:
+
+Ctrl+Alt+F				# форматировать запрос
+
+
+- Автодополнение:
+
+Ctrl+Space				# подсказка по коду
+
+
+- Комментарий строки:
+
+Ctrl+/					# закомментировать / раскомментировать
+
+
+- Блочный комментарий:
+
+Ctrl+Shift+/			# /* ... */
+
+
+- Переключение между запросами:
+
+Alt+Up / Alt+Down		# предыдущий / следующий запрос
+
+
+- Показать план запроса:
+
+Ctrl+Alt+Shift+E		# Explain Plan
+
+
+- Открыть Visual Query Builder:
+
+Ctrl+B					# визуальный конструктор запросов
+
+
+- Показать/скрыть SQL в VQB:
+
+Ctrl+Shift+B			# сгенерированный SQL
+
+
+- Мягкий перенос строк:
+
+Ctrl+Alt+Shift+W		# toggle word wrap
+
+
+ = Работа с результатами:
+
+- Выбрать все строки (без лимита):
+
+Ctrl+Alt+Shift+A		# fetch all rows
+
+
+- Следующая страница результатов:
+
+Ctrl+Alt+;				# fetch next page
+
+
+- Подсчитать количество строк:
+
+Ctrl+Alt+Shift+C		# row count для запроса под курсором
+
+
+- Фильтр по уникальным значениям:
+
+Ctrl+F11				# filter by unique attribute values
+
+
+- Сортировка результатов:
+
+Ctrl+2					# toggle sort order (asc/desc/default)
+
+
+- Переключить Grid / Record view:
+
+Tab						# вид таблицы или записи
+
+
+- Развернуть панель результатов:
+
+Ctrl+Shift+6			# maximize/normalize results
+
+
+- Следующая / предыдущая строка:
+
+Ctrl+Alt+Right / Left	# навигация по строкам
+
+
+- Первая / последняя строка:
+
+Ctrl+Alt+Shift+Left / Right
+
+
+- Перейти по внешнему ключу:
+
+Alt+Space				# follow foreign key link
+
+
+- Показать связанные таблицы:
+
+Ctrl+1					# foreign keys and tables referencing current
+
+
+ = Редактирование данных:
+
+- Добавить строку:
+
+Alt+Insert				# add new row
+
+
+- Удалить строку:
+
+Alt+Delete				# delete current row
+
+
+- Дублировать строку:
+
+Ctrl+Alt+Insert			# duplicate current row
+
+
+- Копировать значение сверху:
+
+Ctrl+D					# copy values from row above
+
+
+- Копировать значение снизу:
+
+Ctrl+Alt+D				# copy values from row below
+
+
+- Редактировать ячейку (inline):
+
+Enter					# встроенный редактор
+
+
+- Редактировать ячейку (диалог):
+
+Shift+Enter				# отдельное окно
+
+
+- Применить изменения:
+
+Ctrl+S					# apply data changes
+
+
+- Откатить изменения:
+
+Ctrl+R					# reject data changes
+
+
+- Установить значение по умолчанию:
+
+Ctrl+Backspace			# set cell to default value
+
+
+ = Транзакции:
+
+- Зафиксировать изменения:
+
+Ctrl+Alt+Shift+K		# commit в текущей сессии
+
+
+- Откатить изменения:
+
+Ctrl+Alt+Shift+R		# rollback в текущей сессии
+
+
+- Режим автокоммита:
+
+# настраивается в Preferences -> Connections
+
+
+ = Навигация и поиск:
+
+- Поиск по объектам:
+
+Ctrl+H					# Search dialog
+
+
+- Поиск по файлам в workspace:
+
+Ctrl+Alt+G				# поиск текста в файлах
+
+
+- Быстрый поиск:
+
+Ctrl+Alt+Shift+F		# Quick search
+
+
+- Переключение редакторов:
+
+Ctrl+F6					# следующий редактор
+Ctrl+Shift+F6			# предыдущий редактор
+
+
+- Переключение перспектив:
+
+Ctrl+F8					# следующая перспектива
+
+
+- Переключение вью:
+
+Ctrl+F7					# следующее вью
+
+
+- Активировать редактор:
+
+F12						# Activate Editor
+
+
+- Показать контекстное меню:
+
+Alt+`					# database tools menu
+
+
+- Список редакторов:
+
+Ctrl+E					# editor drop-down list
+
+
+- Key assist:
+
+Ctrl+Shift+L			# показать все горячие клавиши
+
+
+ = Утилиты:
+
+- Сгенерировать UUID:
+
+Ctrl+Alt+Shift+U		# UUID/GUID в редактор
+
+
+- Открыть dashboard:
+
+Ctrl+Alt+Shift+B		# database dashboard
+
+
+- Выбрать активную схему:
+
+Ctrl+0					# select active schema
+
+
+- Выбрать подключение для редактора:
+
+Ctrl+9					# select connection
+
+
+- Показать консоль сервера:
+
+Ctrl+Shift+O			# server output console
+
+
+- Переключить вертикальные вкладки:
+
+Ctrl+Alt+PageUp/Down	# переключение вкладок
+
+
+
+	--- ПОЛНАЯ ШПАРГАЛКА ПО DBEAVER ---
+
+ = ER-диаграммы:
+
+- Открыть диаграмму таблицы:
+
+# двойной клик по таблице -> вкладка Diagram
+
+
+- Открыть диаграмму схемы:
+
+# двойной клик по схеме -> вкладка Diagram
+
+
+- Создать пользовательскую диаграмму:
+
+File -> New -> DBeaver -> ER Diagram
+# или правый клик на Diagrams -> Create New Diagram
+
+
+- Перетащить таблицы на диаграмму:
+
+# drag & drop из Database Navigator
+
+
+- Добавить заметку:
+
+# на палитре слева выбрать Note
+
+
+- Создать связь между таблицами:
+
+# на палитре слева выбрать Connection
+
+
+- Включить режим редактирования:
+
+# диаграммы по умолчанию read-only; включить Edit mode
+
+
+- Экспортировать диаграмму:
+
+# тулбар -> Export / Print
+
+
+- Настройки нотации и маршрутизации:
+
+# правый клик на пустом месте -> Notation / Routing
+
+
+ = Экспорт данных:
+
+- Экспорт таблицы:
+
+# правый клик на таблице -> Export Data
+
+
+- Выбрать формат:
+
+CSV, SQL, Excel, JSON, XML, HTML и др.
+
+
+- Настроить разделители (CSV):
+
+# указать field separator, text delimiter
+
+
+- Экспорт результатов запроса:
+
+# правый клик в результатах -> Export Data
+
+
+- Экспорт через @export:
+
+@export {"type": "csv"}
+
+
+- Экспорт в базу данных:
+
+# table-to-table transfer через Data Transfer
+
+
+ = Импорт данных:
+
+- Импорт в таблицу:
+
+# правый клик на таблице -> Import Data
+
+
+- Выбрать источник:
+
+CSV, Excel, SQL и др.
+
+
+- Настроить сопоставление колонок:
+
+# маппинг колонок источника и целевой таблицы
+
+
+ = Настройка драйверов:
+
+- Открыть Driver Manager:
+
+Database -> Driver Manager
+
+
+- Добавить новый драйвер:
+
+# кнопка New -> указать имя, класс, библиотеки
+
+
+- Загрузить JDBC-драйвер:
+
+# Libraries -> Add File -> выбрать .jar
+
+
+- Настроить параметры драйвера:
+
+# вкладка Settings -> Driver class, URL template
+
+
+- Проверить драйвер:
+
+# Test Connection
+
+
+- Файл конфигурации драйверов:
+
+workspace/.metadata/.config/drivers.xml
+
+
+ = Визуальный конструктор запросов (VQB):
+
+- Открыть VQB:
+
+Ctrl+B					# или вкладка Query Builder в SQL Editor
+
+
+- Выбрать таблицы:
+
+# отметить таблицы в панели слева
+
+
+- Создать JOIN:
+
+# перетащить связь между таблицами
+
+
+- Добавить условие:
+
+# вкладка Filters -> задать WHERE
+
+
+- Группировка:
+
+# вкладка Grouping -> выбрать колонки
+
+
+- Сортировка:
+
+# вкладка Sorting -> задать ORDER BY
+
+
+- Показать SQL:
+
+Ctrl+Shift+B			# показать/скрыть сгенерированный SQL
+
+
+- Выполнить запрос:
+
+# кнопка Execute в VQB
+
+
+ = Настройки и конфигурация:
+
+- Открыть настройки:
+
+Window -> Preferences
+
+
+- Горячие клавиши:
+
+Preferences -> User Interface -> Keys
+
+
+- Схема клавиш:
+
+# DBeaver Keyboard Only для максимального набора
+
+
+- SQL Editor:
+
+Preferences -> Editors -> SQL Editor
+# SQL Terminal, SQL Processing, Auto-save
+
+
+- Форматирование SQL:
+
+Preferences -> Editors -> SQL Editor -> Formatting
+
+
+- Результаты:
+
+Preferences -> Editors -> Data Editor -> Results
+
+
+- Цвета и шрифты:
+
+Preferences -> User Interface -> Appearance
+
+
+- Настройки подключения:
+
+Preferences -> Connections
+
+
+- Импорт/экспорт настроек:
+
+# Preferences -> Import/Export
+
+
+ = Полезные функции SQL-редактора:
+
+- Выполнить только выделенное:
+
+# выделить фрагмент -> Ctrl+Enter
+
+
+- Выполнить запрос под курсором:
+
+Ctrl+Enter				# без выделения
+
+
+- Множественные запросы:
+
+# можно писать несколько запросов через ;
+
+
+- Параметры в запросе:
+
+SELECT * FROM users WHERE age > :min_age
+# при выполнении спросит значение :min_age
+
+
+- Переменные:
+
+@set myvar = 100
+SELECT * FROM users WHERE id = ${myvar}
+
+
+- Использование переменных:
+
+# Variables panel для установки значений
+
+
+- SQL Terminal:
+
+# включить в Preferences -> Editors -> SQL Editor -> SQL Terminal
+
+
+ = Shell-команды в подключении:
+
+- Настройка shell-команд:
+
+# Connection settings -> Initialization -> Shell Commands
+
+
+- Начальная команда:
+
+# выполняется при подключении
+
+
+- Завершающая команда:
+
+# выполняется при отключении
+
+
+ = Командная строка DBeaver:
+
+- Запуск DBeaver из терминала:
+
+dbeaver
+
+
+- Подключение к базе через CLI:
+
+# не поддерживается напрямую, только GUI
+
+
+- Экспорт через CLI:
+
+# используйте @export в SQL-скрипте
+
+
+ = Полезные советы:
+
+- Быстрое переключение подключений:
+
+Ctrl+9					# select connection for editor
+
+
+- Активная схема:
+
+Ctrl+0					# выбрать схему
+
+
+- Автосохранение скриптов:
+
+# Preferences -> Editors -> SQL Editor -> Auto-save
+
+
+- Шаблоны SQL:
+
+# Preferences -> Editors -> SQL Editor -> Templates
+
+
+- История запросов:
+
+# вкладка Query Manager в SQL Editor
+
+
+- Планы выполнения:
+
+Ctrl+Alt+Shift+E		# Explain Plan
+
+
+- Статистика выполнения:
+
+# видна после EXPLAIN ANALYZE
+
+
+- Просмотр DDL:
+
+# правый клик на таблице -> Generate SQL -> DDL
+
+
+- Генерация SQL для объекта:
+
+# правый клик -> Generate SQL
+
+
+- Копирование данных как SQL INSERT:
+
+# выделить строки -> Copy as SQL
+
+
+- Поиск в результатах:
+
+Ctrl+F					# поиск по таблице результатов
+
+
+- Фильтрация результатов:
+
+# панель Filter внизу результатов
+
+
+ = Работа с несколькими базами:
+
+- Открыть несколько подключений:
+
+# каждое подключение в отдельной вкладке
+
+
+- Сравнение схем:
+
+# правый клик на схеме -> Compare/Migrate
+
+
+- Перенос данных между базами:
+
+# Data Transfer -> table-to-table
+
+
+- Пользовательские диаграммы:
+
+# можно объединять таблицы из разных подключений

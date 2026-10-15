@@ -1,0 +1,814 @@
+	--- ОСНОВНЫЕ КОМАНДЫ PYTHON + POSTGRESQL ---
+
+ = Установка драйверов:
+
+- psycopg2 (классический синхронный драйвер):
+
+pip install psycopg2-binary		# бинарная сборка
+
+
+- psycopg (psycopg3, современный драйвер):
+
+pip install "psycopg[binary]"	# с бинарными зависимостями
+
+
+- asyncpg (асинхронный драйвер):
+
+pip install asyncpg
+
+
+- SQLAlchemy (ORM и Core):
+
+pip install sqlalchemy
+
+
+- Alembic (миграции для SQLAlchemy):
+
+pip install alembic
+
+
+- psycopg2 с пулом соединений:
+
+pip install psycopg2-binary
+
+
+ = Подключение через psycopg2:
+
+- Базовое подключение:
+
+import psycopg2
+
+conn = psycopg2.connect(
+    dbname="mydb",
+    user="postgres",
+    password="secret",
+    host="localhost",
+    port="5432"
+)
+
+
+- Подключение через DSN-строку:
+
+conn = psycopg2.connect("dbname=mydb user=postgres password=secret host=localhost")[reference:0]
+
+
+- Подключение с контекстным менеджером:
+
+with psycopg2.connect(dbname="mydb", user="postgres") as conn:
+    with conn.cursor() as cur:
+        cur.execute("SELECT 1")
+
+
+- Проверка подключения:
+
+try:
+    conn = psycopg2.connect(...)
+    print("Подключение успешно")
+except psycopg2.Error as e:
+    print(f"Ошибка подключения: {e}")
+
+
+ = Выполнение запросов в psycopg2:
+
+- Создание курсора:
+
+cur = conn.cursor()
+
+
+- Выполнить SELECT:
+
+cur.execute("SELECT * FROM users WHERE age > %s", (18,))[reference:1]
+
+
+- Получить все строки:
+
+rows = cur.fetchall()
+for row in rows:
+    print(row)[reference:2]
+
+
+- Получить одну строку:
+
+row = cur.fetchone()
+
+
+- Получить N строк:
+
+rows = cur.fetchmany(10)
+
+
+- Выполнить INSERT:
+
+cur.execute(
+    "INSERT INTO users (name, email) VALUES (%s, %s)",
+    ("Alice", "alice@example.com")
+)
+conn.commit()[reference:3]
+
+
+- Массовая вставка:
+
+cur.executemany(
+    "INSERT INTO users (name, email) VALUES (%s, %s)",
+    [("Alice", "a@e.com"), ("Bob", "b@e.com")]
+)
+conn.commit()[reference:4]
+
+
+- Закрытие курсора и соединения:
+
+cur.close()
+conn.close()
+
+
+ = Транзакции в psycopg2:
+
+- Ручное управление:
+
+conn = psycopg2.connect(...)
+conn.autocommit = False		# по умолчанию
+
+try:
+    cur = conn.cursor()
+    cur.execute("INSERT ...")
+    cur.execute("UPDATE ...")
+    conn.commit()
+except Exception:
+    conn.rollback()
+finally:
+    cur.close()
+    conn.close()
+
+
+- Контекстный менеджер (автоматический commit/rollback):
+
+with conn:
+    with conn.cursor() as cur:
+        cur.execute("INSERT ...")
+        cur.execute("UPDATE ...")
+# при выходе без ошибок — commit, при ошибке — rollback
+
+
+- Установка уровня изоляции:
+
+conn.set_isolation_level(
+    psycopg2.extensions.ISOLATION_LEVEL_SERIALIZABLE
+)
+
+
+ = Подключение через psycopg (psycopg3):
+
+- Базовое подключение:
+
+import psycopg
+
+with psycopg.connect("dbname=mydb user=postgres") as conn:
+    with conn.cursor() as cur:
+        cur.execute("SELECT * FROM users WHERE id = %s", (1,))
+        row = cur.fetchone()[reference:5]
+
+
+- Подключение с параметрами:
+
+with psycopg.connect(
+    host="localhost",
+    dbname="mydb",
+    user="postgres",
+    password="secret"
+) as conn:
+    ...
+
+
+- Контекстный менеджер соединения:
+
+# при выходе из блока соединение закрывается,
+# текущая транзакция коммитится или откатывается[reference:6]
+
+
+- Серверный курсор (для больших выборок):
+
+with psycopg.connect("dbname=mydb") as conn:
+    with conn.cursor(name="my_cursor") as cur:
+        cur.execute("SELECT * FROM very_large_table")
+        for row in cur:
+            ...[reference:7]
+
+
+- Pipeline режим (пакетная отправка запросов):
+
+with conn.pipeline():
+    conn.execute("INSERT ...")
+    conn.execute("INSERT ...")[reference:8]
+
+
+- Автокоммит:
+
+conn = psycopg.connect("dbname=mydb", autocommit=True)[reference:9]
+
+
+ = Подключение через asyncpg:
+
+- Базовое асинхронное подключение:
+
+import asyncio
+import asyncpg
+
+async def main():
+    conn = await asyncpg.connect(
+        user="postgres",
+        password="secret",
+        database="mydb",
+        host="127.0.0.1"
+    )
+    values = await conn.fetch("SELECT * FROM users")
+    await conn.close()
+
+asyncio.run(main())[reference:10]
+
+
+- Использование пула соединений:
+
+import asyncpg
+
+async def main():
+    pool = await asyncpg.create_pool(
+        dsn="postgresql://postgres:secret@localhost/mydb",
+        min_size=2,
+        max_size=50
+    )
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow("SELECT * FROM users WHERE id = $1", 1)
+        print(row)[reference:11]
+
+
+- Выполнение запросов:
+
+# fetch — все строки
+rows = await conn.fetch("SELECT * FROM users")
+
+# fetchrow — одна строка
+row = await conn.fetchrow("SELECT * FROM users WHERE id = $1", 1)
+
+# fetchval — одно значение
+count = await conn.fetchval("SELECT COUNT(*) FROM users")
+
+# execute — INSERT/UPDATE/DELETE
+await conn.execute("INSERT INTO users (name) VALUES ($1)", "Alice")
+
+
+- Транзакции в asyncpg:
+
+async with conn.transaction():
+    await conn.execute("INSERT ...")
+    await conn.execute("UPDATE ...")
+# автоматический commit или rollback
+
+
+- Параметризация (нумерация $1, $2, ...):
+
+await conn.fetch("SELECT * FROM users WHERE age > $1 AND city = $2", 18, "Moscow")[reference:12]
+
+
+- Автоматическое преобразование JSON:
+
+# asyncpg автоматически сериализует dict в JSONB
+await conn.execute("INSERT INTO logs (data) VALUES ($1)", {"event": "login"})[reference:13]
+
+
+ = SQLAlchemy Core (без ORM):
+
+- Создание engine:
+
+from sqlalchemy import create_engine
+
+engine = create_engine("postgresql+psycopg2://postgres:secret@localhost/mydb")[reference:14]
+
+
+- Создание engine через URL.create:
+
+from sqlalchemy.engine import URL
+
+url = URL.create(
+    drivername="postgresql+psycopg2",
+    username="postgres",
+    password="secret",
+    host="localhost",
+    database="mydb"
+)
+engine = create_engine(url)
+
+
+- Выполнение SQL:
+
+from sqlalchemy import text
+
+with engine.connect() as conn:
+    result = conn.execute(text("SELECT * FROM users"))
+    for row in result:
+        print(row)[reference:15]
+
+
+- Параметризованный запрос:
+
+with engine.connect() as conn:
+    result = conn.execute(
+        text("SELECT * FROM users WHERE age > :age"),
+        {"age": 18}
+    )
+
+
+ = SQLAlchemy ORM:
+
+- Определение модели:
+
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+class Base(DeclarativeBase):
+    pass
+
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str]
+    email: Mapped[str | None]
+
+
+- Создание таблиц:
+
+Base.metadata.create_all(engine)
+
+
+- Сессия:
+
+from sqlalchemy.orm import Session
+
+with Session(engine) as session:
+    user = User(name="Alice", email="a@e.com")
+    session.add(user)
+    session.commit()
+
+
+- Запрос через ORM:
+
+with Session(engine) as session:
+    users = session.query(User).filter(User.age > 18).all()
+    for u in users:
+        print(u.name)
+
+
+- SQLAlchemy 2.0 стиль (select):
+
+from sqlalchemy import select
+
+with Session(engine) as session:
+    stmt = select(User).where(User.age > 18)
+    users = session.scalars(stmt).all()
+
+
+ = Alembic (миграции):
+
+- Инициализация:
+
+alembic init alembic[reference:16]
+
+
+- Настройка подключения в alembic.ini:
+
+sqlalchemy.url = postgresql+psycopg2://postgres:secret@localhost/mydb
+
+
+- Или через env.py:
+
+config.set_main_option(
+    "sqlalchemy.url",
+    "postgresql+psycopg2://..."
+)
+
+
+- Автогенерация миграции:
+
+alembic revision --autogenerate -m "Create users table"[reference:17]
+
+
+- Применение миграций:
+
+alembic upgrade head
+
+
+- Откат на одну миграцию:
+
+alembic downgrade -1
+
+
+- Просмотр истории:
+
+alembic history
+
+
+- Текущая версия:
+
+alembic current
+
+
+- Генерация SQL без выполнения:
+
+alembic upgrade head --sql > migration.sql[reference:18]
+
+
+ = Пул соединений psycopg2:
+
+- SimpleConnectionPool:
+
+from psycopg2 import pool
+
+db_pool = pool.SimpleConnectionPool(
+    minconn=5,
+    maxconn=20,
+    host="localhost",
+    database="mydb",
+    user="postgres",
+    password="secret"
+)[reference:19]
+
+
+- ThreadedConnectionPool (потокобезопасный):
+
+from psycopg2 import pool
+
+db_pool = pool.ThreadedConnectionPool(
+    minconn=2,
+    maxconn=10,
+    host="localhost",
+    database="mydb",
+    user="postgres",
+    password="secret"
+)[reference:20]
+
+
+- Получение соединения из пула:
+
+conn = db_pool.getconn()
+try:
+    cur = conn.cursor()
+    cur.execute("SELECT 1")
+finally:
+    db_pool.putconn(conn)
+
+
+- Закрытие пула:
+
+db_pool.closeall()[reference:21]
+
+
+ = Пул соединений psycopg3:
+
+- ConnectionPool:
+
+from psycopg_pool import ConnectionPool
+
+pool = ConnectionPool("postgresql://postgres:secret@localhost/mydb")
+
+
+- Использование:
+
+with pool.connection() as conn:
+    conn.execute("SELECT * FROM users")[reference:22]
+
+
+- Асинхронный пул:
+
+from psycopg_pool import AsyncConnectionPool
+
+async with AsyncConnectionPool(conninfo) as pool:
+    async with pool.connection() as conn:
+        ...
+
+
+ = COPY (быстрая загрузка/выгрузка):
+
+- Экспорт в CSV через psycopg2:
+
+with open("output.csv", "w") as f:
+    cur.copy_expert(
+        "COPY users TO STDOUT WITH CSV HEADER",
+        f
+    )[reference:23]
+
+
+- Импорт из CSV:
+
+with open("input.csv", "r") as f:
+    cur.copy_expert(
+        "COPY users FROM STDIN WITH CSV HEADER",
+        f
+    )
+conn.commit()[reference:24]
+
+
+- COPY с дополнительными опциями:
+
+cur.copy_expert(
+    "COPY users FROM STDIN WITH (FORMAT CSV, NULL '\\N')",
+    f
+)[reference:25]
+
+
+ = LISTEN / NOTIFY (pub/sub):
+
+- Подписка (psycopg2):
+
+conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
+cur = conn.cursor()
+cur.execute("LISTEN orders")[reference:26]
+
+
+- Ожидание уведомлений:
+
+import select
+
+while True:
+    if select.select([conn], [], [], 5) == ([], [], []):
+        continue
+    conn.poll()
+    while conn.notifies:
+        notify = conn.notifies.pop(0)
+        print(f"Канал: {notify.channel}, Payload: {notify.payload}")
+
+
+- Отправка уведомления:
+
+cur.execute("NOTIFY orders, 'new_order'")
+
+
+- Отправка JSON:
+
+cur.execute(
+    "NOTIFY orders, %s",
+    (json.dumps({"order_id": 123}),)
+)[reference:27]
+
+
+ = Работа с JSON и массивами:
+
+- Вставка JSON:
+
+cur.execute(
+    "INSERT INTO events (data) VALUES (%s)",
+    (Json({"type": "click"}),)
+)	# psycopg2: from psycopg2.extras import Json
+
+
+- Чтение JSONB:
+
+cur.execute("SELECT data FROM events WHERE id = 1")
+data = cur.fetchone()[0]	# автоматически преобразуется в dict
+
+
+- Массивы (psycopg2):
+
+cur.execute(
+    "INSERT INTO tags (names) VALUES (%s)",
+    (["python", "postgres"],)
+)
+
+
+- Чтение массива:
+
+cur.execute("SELECT names FROM tags WHERE id = 1")
+names = cur.fetchone()[0]	# ['python', 'postgres']
+
+
+- asyncpg и JSON:
+
+# автоматически сериализует/десериализует dict
+await conn.execute("INSERT INTO logs (data) VALUES ($1)", {"event": "login"})[reference:28]
+
+
+ = Обработка ошибок:
+
+- psycopg2:
+
+import psycopg2
+
+try:
+    cur.execute("SELECT * FROM nonexistent")
+except psycopg2.OperationalError as e:
+    print(f"Ошибка соединения: {e}")
+except psycopg2.ProgrammingError as e:
+    print(f"Ошибка SQL: {e}")
+except psycopg2.IntegrityError as e:
+    print(f"Нарушение целостности: {e}")
+    conn.rollback()
+
+
+- asyncpg:
+
+try:
+    await conn.fetch("SELECT * FROM nonexistent")
+except asyncpg.PostgresError as e:
+    print(f"Ошибка PostgreSQL: {e}")
+except asyncpg.InterfaceError as e:
+    print(f"Ошибка интерфейса: {e}")
+
+
+- SQLAlchemy:
+
+from sqlalchemy.exc import IntegrityError, OperationalError
+
+try:
+    session.commit()
+except IntegrityError:
+    session.rollback()
+
+
+ = Работа с датами и временем:
+
+- Вставка datetime:
+
+from datetime import datetime
+
+cur.execute(
+    "INSERT INTO events (created_at) VALUES (%s)",
+    (datetime.now(),)
+)
+
+
+- Чтение timestamp:
+
+cur.execute("SELECT created_at FROM events WHERE id = 1")
+created_at = cur.fetchone()[0]	# datetime object
+
+
+- Интервалы:
+
+cur.execute(
+    "INSERT INTO tasks (duration) VALUES (%s)",
+    (timedelta(hours=2),)
+)
+
+
+ = Полезные приёмы:
+
+- Получение id после INSERT:
+
+cur.execute("INSERT INTO users (name) VALUES (%s) RETURNING id", ("Alice",))
+new_id = cur.fetchone()[0]
+
+
+- Выполнение функции:
+
+cur.execute("SELECT my_function(%s)", (arg,))
+result = cur.fetchone()[0]
+
+
+- Получение имени колонок:
+
+cur.execute("SELECT * FROM users LIMIT 1")
+colnames = [desc[0] for desc in cur.description]
+
+
+- DictCursor (результат как словарь):
+
+from psycopg2.extras import DictCursor
+
+cur = conn.cursor(cursor_factory=DictCursor)
+cur.execute("SELECT * FROM users")
+row = cur.fetchone()
+print(row["name"])
+
+
+- NamedTupleCursor:
+
+from psycopg2.extras import NamedTupleCursor
+
+cur = conn.cursor(cursor_factory=NamedTupleCursor)
+cur.execute("SELECT * FROM users")
+row = cur.fetchone()
+print(row.name)
+
+
+- Регистрация адаптера типа:
+
+from psycopg2.extensions import register_adapter, AsIs
+
+register_adapter(dict, psycopg2.extras.Json)
+
+
+ = Асинхронный SQLAlchemy:
+
+- Async engine:
+
+from sqlalchemy.ext.asyncio import create_async_engine
+
+engine = create_async_engine(
+    "postgresql+asyncpg://postgres:secret@localhost/mydb"
+)
+
+
+- Async session:
+
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+
+async_session = async_sessionmaker(engine, class_=AsyncSession)
+
+async with async_session() as session:
+    result = await session.execute(text("SELECT 1"))
+    print(result.scalar())
+
+
+- Async ORM запрос:
+
+async with async_session() as session:
+    stmt = select(User).where(User.age > 18)
+    users = (await session.scalars(stmt)).all()
+
+
+ = Работа с большими объёмами данных:
+
+- Серверный курсор (psycopg2):
+
+cur = conn.cursor(name="server_side_cursor")
+cur.itersize = 1000		# по 1000 строк за раз
+cur.execute("SELECT * FROM very_large_table")
+for row in cur:
+    process(row)
+
+
+- Серверный курсор (psycopg3):
+
+with conn.cursor(name="my_cursor") as cur:
+    cur.execute("SELECT * FROM very_large_table")
+    for row in cur:
+        process(row)[reference:29]
+
+
+- COPY для массовой загрузки:
+
+# быстрее, чем executemany
+cur.copy_expert("COPY users FROM STDIN WITH CSV", file)
+
+
+- Пакетная вставка через execute_values:
+
+from psycopg2.extras import execute_values
+
+execute_values(
+    cur,
+    "INSERT INTO users (name, email) VALUES %s",
+    [("Alice", "a@e.com"), ("Bob", "b@e.com")],
+    page_size=1000
+)
+
+
+ = Лучшие практики:
+
+- Никогда не конкатенировать SQL:
+
+# ПЛОХО:
+cur.execute(f"SELECT * FROM users WHERE name = '{name}'")
+
+# ХОРОШО:
+cur.execute("SELECT * FROM users WHERE name = %s", (name,))
+
+
+- Использовать пул соединений:
+
+# для веб-приложений и многопоточных сценариев
+pool = psycopg2.pool.ThreadedConnectionPool(...)
+
+
+- Закрывать ресурсы:
+
+with conn.cursor() as cur:
+    cur.execute(...)
+# курсор закроется автоматически
+
+
+- Управлять транзакциями явно:
+
+with conn:
+    with conn.cursor() as cur:
+        cur.execute("INSERT ...")
+        cur.execute("UPDATE ...")
+# commit или rollback автоматически
+
+
+- Использовать asyncpg для асинхронных приложений:
+
+# FastAPI, aiohttp, Sanic
+pool = await asyncpg.create_pool(...)
+
+
+- Использовать SQLAlchemy ORM для сложной логики:
+
+# модели, связи, миграции
+session.add(user)
+session.commit()
+
+
+- Логировать медленные запросы:
+
+import logging
+logging.basicConfig()
+logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)

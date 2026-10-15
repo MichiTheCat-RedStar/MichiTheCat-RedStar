@@ -1,0 +1,896 @@
+	--- ОСНОВНЫЕ КОМАНДЫ ODFDO ---
+
+ = Установка и зависимости:
+
+- Установка из PyPI:
+
+pip install odfdo
+
+
+- Единственная зависимость:
+
+lxml			# требуется для работы с XML
+
+
+- Поддерживаемые версии Python:
+
+3.10 – 3.14		# Linux, Mac, Windows
+
+
+- Лицензия:
+
+Apache License 2.0
+
+
+- Импорт базовых классов:
+
+from odfdo import Document, Paragraph, Table, Cell, Style
+
+
+ = Создание документов:
+
+- Создать текстовый документ (.odt):
+
+from odfdo import Document
+
+doc = Document('text')			# или 'odt'
+
+
+- Создать таблицу (.ods):
+
+doc = Document('spreadsheet')	# или 'ods'
+
+
+- Создать презентацию (.odp):
+
+doc = Document('presentation')	# или 'odp'
+
+
+- Создать рисунок (.odg):
+
+doc = Document('drawing')		# или 'odg'
+
+
+- Сохранить документ:
+
+doc.save("output.odt")
+
+
+- Сохранить с форматированием XML:
+
+doc.save("output.odt", pretty=True)
+
+
+- Открыть существующий документ:
+
+doc = Document("existing.ods")
+
+
+- Получить тело документа:
+
+body = doc.body
+
+
+ = Работа с текстовыми документами:
+
+- Добавить параграф:
+
+from odfdo import Paragraph
+
+doc = Document('text')
+doc.body.append(Paragraph("Hello world!"))
+doc.save("hello.odt")
+
+
+- Добавить заголовок:
+
+from odfdo import Header
+
+doc.body.append(Header(1, "Заголовок первого уровня"))
+doc.body.append(Header(2, "Подзаголовок"))
+
+
+- Добавить список:
+
+from odfdo import List, ListItem
+
+lst = List()
+lst.add_item("Первый пункт")
+lst.add_item("Второй пункт")
+doc.body.append(lst)
+
+
+- Добавить таблицу в текстовый документ:
+
+from odfdo import Table
+
+table = Table("Table1", width=3, height=3)
+doc.body.append(table)
+
+
+- Получить все параграфы:
+
+for para in doc.body.get_paragraphs():
+    print(para.text)
+
+
+- Поиск и замена текста:
+
+doc.body.replace("old_text", "new_text")
+
+
+- Поиск с регулярным выражением:
+
+doc.body.replace(pattern=r"\d+", replacement="NUM")
+
+
+ = Работа с таблицами (ODS):
+
+- Получить лист по индексу:
+
+sheet = doc.body.get_sheet(0)	# первый лист
+
+
+- Получить лист по имени:
+
+sheet = doc.body.get_table("Sheet1")
+
+
+- Создать новый лист:
+
+table = Table("NewSheet", width=5, height=10)
+doc.body.append(table)
+
+
+- Установить значение ячейки (A1-нотация):
+
+sheet.set_cell("A1", "Header")
+sheet.set_cell("B2", 42)
+sheet.set_cell("C3", 3.14)
+sheet.set_cell("D4", True)
+
+
+- Установить значение по индексам (0-based):
+
+sheet.set_cell((0, 0), "A1")
+sheet.set_cell((1, 1), 42)
+
+
+- Получить значение ячейки:
+
+val = sheet.get_cell("A1").value
+
+
+- Получить ячейку по координатам:
+
+cell = sheet.get_cell("B2")
+
+
+- Установить формулу:
+
+sheet.set_cell("E1", "=SUM(A1:D1)", cell_type="formula")
+
+
+- Установить тип ячейки:
+
+sheet.set_cell("F1", 123.45, cell_type="float")
+sheet.set_cell("G1", "2024-01-15", cell_type="date")
+
+
+- Добавить строку:
+
+row = sheet.append_row()
+row = sheet.append_row(["Value1", "Value2", "Value3"])
+
+
+- Добавить колонку:
+
+col = sheet.append_column()
+
+
+- Получить строку по индексу:
+
+row = sheet.get_row(0)
+
+
+- Получить колонку по индексу:
+
+col = sheet.get_column(0)
+
+
+- Итерация по строкам:
+
+for row in sheet.traverse():
+    for cell in row.traverse():
+        print(cell.value)
+
+
+- Итерация только по значениям:
+
+for row_values in sheet.iter_values():
+    for value in row_values:
+        print(value)
+
+
+- Получить диапазон ячеек:
+
+cells = sheet.get_cells("A1:C3")
+
+
+- Удалить диапазон ячеек:
+
+sheet.delete_cells("A1:B5")
+
+
+- Удалить пустые строки и колонки в конце:
+
+sheet.rstrip()
+
+
+- Оптимизировать ширину таблицы:
+
+sheet.optimize_width()
+
+
+ = Стили и форматирование:
+
+- Создать стиль ячейки:
+
+from odfdo import create_table_cell_style
+
+header_style = create_table_cell_style(
+    background_color="#eeeeee",
+    border="0.5pt solid #000000",
+    padding="0.1in"
+)
+
+
+- Применить стиль к ячейке:
+
+cell = sheet.get_cell("A1")
+cell.style = header_style.name
+
+
+- Установить значение со стилем:
+
+sheet.set_cell("B2", "Styled cell", style=header_style)
+
+
+- Создать текстовый стиль:
+
+from odfdo import Style
+
+text_style = Style(
+    family="text",
+    name="MyTextStyle",
+    color="#ff0000",
+    bold=True,
+    italic=True,
+    font="Arial",
+    size="12pt"
+)
+
+
+- Создать стиль параграфа:
+
+para_style = Style(
+    family="paragraph",
+    name="MyParaStyle",
+    parent_style="Standard",
+    align="center",
+    indent="1cm"
+)
+
+
+- Установить свойства стиля:
+
+style.set_properties(
+    area="text",
+    color="#0000ff",
+    background_color="#ffff00",
+    font="Times New Roman",
+    size="14pt"
+)
+
+
+- Получить свойства стиля:
+
+props = style.get_properties(area="text")
+
+
+- Удалить свойства стиля:
+
+style.del_properties(area="text")
+
+
+- Вставить стиль в документ:
+
+doc.insert_style(text_style)
+
+
+ = Числовые форматы:
+
+- Формат валюты:
+
+sheet.set_cell("H1", 1234.56, style="Currency")
+
+
+- Формат процента:
+
+sheet.set_cell("I1", 0.25, style="Percent")
+
+
+- Формат даты:
+
+sheet.set_cell("J1", "2024-01-15", style="Date")
+
+
+- Формат с разделителями:
+
+sheet.set_cell("K1", 1234567.89, style="Number")
+
+
+ = Метаданные:
+
+- Доступ к метаданным:
+
+meta = doc.meta
+
+
+- Установить заголовок:
+
+meta.title = "Мой документ"
+
+
+- Установить тему:
+
+meta.subject = "Тема документа"
+
+
+- Установить автора:
+
+meta.creator = "Иван Иванов"
+
+
+- Добавить ключевое слово:
+
+meta.keywords.append("python")
+meta.keywords.append("odfdo")
+
+
+- Установить дату создания:
+
+from datetime import datetime
+
+meta.creation_date = datetime(2024, 1, 15, 10, 30)
+
+
+- Установить дату изменения:
+
+meta.modification_date = datetime.now()
+
+
+- Получить метаданные:
+
+print(meta.title)
+print(meta.creator)
+print(meta.keywords)
+
+
+ = Работа с частями документа:
+
+- Получить XML-часть:
+
+content = doc.get_part("content.xml")
+
+
+- Установить XML-часть:
+
+doc.set_part("content.xml", new_content)
+
+
+- Добавить внешний файл (изображение):
+
+doc.add_file("image.png")
+
+
+ = Утилиты командной строки:
+
+- Показать diff двух ODT:
+
+odfdo-diff file1.odt file2.odt
+
+
+- Распаковать ODF в папку:
+
+odfdo-folder document.odt
+
+
+- Собрать папку обратно в ODF:
+
+odfdo-folder --reverse folder/
+
+
+- Конвертировать в flat XML:
+
+odfdo-flat document.odt
+
+
+- Восстановить из flat XML:
+
+odfdo-flat --reverse document.fodt
+
+
+- Показать заголовки документа:
+
+odfdo-headers document.odt
+
+
+- Подсветить совпадения регулярного выражения:
+
+odfdo-highlight "pattern" document.odt
+
+
+- Конвертировать в Markdown:
+
+odfdo-markdown document.odt
+
+
+- Замена текста:
+
+odfdo-replace document.odt "old" "new"
+
+
+- Показать части документа:
+
+odfdo-show document.odt
+
+
+
+	--- ПОЛНАЯ ШПАРГАЛКА ПО ODFDO ---
+
+ = Архитектура документа:
+
+- Класс Document:
+
+# Основной класс для создания, загрузки, сохранения
+# doc = Document("text")			# создать
+# doc = Document("file.odt")		# загрузить
+# doc.save("file.odt")				# сохранить
+
+
+- Части ODF-документа:
+
+content.xml		# основное содержимое
+styles.xml		# стили
+meta.xml		# метаданные
+settings.xml	# настройки
+manifest.xml	# манифест
+
+
+- Иерархия элементов:
+
+Element				# базовый класс всех элементов
+├── Paragraph		# параграф
+├── Header			# заголовок
+├── Table			# таблица
+│   ├── Row			# строка
+│   ├── Column		# колонка
+│   └── Cell		# ячейка
+├── List			# список
+│   └── ListItem	# элемент списка
+└── Span			# форматированный текст
+
+
+ = Класс Document (подробно):
+
+- Создание:
+
+Document('text')			# .odt
+Document('spreadsheet')		# .ods
+Document('presentation')	# .odp
+Document('drawing')			# .odg
+
+
+- Загрузка:
+
+Document("file.odt")		# открыть существующий
+
+
+- Методы:
+
+doc.save(path)				# сохранить
+doc.get_part(name)			# получить XML-часть
+doc.set_part(name, data)	# установить XML-часть
+doc.add_file(path)			# добавить внешний файл
+doc.insert_style(style)		# вставить стиль
+
+
+- Свойства:
+
+doc.body					# тело документа
+doc.meta					# метаданные
+doc.styles					# стили
+
+
+ = Класс Paragraph:
+
+- Создание:
+
+from odfdo import Paragraph
+
+p = Paragraph("Текст параграфа")
+
+
+- Свойства:
+
+p.text						# текст
+p.style						# стиль
+p.inner_text				# внутренний текст
+
+
+- Методы:
+
+p.append(content)			# добавить содержимое
+p.append_plain_text(text)	# добавить текст с переносами
+p.set_span(text, style)		# создать span
+p.search(pattern)			# поиск
+p.replace(old, new)			# замена
+
+
+ = Класс Header:
+
+- Создание:
+
+from odfdo import Header
+
+h = Header(1, "Заголовок")		# уровень 1
+h = Header(2, "Подзаголовок")	# уровень 2
+
+
+- Свойства:
+
+h.level						# уровень (1-6)
+h.text						# текст
+h.style						# стиль
+
+
+ = Класс Table:
+
+- Создание:
+
+from odfdo import Table
+
+table = Table("Sheet1", width=5, height=10)
+table = Table("Sheet1", width=5, height=10, style="TableStyle")
+
+
+- Свойства:
+
+table.name					# имя таблицы
+table.style					# стиль таблицы
+table.rows					# строки
+table.columns				# колонки
+table.cells					# ячейки
+
+
+- Методы:
+
+table.get_row(index)		# получить строку
+table.get_column(index)		# получить колонку
+table.get_cell(coord)		# получить ячейку
+table.set_cell(coord, val)	# установить значение
+table.append_row()			# добавить строку
+table.append_column()		# добавить колонку
+table.traverse()			# итерация
+table.rstrip()				# удалить пустые края
+table.optimize_width()		# оптимизировать ширину
+table.get_cells(range)		# диапазон ячеек
+table.delete_cells(range)	# удалить диапазон
+
+
+- Доступ к ячейкам:
+
+table[0, 0]					# по индексам (0-based)
+table["A1"]					# по A1-нотации
+table.get_cell(0, 0)		# метод
+table.get_cell("A1")		# метод
+
+
+ = Класс Cell:
+
+- Свойства:
+
+cell.value					# значение
+cell.style					# стиль
+cell.formula				# формула
+cell.cell_type				# тип
+
+
+- Методы:
+
+cell.set_value(val)			# установить значение
+cell.get_value()			# получить значение
+cell.clear()				# очистить (включая стиль)
+
+
+- Типы ячеек:
+
+cell_type="string"			# строка
+cell_type="float"			# число
+cell_type="boolean"			# логический
+cell_type="date"			# дата
+cell_type="time"			# время
+cell_type="formula"			# формула
+
+
+ = Класс Style:
+
+- Создание:
+
+from odfdo import Style
+
+style = Style(
+    family="text",			# семейство
+    name="MyStyle",			# имя
+    parent_style="Standard",# родительский стиль
+    color="#ff0000",		# цвет текста
+    bold=True,				# жирный
+    italic=True,			# курсив
+    font="Arial",			# шрифт
+    size="12pt"				# размер
+)
+
+
+- Семейства стилей:
+
+paragraph					# параграф
+text						# текст
+table						# таблица
+table-column				# колонка
+table-row					# строка
+table-cell					# ячейка
+graphic						# графика
+page-layout					# макет страницы
+master-page					# мастер-страница
+list						# список
+
+
+- Методы:
+
+style.get_properties(area)	# получить свойства
+style.set_properties(area, **kwargs)	# установить
+style.del_properties(area)	# удалить
+
+
+ = Функция create_table_cell_style:
+
+- Создание стиля ячейки:
+
+from odfdo import create_table_cell_style
+
+style = create_table_cell_style(
+    border="0.06pt solid #000000",
+    background_color="#EEEEEE",
+    padding="0.1cm"
+)
+
+
+- Параметры:
+
+border						# рамка
+background_color			# цвет фона
+padding						# отступы
+color						# цвет текста
+font						# шрифт
+size						# размер
+bold						# жирный
+italic						# курсив
+
+
+ = Работа с метаданными:
+
+- Доступ:
+
+meta = doc.meta
+
+
+- Свойства:
+
+meta.title					# заголовок
+meta.subject				# тема
+meta.creator				# автор
+meta.keywords				# ключевые слова (список)
+meta.creation_date			# дата создания
+meta.modification_date		# дата изменения
+
+
+- Пример:
+
+from datetime import datetime
+
+meta = doc.meta
+meta.title = "Отчёт"
+meta.creator = "Иван"
+meta.keywords.append("python")
+meta.creation_date = datetime(2024, 1, 15)
+
+
+ = Класс List и ListItem:
+
+- Создание списка:
+
+from odfdo import List, ListItem
+
+lst = List()
+lst.add_item("Первый")
+lst.add_item("Второй")
+lst.add_item("Третий")
+
+
+- Вставка элемента:
+
+lst.insert_item(1, "Новый")
+
+
+- Свойства:
+
+lst.style					# стиль списка
+
+
+ = Класс Span:
+
+- Создание форматированного текста:
+
+from odfdo import Span
+
+span = Span("Текст", style="Bold")
+
+
+- Внутри параграфа:
+
+p = Paragraph()
+p.set_span("Жирный текст", style="Bold")
+
+
+ = Работа с изображениями:
+
+- Добавить файл:
+
+doc.add_file("image.png")
+
+
+- Вставить изображение в текст:
+
+from odfdo import Frame
+
+frame = Frame("image.png")
+doc.body.append(frame)
+
+
+ = Полезные приёмы:
+
+- Копирование листа:
+
+import copy
+
+new_sheet = copy.deepcopy(sheet)
+doc.body.append(new_sheet)
+
+
+- Объединение документов:
+
+doc1 = Document("file1.odt")
+doc2 = Document("file2.odt")
+for para in doc2.body.get_paragraphs():
+    doc1.body.append(para)
+doc1.save("merged.odt")
+
+
+- Экспорт таблицы в CSV:
+
+import csv
+
+with open("output.csv", "w", newline="") as f:
+    writer = csv.writer(f)
+    for row in sheet.iter_values():
+        writer.writerow(row)
+
+
+- Импорт из CSV:
+
+import csv
+
+with open("input.csv") as f:
+    reader = csv.reader(f)
+    for row in reader:
+        sheet.append_row(row)
+
+
+- Копирование стиля:
+
+new_style = Style(
+    family="text",
+    name="NewStyle",
+    parent_style="ExistingStyle"
+)
+
+
+- Проверка существования листа:
+
+try:
+    sheet = doc.body.get_table("Sheet1")
+except Exception:
+    sheet = Table("Sheet1", width=5, height=10)
+    doc.body.append(sheet)
+
+
+- Получить все имена листов:
+
+for table in doc.body.get_tables():
+    print(table.name)
+
+
+ = Обработка ошибок:
+
+- Общий шаблон:
+
+from odfdo import Document
+
+try:
+    doc = Document("nonexistent.ods")
+except FileNotFoundError:
+    print("Файл не найден")
+except Exception as e:
+    print(f"Ошибка: {e}")
+
+
+- Безопасное сохранение:
+
+try:
+    doc.save("output.ods")
+except PermissionError:
+    print("Нет прав на запись")
+
+
+ = Лучшие практики:
+
+- Использовать A1-нотацию для читаемости:
+
+sheet.set_cell("A1", "Header")		# хорошо
+sheet.set_cell((0, 0), "Header")	# менее читаемо
+
+
+- Закрывать документ после сохранения:
+
+doc.save("output.ods")
+# документ не требует явного закрытия,
+# но можно освободить память
+del doc
+
+
+- Использовать pretty=True для отладки:
+
+doc.save("debug.odt", pretty=True)
+
+
+- Проверять типы при установке значений:
+
+sheet.set_cell("A1", 42, cell_type="float")
+sheet.set_cell("B1", "text", cell_type="string")
+
+
+- Использовать create_table_cell_style для стилей:
+
+# вместо ручного создания Style с десятками параметров
+style = create_table_cell_style(
+    background_color="#f0f0f0",
+    border="1pt solid black"
+)
+
+
+- Использовать утилиты CLI для быстрых задач:
+
+# odfdo-markdown для конвертации в Markdown
+# odfdo-diff для сравнения версий
+# odfdo-replace для массовой замены

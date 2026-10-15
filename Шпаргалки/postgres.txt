@@ -1,0 +1,1030 @@
+	--- ОСНОВНЫЕ КОМАНДЫ POSTGRESQL ---
+
+ = Подключение и psql:
+
+- Подключиться к базе:
+
+psql -h localhost -p 5432 -U postgres -d mydb
+
+
+- Подключиться локально:
+
+psql -U postgres
+
+
+- Выйти из psql:
+
+\q
+
+
+- Список баз данных:
+
+\l
+
+
+- Переключиться на другую БД:
+
+\c mydb
+
+
+- Список таблиц:
+
+\dt
+
+
+- Описание таблицы:
+
+\d table_name
+
+
+- Список пользователей и ролей:
+
+\du
+
+
+- Список схем:
+
+\dn
+
+
+- Список индексов:
+
+\di
+
+
+- Список представлений:
+
+\dv
+
+
+- Выполнить SQL из файла:
+
+\i /path/to/file.sql
+
+
+- Показать все настройки:
+
+SHOW ALL;
+
+
+- Помощь по psql:
+
+\?
+
+
+- Помощь по SQL:
+
+\h
+
+
+ = Управление базами данных:
+
+- Создать базу:
+
+CREATE DATABASE mydb;
+
+
+- Создать базу с владельцем и кодировкой:
+
+CREATE DATABASE mydb OWNER myuser ENCODING 'UTF8';
+
+
+- Удалить базу:
+
+DROP DATABASE mydb;
+
+
+- Удалить базу принудительно:
+
+DROP DATABASE mydb WITH (FORCE);
+
+
+- Переименовать базу:
+
+ALTER DATABASE oldname RENAME TO newname;
+
+
+- Список баз через SQL:
+
+SELECT datname FROM pg_database;
+
+
+ = Управление таблицами:
+
+- Создать таблицу:
+
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email TEXT UNIQUE,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+
+- Удалить таблицу:
+
+DROP TABLE users;
+
+
+- Удалить таблицу если существует:
+
+DROP TABLE IF EXISTS users;
+
+
+- Добавить колонку:
+
+ALTER TABLE users ADD COLUMN age INT;
+
+
+- Удалить колонку:
+
+ALTER TABLE users DROP COLUMN age;
+
+
+- Переименовать колонку:
+
+ALTER TABLE users RENAME COLUMN name TO full_name;
+
+
+- Изменить тип колонки:
+
+ALTER TABLE users ALTER COLUMN age TYPE BIGINT;
+
+
+- Установить NOT NULL:
+
+ALTER TABLE users ALTER COLUMN email SET NOT NULL;
+
+
+- Снять NOT NULL:
+
+ALTER TABLE users ALTER COLUMN email DROP NOT NULL;
+
+
+- Добавить значение по умолчанию:
+
+ALTER TABLE users ALTER COLUMN age SET DEFAULT 18;
+
+
+- Удалить значение по умолчанию:
+
+ALTER TABLE users ALTER COLUMN age DROP DEFAULT;
+
+
+- Переименовать таблицу:
+
+ALTER TABLE users RENAME TO people;
+
+
+- Очистить таблицу:
+
+TRUNCATE TABLE users;
+
+
+- Очистить с каскадом и сбросом序列:
+
+TRUNCATE TABLE users RESTART IDENTITY CASCADE;
+
+
+ = Типы данных:
+
+- Числовые:
+
+SMALLINT			# 2 байта
+INTEGER				# 4 байта
+BIGINT				# 8 байт
+NUMERIC(p,s)		# точное число
+REAL				# 4 байта с плавающей точкой
+DOUBLE PRECISION	# 8 байт с плавающей точкой
+
+
+- Строковые:
+
+CHAR(n)				# фиксированная длина
+VARCHAR(n)			# переменная длина с лимитом
+TEXT				# переменная длина без лимита
+
+
+- Дата и время:
+
+DATE				# дата
+TIME				# время
+TIMESTAMP			# дата и время
+TIMESTAMPTZ			# дата и время с часовым поясом
+INTERVAL			# интервал
+
+
+- Логический:
+
+BOOLEAN				# true / false / null
+
+
+- JSON:
+
+JSON				# текст JSON
+JSONB				# бинарный JSON с индексацией
+
+
+- Массивы:
+
+INTEGER[]			# массив целых
+TEXT[]				# массив строк
+
+
+- UUID:
+
+UUID				# универсальный идентификатор
+
+
+ = Ограничения:
+
+- PRIMARY KEY:
+
+id SERIAL PRIMARY KEY
+
+
+- UNIQUE:
+
+email TEXT UNIQUE
+
+
+- NOT NULL:
+
+name TEXT NOT NULL
+
+
+- CHECK:
+
+age INT CHECK (age >= 0)
+
+
+- FOREIGN KEY:
+
+user_id INT REFERENCES users(id)
+
+
+- FOREIGN KEY с ON DELETE:
+
+user_id INT REFERENCES users(id) ON DELETE CASCADE
+
+
+- Именованное ограничение:
+
+CONSTRAINT chk_age CHECK (age >= 18)
+
+
+
+	--- ПОЛНАЯ ШПАРГАЛКА ПО POSTGRESQL ---
+
+ = SELECT и фильтрация:
+
+- Все колонки:
+
+SELECT * FROM users;
+
+
+- Конкретные колонки:
+
+SELECT id, name FROM users;
+
+
+- Псевдоним:
+
+SELECT name AS username FROM users;
+
+
+- Условие:
+
+SELECT * FROM users WHERE age > 18;
+
+
+- AND / OR / NOT:
+
+SELECT * FROM users WHERE age > 18 AND active = true;
+
+
+- IN:
+
+SELECT * FROM users WHERE id IN (1, 2, 3);
+
+
+- BETWEEN:
+
+SELECT * FROM users WHERE age BETWEEN 18 AND 30;
+
+
+- LIKE:
+
+SELECT * FROM users WHERE name LIKE 'A%';
+
+
+- ILIKE:
+
+SELECT * FROM users WHERE name ILIKE 'a%';
+
+
+- IS NULL:
+
+SELECT * FROM users WHERE email IS NULL;
+
+
+- IS NOT NULL:
+
+SELECT * FROM users WHERE email IS NOT NULL;
+
+
+- ORDER BY:
+
+SELECT * FROM users ORDER BY created_at DESC;
+
+
+- LIMIT / OFFSET:
+
+SELECT * FROM users ORDER BY id LIMIT 10 OFFSET 20;
+
+
+- DISTINCT:
+
+SELECT DISTINCT city FROM users;
+
+
+- COUNT:
+
+SELECT COUNT(*) FROM users;
+
+
+- Агрегаты:
+
+SELECT COUNT(*), AVG(age), MIN(age), MAX(age), SUM(age) FROM users;
+
+
+- GROUP BY:
+
+SELECT city, COUNT(*) FROM users GROUP BY city;
+
+
+- HAVING:
+
+SELECT city, COUNT(*) FROM users GROUP BY city HAVING COUNT(*) > 5;
+
+
+ = JOIN:
+
+- INNER JOIN:
+
+SELECT u.name, o.total
+FROM users u
+JOIN orders o ON u.id = o.user_id;
+
+
+- LEFT JOIN:
+
+SELECT u.name, o.total
+FROM users u
+LEFT JOIN orders o ON u.id = o.user_id;
+
+
+- RIGHT JOIN:
+
+SELECT u.name, o.total
+FROM users u
+RIGHT JOIN orders o ON u.id = o.user_id;
+
+
+- FULL JOIN:
+
+SELECT u.name, o.total
+FROM users u
+FULL JOIN orders o ON u.id = o.user_id;
+
+
+- CROSS JOIN:
+
+SELECT u.name, p.title
+FROM users u
+CROSS JOIN products p;
+
+
+- SELF JOIN:
+
+SELECT e.name AS employee, m.name AS manager
+FROM employees e
+LEFT JOIN employees m ON e.manager_id = m.id;
+
+
+ = INSERT, UPDATE, DELETE:
+
+- Вставить одну строку:
+
+INSERT INTO users (name, email) VALUES ('Alice', 'alice@example.com');
+
+
+- Вставить несколько строк:
+
+INSERT INTO users (name, email) VALUES
+('Alice', 'alice@example.com'),
+('Bob', 'bob@example.com');
+
+
+- Вставить с возвратом:
+
+INSERT INTO users (name) VALUES ('Alice') RETURNING id;
+
+
+- Обновить:
+
+UPDATE users SET age = 20 WHERE id = 1;
+
+
+- Обновить с возвратом:
+
+UPDATE users SET age = 20 WHERE id = 1 RETURNING *;
+
+
+- Удалить:
+
+DELETE FROM users WHERE id = 1;
+
+
+- Удалить с возвратом:
+
+DELETE FROM users WHERE id = 1 RETURNING *;
+
+
+- UPSERT:
+
+INSERT INTO users (id, name) VALUES (1, 'Alice')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name;
+
+
+- UPSERT DO NOTHING:
+
+INSERT INTO users (id, name) VALUES (1, 'Alice')
+ON CONFLICT (id) DO NOTHING;
+
+
+ = Транзакции:
+
+- Начать транзакцию:
+
+BEGIN;
+
+
+- Зафиксировать:
+
+COMMIT;
+
+
+- Откатить:
+
+ROLLBACK;
+
+
+- Точка сохранения:
+
+SAVEPOINT sp1;
+
+
+- Откат к точке:
+
+ROLLBACK TO SAVEPOINT sp1;
+
+
+- Удалить точку:
+
+RELEASE SAVEPOINT sp1;
+
+
+- Уровни изоляции:
+
+BEGIN TRANSACTION ISOLATION LEVEL READ COMMITTED;
+BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+
+
+ = Индексы:
+
+- Создать индекс:
+
+CREATE INDEX idx_users_email ON users(email);
+
+
+- Уникальный индекс:
+
+CREATE UNIQUE INDEX idx_users_email ON users(email);
+
+
+- Составной индекс:
+
+CREATE INDEX idx_users_name_age ON users(name, age);
+
+
+- Частичный индекс:
+
+CREATE INDEX idx_active_users ON users(email) WHERE active = true;
+
+
+- Индекс по выражению:
+
+CREATE INDEX idx_lower_email ON users(LOWER(email));
+
+
+- GIN для JSONB:
+
+CREATE INDEX idx_data_gin ON users USING GIN (data);
+
+
+- Удалить индекс:
+
+DROP INDEX idx_users_email;
+
+
+- Список индексов:
+
+\di
+
+
+ = Представления и последовательности:
+
+- Создать представление:
+
+CREATE VIEW active_users AS
+SELECT * FROM users WHERE active = true;
+
+
+- Заменить представление:
+
+CREATE OR REPLACE VIEW active_users AS
+SELECT * FROM users WHERE active = true;
+
+
+- Удалить представление:
+
+DROP VIEW active_users;
+
+
+- Создать материализованное представление:
+
+CREATE MATERIALIZED VIEW user_stats AS
+SELECT city, COUNT(*) FROM users GROUP BY city;
+
+
+- Обновить материализованное представление:
+
+REFRESH MATERIALIZED VIEW user_stats;
+
+
+- Создать последовательность:
+
+CREATE SEQUENCE user_id_seq START 1;
+
+
+- Следующее значение:
+
+SELECT nextval('user_id_seq');
+
+
+- Текущее значение:
+
+SELECT currval('user_id_seq');
+
+
+ = Пользователи и права:
+
+- Создать роль:
+
+CREATE ROLE myuser LOGIN PASSWORD 'secret';
+
+
+- Создать суперпользователя:
+
+CREATE ROLE admin SUPERUSER LOGIN PASSWORD 'secret';
+
+
+- Создать пользователя:
+
+CREATE USER myuser WITH PASSWORD 'secret';
+
+
+- Удалить роль:
+
+DROP ROLE myuser;
+
+
+- Дать право на подключение к БД:
+
+GRANT CONNECT ON DATABASE mydb TO myuser;
+
+
+- Дать право на схему:
+
+GRANT USAGE ON SCHEMA public TO myuser;
+
+
+- Дать право на таблицу:
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON users TO myuser;
+
+
+- Дать право на все таблицы в схеме:
+
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO myuser;
+
+
+- Забрать право:
+
+REVOKE DELETE ON users FROM myuser;
+
+
+- Сменить пароль:
+
+ALTER ROLE myuser WITH PASSWORD 'newsecret';
+
+
+- Список ролей:
+
+\du
+
+
+ = Бэкап и восстановление:
+
+- Дамп одной базы:
+
+pg_dump -U postgres -d mydb -f mydb.sql
+
+
+- Дамп в custom-формате:
+
+pg_dump -U postgres -d mydb -Fc -f mydb.dump
+
+
+- Дамп только схемы:
+
+pg_dump -U postgres -d mydb --schema-only -f schema.sql
+
+
+- Дамп только данных:
+
+pg_dump -U postgres -d mydb --data-only -f data.sql
+
+
+- Восстановить из SQL:
+
+psql -U postgres -d mydb -f mydb.sql
+
+
+- Восстановить из custom:
+
+pg_restore -U postgres -d mydb mydb.dump
+
+
+- Дамп всех баз:
+
+pg_dumpall -U postgres -f all.sql
+
+
+- Восстановить все базы:
+
+psql -U postgres -f all.sql
+
+
+ = Расширения:
+
+- Показать доступные расширения:
+
+SELECT * FROM pg_available_extensions;
+
+
+- Установить расширение:
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+
+- Установить pgcrypto:
+
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+
+- Установить hstore:
+
+CREATE EXTENSION IF NOT EXISTS hstore;
+
+
+- Удалить расширение:
+
+DROP EXTENSION hstore;
+
+
+- Список установленных расширений:
+
+\dx
+
+
+ = Производительность и диагностика:
+
+- План запроса:
+
+EXPLAIN SELECT * FROM users WHERE email = 'a@b.c';
+
+
+- План с выполнением:
+
+EXPLAIN ANALYZE SELECT * FROM users WHERE email = 'a@b.c';
+
+
+- Активные запросы:
+
+SELECT pid, query, state FROM pg_stat_activity;
+
+
+- Убить запрос:
+
+SELECT pg_cancel_backend(pid);
+
+
+- Убить соединение:
+
+SELECT pg_terminate_backend(pid);
+
+
+- Размер базы:
+
+SELECT pg_size_pretty(pg_database_size('mydb'));
+
+
+- Размер таблицы:
+
+SELECT pg_size_pretty(pg_total_relation_size('users'));
+
+
+- Статистика таблиц:
+
+SELECT * FROM pg_stat_user_tables;
+
+
+- Обновить статистику:
+
+ANALYZE users;
+
+
+- Очистка мёртвых строк:
+
+VACUUM users;
+
+
+- Полная очистка:
+
+VACUUM FULL users;
+
+
+- Переиндексация:
+
+REINDEX TABLE users;
+
+
+ = Полезные функции:
+
+- Текущая дата и время:
+
+SELECT NOW();
+SELECT CURRENT_DATE;
+SELECT CURRENT_TIME;
+
+
+- Форматирование даты:
+
+SELECT TO_CHAR(NOW(), 'YYYY-MM-DD HH24:MI:SS');
+
+
+- Приведение типов:
+
+SELECT '123'::INTEGER;
+SELECT CAST('123' AS INTEGER);
+
+
+- COALESCE:
+
+SELECT COALESCE(email, 'нет email') FROM users;
+
+
+- NULLIF:
+
+SELECT NULLIF(age, 0) FROM users;
+
+
+- CASE:
+
+SELECT name,
+       CASE
+           WHEN age >= 18 THEN 'взрослый'
+           ELSE 'ребёнок'
+       END AS category
+FROM users;
+
+
+- Генерация series:
+
+SELECT generate_series(1, 10);
+
+
+- Случайное число:
+
+SELECT random();
+
+
+- UUID:
+
+SELECT gen_random_uuid();
+
+
+- JSON:
+
+SELECT '{"a":1}'::jsonb -> 'a';
+SELECT '{"a":1}'::jsonb ->> 'a';
+
+
+- Массивы:
+
+SELECT ARRAY[1,2,3];
+SELECT unnest(ARRAY[1,2,3]);
+
+
+- Строки:
+
+SELECT LENGTH('abc');
+SELECT UPPER('abc');
+SELECT LOWER('ABC');
+SELECT TRIM('  abc  ');
+SELECT SUBSTRING('abcdef', 2, 3);
+
+
+ = Пользовательские функции и триггеры:
+
+- Создать функцию:
+
+CREATE OR REPLACE FUNCTION add(a INT, b INT)
+RETURNS INT AS $$
+BEGIN
+    RETURN a + b;
+END;
+$$ LANGUAGE plpgsql;
+
+
+- Вызвать функцию:
+
+SELECT add(2, 3);
+
+
+- Удалить функцию:
+
+DROP FUNCTION add(INT, INT);
+
+
+- Создать триггерную функцию:
+
+CREATE OR REPLACE FUNCTION update_modified_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+- Создать триггер:
+
+CREATE TRIGGER update_users_modified
+BEFORE UPDATE ON users
+FOR EACH ROW
+EXECUTE FUNCTION update_modified_column();
+
+
+- Удалить триггер:
+
+DROP TRIGGER update_users_modified ON users;
+
+
+ = Схемы:
+
+- Создать схему:
+
+CREATE SCHEMA myschema;
+
+
+- Удалить схему:
+
+DROP SCHEMA myschema CASCADE;
+
+
+- Сменить схему:
+
+SET search_path TO myschema, public;
+
+
+- Показать текущий search_path:
+
+SHOW search_path;
+
+
+- Создать таблицу в схеме:
+
+CREATE TABLE myschema.users (...);
+
+
+- Обращение к таблице:
+
+SELECT * FROM myschema.users;
+
+
+ = Настройки и конфигурация:
+
+- Показать параметр:
+
+SHOW work_mem;
+
+
+- Установить параметр для сессии:
+
+SET work_mem = '64MB';
+
+
+- Сбросить параметр:
+
+RESET work_mem;
+
+
+- Файл конфигурации:
+
+SHOW config_file;
+
+
+- Перечитать конфигурацию:
+
+SELECT pg_reload_conf();
+
+
+- Список настроек:
+
+SELECT name, setting, unit FROM pg_settings;
+
+
+ = Полезные команды psql:
+
+- Выполнить команду shell:
+
+\! ls -la
+
+
+- Редактировать запрос в редакторе:
+
+\e
+
+
+- Включить тайминг:
+
+\timing
+
+
+- Расширенный вывод:
+
+\x
+
+
+- Показать историю:
+
+\s
+
+
+- Сохранить вывод в файл:
+
+\o /tmp/output.txt
+
+
+- Прекратить вывод в файл:
+
+\o
+
+
+- Выполнить файл:
+
+\i /path/to/file.sql
+
+
+- Показать размеры таблиц:
+
+\dt+
+
+
+- Показать права:
+
+\dp
+
+
+- Показать функции:
+
+\df
+
+
+- Показать типы:
+
+\dT
