@@ -1,0 +1,454 @@
+	--- ОСНОВЫ TOKENIZER ---
+ = Ключевые понятия:
+- Термины:
+tokenizer			# преобразует текст в id токенов и обратно
+vocab				# словарь: token -> id
+token				# единица текста: слово, подслово, символ, спецтокен
+id					# числовой индекс токена в vocab
+BPE					# Byte Pair Encoding: частотные слияния подслов
+WordPiece			# подслово через ##; BERT-семейство
+SentencePiece		# сегментация без жёсткого пробела; часто ▁
+Unigram				# вероятностная сегментация; T5/mT5
+special_tokens		# служебные токены: pad, eos, bos, cls, sep, mask
+added_tokens		# дополнительные токены, не разбиваются дальше
+byte_fallback		# неизвестные символы представляются байтами
+model_max_length	# максимум токенов, который ожидает модель
+attention_mask		# 1 = реальный токен, 0 = padding
+token_type_ids		# сегменты A/B для BERT-подобных пар
+
+
+ = Быстрая формула:
+- Текст -> id -> текст:
+ids = tokenizer.encode("Привет мир")
+tokens = tokenizer.convert_ids_to_tokens(ids)
+text = tokenizer.decode(ids)
+
+
+- Batch -> PyTorch:
+batch = tokenizer(["a", "b"], padding=True, truncation=True, return_tensors="pt")
+input_ids = batch["input_ids"]
+attention_mask = batch["attention_mask"]
+
+
+ = Типы токенизаторов:
+- Алгоритмы:
+BPE					# GPT-2, RoBERTa, многие LLM; хорош для кода и мультиязычности
+WordPiece			# BERT, DistilBERT; подслово начинается с ##
+SentencePiece		# T5, mT5, некоторые LLM; пробел часто ▁
+Unigram				# вероятностный выбор сегментации; гибок
+Character			# по символам; просто, но длинные последовательности
+Byte-level			# любой Unicode через байты; меньше <unk>
+
+
+- Спецтокены:
+<unk>						# неизвестный токен
+<s>, bos					# начало последовательности
+</s>, eos					# конец последовательности
+<pad>						# заполнение батча
+[CLS], [SEP], [MASK]		# BERT-подобные
+<|im_start|>, <|im_end|>	# chat-токены некоторых моделей
+
+
+
+	--- TOKENIZERS (HF) ---
+ = Установка и импорт:
+- Базовое:
+pip install tokenizers
+from tokenizers import Tokenizer, AddedToken, decoders, models, normalizers, pre_tokenizers, processors, trainers
+
+
+ = Загрузка и сохранение:
+- Файл tokenizer.json:
+tokenizer = Tokenizer.from_file("tokenizer.json")
+tokenizer.save("tokenizer.json")
+
+
+ = Кодирование:
+- Один текст:
+encoding = tokenizer.encode("Привет мир")
+ids = encoding.ids
+tokens = encoding.tokens
+offsets = encoding.offsets
+
+
+- Пара текстов:
+encoding = tokenizer.encode(("вопрос", "ответ"))
+ids = encoding.ids
+type_ids = encoding.type_ids		# если задан post-processor с сегментами
+
+
+- Батч:
+encodings = tokenizer.encode_batch(["текст 1", "текст 2"])
+ids_batch = [e.ids for e in encodings]
+
+
+ = Padding и truncation:
+- Включение:
+tokenizer.enable_padding(pad_id=0, pad_token="[PAD]", length=None, direction="right")
+tokenizer.enable_truncation(max_length=128, stride=0, strategy="longest_first", direction="right")
+
+
+- Стратегии truncation:
+longest_first		# удаляет токены из самой длинной последовательности/пары
+only_first			# усекает первый текст
+only_second			# усекает второй текст
+
+
+ = Спецтокены и added tokens:
+- Добавление:
+tokenizer.add_special_tokens(["<bos>", "<eos>", "<pad>"])
+# или явно контролировать normalized/special:
+tokenizer.add_tokens([AddedToken("<eos>", special=True, normalized=False)])
+
+
+- Проверка:
+vocab = tokenizer.get_vocab(with_added_tokens=True)
+size = tokenizer.get_vocab_size(with_added_tokens=True)
+id_eos = tokenizer.token_to_id("<eos>")
+token_0 = tokenizer.id_to_token(0)
+
+
+ = Компоненты pipeline:
+- Normalizer:
+tokenizer.normalizer = normalizers.Sequence([
+    normalizers.UnicodeNFC(),
+    normalizers.Lowercase(),
+    normalizers.Strip(left=True, right=True),
+])
+
+
+- Pre-tokenizer:
+tokenizer.pre_tokenizer = pre_tokenizers.ByteLevel(add_prefix_space=False)
+# или:
+tokenizer.pre_tokenizer = pre_tokenizers.Split(" ", behavior="isolated")
+# или для SentencePiece-like:
+tokenizer.pre_tokenizer = pre_tokenizers.Metaspace(replacement="▁", prepend_scheme="first")
+
+
+- Model:
+tokenizer.model = models.BPE(unk_token="<unk>")
+# или:
+tokenizer.model = models.Unigram(vocab=[("a", 0.0)], unk_id=0, byte_fallback=True)
+
+
+- Post-processor:
+tokenizer.post_processor = processors.TemplateProcessing(
+    single="[CLS] $A [SEP]",
+    pair="[CLS] $A [SEP] $B:1 [SEP]:1",
+    special_tokens=[
+        ("[CLS]", tokenizer.token_to_id("[CLS]")),
+        ("[SEP]", tokenizer.token_to_id("[SEP]")),
+    ],
+)
+
+
+- Decoder:
+tokenizer.decoder = decoders.ByteLevel()
+# или WordPiece:
+tokenizer.decoder = decoders.WordPiece(prefix="##")
+# или Sequence:
+tokenizer.decoder = decoders.Sequence([decoders.Replace("▁", " ")])
+
+
+ = Обучение BPE:
+- Минимальный trainer:
+tokenizer = Tokenizer(models.BPE(unk_token="<unk>"))
+tokenizer.pre_tokenizer = pre_tokenizers.ByteLevel(add_prefix_space=False)
+tokenizer.decoder = decoders.ByteLevel()
+trainer = trainers.BpeTrainer(
+    vocab_size=30000,
+    min_frequency=2,
+    special_tokens=["<unk>", "<s>", "</s>", "<pad>"],
+    initial_alphabet=pre_tokenizers.ByteLevel.alphabet(),
+)
+tokenizer.train_from_iterator(["текст 1", "текст 2", "..."], trainer=trainer)
+tokenizer.save("tokenizer.json")
+
+
+- WordPiece trainer:
+trainer = trainers.WordPieceTrainer(
+    vocab_size=30000,
+    min_frequency=2,
+    special_tokens=["[UNK]", "[PAD]", "[CLS]", "[SEP]", "[MASK]"],
+    continuing_subword_prefix="##",
+)
+
+
+- Unigram trainer:
+trainer = trainers.UnigramTrainer(
+    vocab_size=32000,
+    special_tokens=["<unk>", "<s>", "</s>"],
+    unk_id=0,
+    byte_fallback=True,
+)
+
+
+
+	--- TRANSFORMERS TOKENIZER ---
+ = AutoTokenizer:
+- Загрузка:
+from transformers import AutoTokenizer
+tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
+tokenizer = AutoTokenizer.from_pretrained("gpt2")
+tokenizer.padding_side = "left"
+tokenizer.truncation_side = "left"
+
+
+- Быстрая проверка:
+print(tokenizer.name_or_path)
+print(tokenizer.model_max_length)
+print(tokenizer.all_special_tokens)
+print(len(tokenizer))
+
+
+ = Основные методы:
+- encode/decode:
+ids = tokenizer.encode("Привет мир", add_special_tokens=True)
+text = tokenizer.decode(ids, skip_special_tokens=True)
+tokens = tokenizer.tokenize("Привет мир")
+
+
+- __call__:
+batch = tokenizer(
+    ["первый текст", "второй текст"],
+    padding=True,
+    truncation=True,
+    max_length=128,
+    return_tensors="pt",
+    return_attention_mask=True,
+    return_token_type_ids=False,
+)
+
+
+- batch_decode:
+texts = tokenizer.batch_decode(batch["input_ids"], skip_special_tokens=True)
+
+
+ = Padding и генерация:
+- Causal LM:
+# для батч-генерации лучше left padding, чтобы сгенерированные токены были в конце
+tokenizer.padding_side = "left"
+batch = tokenizer(prompts, padding=True, truncation=True, return_tensors="pt")
+
+
+- Encoder LM:
+# BERT обычно right padding; важны [CLS]/[SEP] и token_type_ids
+tokenizer.padding_side = "right"
+batch = tokenizer(texts, pairs, padding=True, truncation=True, return_tensors="pt")
+
+
+ = Спецтокены модели:
+- Карта токенов:
+tokenizer.pad_token		# строка или None
+tokenizer.pad_token_id
+tokenizer.eos_token_id
+tokenizer.bos_token_id
+tokenizer.unk_token_id
+tokenizer.cls_token_id
+tokenizer.sep_token_id
+tokenizer.mask_token_id
+
+
+- Установка pad/eos:
+if tokenizer.pad_token is None:
+    tokenizer.pad_token = tokenizer.eos_token
+# или добавить новый:
+tokenizer.add_special_tokens({"pad_token": "<pad>"})
+
+
+ = Добавление токенов:
+- Расширение словаря:
+num_added = tokenizer.add_tokens(["<tool_call>", "<tool_response>"])
+model.resize_token_embeddings(len(tokenizer))
+# num_added > 0 значит новые токены реально добавлены
+
+
+- Добавление спецтокенов:
+tokenizer.add_special_tokens({
+    "bos_token": "<s>",
+    "eos_token": "</s>",
+    "pad_token": "<pad>",
+    "additional_special_tokens": ["<tool_call>", "<tool_response>"],
+})
+model.resize_token_embeddings(len(tokenizer))
+
+
+ = Chat template:
+- apply_chat_template:
+messages = [
+    {"role": "system", "content": "Ты полезный ассистент."},
+    {"role": "user", "content": "Привет!"},
+]
+text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+inputs = tokenizer(text, return_tensors="pt")
+
+
+- Проверка шаблона:
+print(tokenizer.chat_template)
+# если None, модель не имеет готового chat-шаблона в tokenizer
+# некоторые модели хранят шаблон в config или требуют ручной шаблон
+
+
+ = Быстрые однострочники:
+- Диагностика:
+print(tokenizer.convert_ids_to_tokens(ids))
+print(tokenizer.decode(ids, skip_special_tokens=False))
+print(tokenizer("a", return_tensors="pt"))
+
+
+
+	--- LLM И ГЕНЕРАЦИЯ ---
+ = Важные токены:
+- EOS и stopping:
+eos_token_id		# модель должна остановиться на этом id; может быть несколько
+pad_token_id		# не должен попадать в loss/генерацию без attention mask
+bos_token_id		# часто подаётся декодеру в начале
+forced_bos_token_id	# у некоторых llama-моделей принудительный BOS
+
+
+ = Attention mask:
+- Смысл:
+1				# реальный токен, участвует в attention
+0				# padding, обычно игнорируется
+# без mask pad-токены будут влиять на hidden states и качество
+
+
+ = Loss masking:
+- Обучение:
+labels = input_ids.clone()
+labels[attention_mask == 0] = -100		# ignored index для CrossEntropyLoss
+# для instruction tuning маскируют prompt, обучают только response
+
+
+ = Контекстное окно:
+- Ограничения:
+model_max_length	# максимум токенов, не символов
+truncation_side		# left сохраняет хвост промпта, right сохраняет начало
+stride				# перекрытие при нарезке длинных документов
+# 4096 токенов != 4096 слов; код, CJK и эмодзи могут давать больше токенов
+
+
+ = Byte fallback и Unicode:
+- Поведение:
+byte_fallback=True		# неизвестные символы раскладываются на байты
+# уменьшает <unk>, но может увеличивать длину последовательности
+# для кода и мультиязычных моделей обычно желательно
+
+
+
+	--- OLLAMA / GGUF ---
+ = Проверка через Ollama:
+- CLI:
+ollama show <model>					# параметры, шаблон, системный промпт
+ollama show <model> --modelfile		# Modelfile: FROM, TEMPLATE, PARAMETER
+# Ollama скрывает vocab/ids; прямой tokenizer API из CLI нет
+
+
+ = GGUF:
+- Низкоуровнево:
+# tokenizer встроен в GGUF; special tokens и порядок id могут отличаться от HF
+# для инспекции используй инструменты llama.cpp или python-gguf, если доступны
+# при конвертации HF -> GGUF проверяй eos, bos, pad, vocab_size и chat template
+
+
+ = Практические риски:
+- Несовпадение:
+HF tokenizer id != GGUF id		# не подставляй HF ids в чужой рантайм
+chat template differs			# один и тот же чат может токенизироваться по-разному
+missing pad token				# Ollama/GGUF часто не использует pad так же, как HF
+
+
+
+	--- ОТЛАДКА ---
+ = Неизвестные токены:
+- Симптомы:
+много <unk>				# vocab не покрывает язык/код/спецсимволы
+битый decode			# не подключен decoder или неверный pre-tokenizer
+# лечение: byte_fallback, ByteLevel, расширить vocab, переобучить tokenizer
+
+
+ = Padding ломает результат:
+- Проверка:
+print(batch["attention_mask"].sum(dim=-1))
+print(tokenizer.decode(batch["input_ids"][0], skip_special_tokens=True))
+# если pad справа и модель causal, генерация может стартовать не там, где нужно
+# для generation используй padding_side="left"
+
+
+ = Неправильные special tokens:
+- Проверка:
+print(tokenizer.special_tokens_map)
+print(tokenizer.all_special_tokens)
+print(tokenizer.encode(text, add_special_tokens=False))
+# для LLM часто нужен add_special_tokens=False, если шаблон уже добавил <|...|>
+
+
+ = Vocab mismatch при дообучении:
+- Правила:
+len(tokenizer) != model.get_input_embeddings().weight.shape[0]	# нужно resize
+новые токены имеют случайные embeddings							# нужны обучение/инициализация
+changing tokenizer changes ids									# старые checkpoints могут стать несовместимыми
+# сохраняй tokenizer.json рядом с моделью и фиксируй версию
+
+
+ = Длинные последовательности:
+- Диагностика:
+print(len(ids), tokenizer.model_max_length)
+# если OOM: truncation, меньший batch, gradient checkpointing, выбор стороны усечения
+# если теряется начало промпта: truncation_side="left"
+
+
+ = Roundtrip test:
+- Минимальная проверка:
+text = "Проверка: код, эмодзи, пробелы  "
+ids = tokenizer.encode(text, add_special_tokens=False)
+back = tokenizer.decode(ids, skip_special_tokens=True)
+print(ids)
+print(back)
+# в идеале back совпадает с text после нормализации; проверяй наличие <unk>
+
+
+
+	--- ПРАКТИЧЕСКИЕ ШАБЛОНЫ ---
+ = Минимальный HF tokenizers:
+- Train + encode:
+from tokenizers import Tokenizer, models, pre_tokenizers, decoders, trainers
+tok = Tokenizer(models.BPE(unk_token="<unk>"))
+tok.pre_tokenizer = pre_tokenizers.ByteLevel(add_prefix_space=False)
+tok.decoder = decoders.ByteLevel()
+trainer = trainers.BpeTrainer(vocab_size=1000, special_tokens=["<unk>", "<s>", "</s>"], initial_alphabet=pre_tokenizers.ByteLevel.alphabet())
+tok.train_from_iterator(["привет мир", "токенизация это важно"], trainer)
+enc = tok.encode("привет мир")
+print(enc.ids, enc.tokens, tok.decode(enc.ids))
+
+
+ = Transformers для PyTorch:
+- Batch для модели:
+from transformers import AutoModelForCausalLM, AutoTokenizer
+import torch
+tok = AutoTokenizer.from_pretrained("gpt2")
+tok.pad_token = tok.eos_token
+tok.padding_side = "left"
+model = AutoModelForCausalLM.from_pretrained("gpt2", torch_dtype=torch.float16)	# на CPU лучше float32
+batch = tok(["Привет!", "Как дела?"], padding=True, truncation=True, return_tensors="pt")
+with torch.no_grad():
+    out = model.generate(**batch, max_new_tokens=32, do_sample=False)
+print(tok.batch_decode(out, skip_special_tokens=True))
+
+
+ = Instruction masking:
+- Labels только response:
+prompt = "Вопрос: ...\nОтвет:"
+full = prompt + " ответ модели"
+enc = tok(full, return_tensors="pt", add_special_tokens=False)
+prompt_enc = tok(prompt, add_special_tokens=False)
+labels = enc.input_ids.clone()
+labels[0, :len(prompt_enc["input_ids"])] = -100
+
+
+ = Сохранение комплекта:
+- Файлы:
+tokenizer.save_pretrained("out/tokenizer")		# transformers
+# или для tokenizers:
+tokenizer.save("out/tokenizer.json")
+# рядом клади tokenizer_config.json, special_tokens_map.json, vocab/merges если нужны

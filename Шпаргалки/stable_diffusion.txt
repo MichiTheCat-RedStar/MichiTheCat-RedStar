@@ -1,0 +1,684 @@
+	--- ОСНОВЫ STABLE DIFFUSION ---
+ = Ключевые понятия:
+- Термины:
+latent diffusion		# генерация в латентном пространстве VAE, а не напрямую в пикселях
+checkpoint				# основная модель: text encoder + UNet + VAE
+sampler					# метод шаговой деноизации: Euler, DPM++, UniPC и т.д.
+scheduler				# расписание шагов/шума: Karras, Normal, Exponential
+guidance_scale			# CFG: насколько сильно модель следует промпту
+seed					# зерно начального шума; фиксированный seed помогает воспроизводить
+strength				# для img2img/inpaint: сколько исходника перерисовать
+clip_skip				# пропуск последних слоёв CLIP; 2 часто для аниме/стилевых моделей
+negative_prompt			# условия, которые модель должна подавлять
+batch_size				# сколько изображений генерировать за один проход
+n_iter					# сколько батчей подряд генерировать
+denoising_strength		# в UI часто то же, что strength для img2img/inpaint
+
+
+ = Форматы файлов:
+- Модели и веса:
+.safetensors			# предпочтительно: безопаснее, быстрее, без pickle
+.ckpt					# старый формат; может содержать исполняемый pickle
+.gguf					# квантизованные веса; удобны для CPU/слабых GPU
+vae.safetensors			# отдельный VAE для цвета/резкости
+lora.safetensors		# лёгкая дообученная надстройка: стиль, персонаж, объект
+embedding.pt			# textual inversion / концепт-токен
+controlnet.safetensors		# условный контроль по краям, позе, глубине и т.д.
+workflows.json			# графы ComfyUI; не путать с обычным checkpoint
+
+
+ = Поколения и размеры:
+- Нативные разрешения:
+SD 1.5					# нативно 512x512; размеры кратные 8; 512x768/768x512 осторожно
+SD 2.x base				# часто 768x768; менее популярна, чем SD 1.5
+SD 2.x depth/inpaint	# специализированные версии для глубины/маски
+SDXL					# нативно 1024x1024; требует больше VRAM, чем SD 1.5
+SD 3 / SD 3.5			# flow matching; отдельные pipeline и текстовые энкодеры
+LCM / Turbo				# дистиллированные версии; 1-8 шагов, низкий CFG
+
+
+- SDXL пропорции:
+1024x1024			# квадрат
+1216x832			# ландшафт
+832x1216			# портрет
+1344x768			# широкий ландшафт
+768x1344			# высокий портрет
+
+
+
+	--- PYTHON DIFFUSERS ---
+ = Установка:
+- Базовый набор:
+pip install diffusers transformers accelerate safetensors pillow
+
+
+- Дополнительно:
+pip install torch							# ставь сборку под CUDA/ROCm/CPU отдельно
+pip install xformers						# только CUDA; экономит VRAM и ускоряет
+pip install controlnet-aux opencv-python	# для генерации карт ControlNet
+
+
+ = Text-to-image SD 1.5:
+- Минимальный скрипт:
+import torch
+from diffusers import StableDiffusionPipeline, DPMSolverMultistepScheduler
+device = "cuda" if torch.cuda.is_available() else "cpu"
+dtype = torch.float16 if device == "cuda" else torch.float32
+pipe = StableDiffusionPipeline.from_pretrained(
+    "runwayml/stable-diffusion-v1-5",
+    torch_dtype=dtype,
+    use_safetensors=True,
+)
+pipe.scheduler = DPMSolverMultistepScheduler.from_config(
+    pipe.scheduler.config,
+    solver_order=2,
+    algorithm_type="dpmsolver++",
+    use_karras_sigmas=True,
+)
+if device == "cuda":
+    pipe.enable_model_cpu_offload()		# мало VRAM; не делай pipe.to("cuda") одновременно
+else:
+    pipe.to("cpu")
+image = pipe(
+    prompt="cinematic portrait of a cat astronaut, soft rim light, 85mm",
+    negative_prompt="blurry, extra limbs, watermark, text",
+    width=512,
+    height=512,
+    num_inference_steps=28,
+    guidance_scale=7.0,
+    generator=torch.Generator(device).manual_seed(42),
+).images[0]
+image.save("out.png")
+
+
+ = Text-to-image SDXL:
+- Минимальный скрипт:
+import torch
+from diffusers import StableDiffusionXLPipeline, DPMSolverMultistepScheduler
+pipe = StableDiffusionXLPipeline.from_pretrained(
+    "stabilityai/stable-diffusion-xl-base-1.0",
+    torch_dtype=torch.float16,
+    variant="fp16",
+    use_safetensors=True,
+)
+pipe.scheduler = DPMSolverMultistepScheduler.from_config(
+    pipe.scheduler.config,
+    use_karras_sigmas=True,
+)
+pipe.enable_model_cpu_offload()
+pipe.enable_vae_tiling()
+image = pipe(
+    prompt="cinematic portrait, detailed skin, soft light",
+    negative_prompt="blurry, extra limbs, watermark, text",
+    width=1024,
+    height=1024,
+    num_inference_steps=30,
+    guidance_scale=6.5,
+    generator=torch.Generator("cuda").manual_seed(42),
+).images[0]
+image.save("out.png")
+
+
+ = Локальный checkpoint:
+- Через from_single_file:
+from diffusers import StableDiffusionPipeline
+pipe = StableDiffusionPipeline.from_single_file(
+    "/path/to/model.safetensors",
+    torch_dtype=torch.float16,
+)
+# Для .ckpt:
+# pipe = StableDiffusionPipeline.from_single_file(
+#     "/path/to/model.ckpt",
+#     torch_dtype=torch.float16,
+# )
+
+
+ = Img2img:
+- Перерисовка с сохранением композиции:
+from diffusers import StableDiffusionImg2ImgPipeline
+from PIL import Image
+pipe = StableDiffusionImg2ImgPipeline.from_pretrained(
+    "runwayml/stable-diffusion-v1-5",
+    torch_dtype=torch.float16,
+    use_safetensors=True,
+)
+pipe.enable_model_cpu_offload()
+init_image = Image.open("input.jpg").convert("RGB").resize((512, 512))
+image = pipe(
+    prompt="oil painting, dramatic light",
+    negative_prompt="blurry, watermark, text",
+    image=init_image,
+    strength=0.55,				# 0 = почти оригинал, 1 = полная перерисовка
+    num_inference_steps=30,
+    guidance_scale=7.0,
+).images[0]
+image.save("img2img.png")
+
+
+ = Inpaint:
+- Изменение только замаскированной области:
+from diffusers import StableDiffusionInpaintPipeline
+from PIL import Image
+pipe = StableDiffusionInpaintPipeline.from_pretrained(
+    "runwayml/stable-diffusion-inpainting",
+    torch_dtype=torch.float16,
+    use_safetensors=True,
+)
+pipe.enable_model_cpu_offload()
+init_image = Image.open("input.jpg").convert("RGB")
+mask_image = Image.open("mask.png").convert("L")	# белое = перерисовать, чёрное = сохранить
+image = pipe(
+    prompt="a realistic cat face",
+    negative_prompt="blurry, deformed, watermark",
+    image=init_image,
+    mask_image=mask_image,
+    strength=0.85,
+    num_inference_steps=30,
+    guidance_scale=7.0,
+).images[0]
+image.save("inpaint.png")
+
+
+ = LoRA:
+- Загрузка и вес:
+pipe.load_lora_weights("/path/to/lora.safetensors", adapter_name="style")
+pipe.set_adapters(["style"], adapter_weights=[0.75])
+# Вшить LoRA в веса модели:
+# pipe.fuse_lora(lora_scale=0.75)
+# Выгрузить LoRA:
+# pipe.unload_lora_weights()
+
+
+ = Textual Inversion:
+- Загрузка embedding:
+pipe.load_textual_inversion("/path/to/my_style.pt", token="<my_style>")
+prompt = "portrait of a wizard, <my_style>"
+
+
+ = ControlNet:
+- Условная генерация по карте:
+from diffusers import ControlNetModel, StableDiffusionControlNetPipeline
+from PIL import Image
+controlnet = ControlNetModel.from_pretrained(
+    "lllyasviel/control_v11p_sd15_canny",
+    torch_dtype=torch.float16,
+)
+pipe = StableDiffusionControlNetPipeline.from_pretrained(
+    "runwayml/stable-diffusion-v1-5",
+    controlnet=controlnet,
+    torch_dtype=torch.float16,
+)
+pipe.enable_model_cpu_offload()
+control_image = Image.open("canny.png").convert("RGB").resize((512, 512))
+image = pipe(
+    prompt="cyberpunk street, neon rain",
+    negative_prompt="blurry, watermark, text",
+    image=control_image,
+    width=512,
+    height=512,
+    controlnet_conditioning_scale=0.8,
+    num_inference_steps=28,
+    guidance_scale=7.0,
+).images[0]
+image.save("controlnet.png")
+
+
+ = ControlNet aux:
+- Генерация карты Canny:
+from controlnet_aux import CannyDetector
+from PIL import Image
+processor = CannyDetector()
+original = Image.open("input.jpg").convert("RGB")
+control_image = processor(original, low_threshold=100, high_threshold=200)
+control_image = control_image.resize((512, 512))
+control_image.save("canny.png")
+
+
+ = Scheduler и sampler:
+- Часто используемые:
+EulerDiscreteScheduler			# стабильный, детерминированный
+EulerAncestralDiscreteScheduler	# "Euler a", stochastic, разнообразнее
+DPMSolverMultistepScheduler		# DPM++ 2M/2S; быстрый и качественный
+UniPCMultistepScheduler			# хороший баланс скорость/качество
+LCMScheduler					# Latent Consistency; 4-8 шагов
+DDIMScheduler					# классический DDIM
+
+
+ = Основные параметры вызова pipeline:
+- Текст и размер:
+prompt					# обязательный текстовый запрос
+negative_prompt			# что исключить
+width / height			# кратные 8
+num_inference_steps		# 20-40 обычно; LCM/Turbo 4-8
+guidance_scale			# 1-2 свободно, 5-8 сбалансированно, 9+ жёстко
+
+
+- Воспроизводимость и режимы:
+generator						# torch.Generator(device).manual_seed(seed)
+image							# init image для img2img/controlnet
+mask_image						# маска для inpaint
+strength						# доля перерисовки
+controlnet_conditioning_scale	# сила ControlNet, обычно 0.5-1.0
+return_dict						# False вернёт tuple вместо объекта вывода
+
+
+ = Сохранение PNG с метаданными:
+- Prompt, seed, steps, cfg:
+from PIL.PngImagePlugin import PngInfo
+meta = PngInfo()
+meta.add_text("prompt", prompt)
+meta.add_text("negative_prompt", negative_prompt)
+meta.add_text("seed", str(seed))
+meta.add_text("steps", str(num_inference_steps))
+meta.add_text("cfg", str(guidance_scale))
+image.save("out.png", pnginfo=meta)
+
+
+
+	--- AUTOMATIC1111 / FORGE API ---
+ = Запуск:
+- С API:
+webui.sh --api --listen			# Linux/macOS
+webui.bat --api --listen		# Windows
+# порт по умолчанию 7860
+# Swagger/OpenAPI: http://127.0.0.1:7860/docs
+
+
+ = TXT2IMG payload:
+- Основной JSON:
+{
+  "prompt": "masterpiece, best quality, cat astronaut",
+  "negative_prompt": "lowres, bad anatomy, watermark, text",
+  "steps": 28,
+  "cfg_scale": 7,
+  "width": 512,
+  "height": 512,
+  "sampler_name": "DPM++ 2M",
+  "scheduler": "Karras",
+  "seed": 42,
+  "subseed": -1,
+  "subseed_strength": 0,
+  "batch_size": 1,
+  "n_iter": 1,
+  "clip_skip": 2,
+  "restore_faces": false,
+  "denoising_strength": 0.75
+}
+
+
+- Примечания:
+# старый A1111: sampler_name может быть "DPM++ 2M Karras"
+# новый A1111/Forge: sampler_name без Karras, scheduler отдельно
+# denoising_strength в txt2img обычно не главный параметр, важен для img2img
+
+
+ = Python запрос к A1111:
+- TXT2IMG через requests:
+import base64
+import io
+import requests
+from PIL import Image
+payload = {
+    "prompt": "masterpiece, cat astronaut",
+    "negative_prompt": "lowres, watermark, text",
+    "steps": 28,
+    "cfg_scale": 7,
+    "width": 512,
+    "height": 512,
+    "sampler_name": "DPM++ 2M",
+    "scheduler": "Karras",
+    "seed": 42,
+}
+r = requests.post(
+    "http://127.0.0.1:7860/sdapi/v1/txt2img",
+    json=payload,
+    timeout=600,
+)
+r.raise_for_status()
+data = r.json()
+img_bytes = base64.b64decode(data["images"][0])
+Image.open(io.BytesIO(img_bytes)).save("out.png")
+
+
+ = IMG2IMG payload:
+- Основной JSON:
+{
+  "prompt": "oil painting, dramatic light",
+  "negative_prompt": "blurry, watermark, text",
+  "init_images": ["<base64>"],
+  "denoising_strength": 0.55,
+  "steps": 30,
+  "cfg_scale": 7,
+  "width": 512,
+  "height": 512,
+  "sampler_name": "Euler a",
+  "seed": 42
+}
+
+
+- Примечания:
+# init_images: список base64 без префикса data:image/png;base64,
+
+
+ = Подготовка base64 для img2img:
+- Чтение файла:
+import base64
+with open("input.jpg", "rb") as f:
+    init_b64 = base64.b64encode(f.read()).decode("utf-8")
+payload["init_images"] = [init_b64]
+
+
+ = UPSCALE через extra-single-image:
+- POST http://127.0.0.1:7860/sdapi/v1/extra-single-image:
+{
+  "image": "<base64>",
+  "upscaler_1": "R-ESRGAN 4x+"
+}
+# ответ обычно содержит поле "image", а не список "images"
+# доступные upscaler зависят от установленных моделей
+
+
+ = Полезные эндпоинты A1111:
+- Частые:
+GET  /sdapi/v1/sd-models			# список checkpoint
+GET  /sdapi/v1/samplers				# список самплеров
+GET  /sdapi/v1/options				# текущие опции
+POST /sdapi/v1/options				# сменить модель/опции
+POST /sdapi/v1/refresh-checkpoints	# пересканировать папку моделей
+POST /sdapi/v1/interrogate			# CLIP-подсказка по изображению
+
+
+ = Смена модели через API:
+- POST /sdapi/v1/options:
+{
+  "sd_model_checkpoint": "my-model-name"
+}
+
+
+
+	--- STABLE-DIFFUSION.CPP / GGUF ---
+ = Сборка:
+- Базовая:
+git clone https://github.com/leejet/stable-diffusion.cpp
+cd stable-diffusion.cpp
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --config Release -j
+
+
+ = Запуск GGUF:
+- TXT2IMG:
+./build/bin/stable-diffusion \
+  -m sd-v1-5-Q4_K_M.gguf \
+  -p "cat astronaut, cinematic, soft light" \
+  -n "blurry, watermark, text, extra limbs" \
+  -o out.png \
+  --width 512 \
+  --height 512 \
+  --steps 20 \
+  --cfg-scale 7 \
+  --seed 42 \
+  --sample euler \
+  --clip-skip 2
+# точные флаги зависят от сборки; проверяй:
+# ./build/bin/stable-diffusion --help
+
+
+ = Частые опции:
+- Основные:
+-m, --model				# checkpoint/GGUF
+-t, --vae				# отдельный VAE, если не встроен
+-p, --prompt			# промпт
+-n, --negative-prompt	# негативный промпт
+-o, --output			# путь к PNG
+--width, --height		# размер, кратный 8
+--steps					# число шагов
+--cfg-scale				# guidance scale
+--seed					# seed
+--sample				# euler, euler_ancestral, dpm++ варианты и т.д.
+--clip-skip				# clip skip
+--fp32					# стабильнее на CPU/старом железе
+--force-fp16			# быстрее на поддерживаемых GPU
+
+
+- Для слабого железа:
+--diffusion-cpu-only		# UNet на CPU
+--vae-cpu-only				# VAE на CPU
+--text-encoder-cpu-only		# текстовый энкодер на CPU
+# комбинируй с маленьким размером и малым числом шагов
+
+
+
+	--- ПРОМПТЫ И ПАРАМЕТРЫ ---
+ = Структура промпта:
+- Порядок важности:
+subject				# кто/что: "a red fox"
+medium				# носитель: "oil painting", "photo", "3d render"
+style				# художник/движение: "ukiyo-e", "cyberpunk"
+lighting			# "softbox", "golden hour", "neon rim light"
+composition			# "close-up", "wide shot", "rule of thirds"
+quality				# "highly detailed", "8k", "sharp focus"
+mood				# "melancholic", "epic", "cozy"
+
+
+ = Шаблон промпта:
+- Универсальный:
+[subject], [medium], [style], [lighting], [composition], [quality], [mood]
+
+
+- Пример:
+portrait of a nonbinary hacker, digital painting, cyberpunk neon, rim light, close-up, highly detailed, calm mood
+
+
+ = Negative prompt:
+- Базовый набор:
+lowres, bad anatomy, bad hands, extra fingers, missing limbs, extra limbs, deformed, disfigured, blurry, jpeg artifacts, watermark, text, signature, username, oversaturated, worst quality
+
+
+ = Веса в A1111/Forge:
+- Синтаксис:
+(keyword:1.2)		# усилить
+[keyword]			# ослабить
+<lora:name:0.8>		# LoRA вес
+<BREAK>				# разбить длинный промпт на части внимания
+# В чистом diffusers синтаксис () может не работать без дополнительной обработки prompt_embeds
+
+
+ = Приёмы промптинга:
+- Практические:
+ранние токены важнее		# ставь главное в начало
+короче чаще лучше			# не сваливай 50 тегов без структуры
+описывай цель, не список	# "wet asphalt reflecting neon" вместо "rain, city, neon, reflection"
+один стиль за раз			# смешение многих художников размывает результат
+для лиц						# eyes, skin texture, lighting
+для рук						# hands, fingers, pose, negative prompt, ControlNet
+для композиции				# camera angle, lens, framing, depth of field
+
+
+ = Быстрые пресеты:
+- Настройки:
+черновой			# 15-20 шагов, CFG 5-6, Euler a / DPM++ 2M Karras
+баланс				# 25-35 шагов, CFG 6-8, DPM++ 2M Karras / UniPC
+жёсткий промпт		# 30-40 шагов, CFG 8-12, DPM++ 2M / DDIM
+LCM/Turbo			# 4-8 шагов, CFG 1-2, LCMScheduler / Euler a
+аниме/стиль			# 20-30 шагов, CFG 6-8, clip_skip 2
+фотореализм			# 30-40 шагов, CFG 5-7, clip_skip 1-2, детали кожи/света
+
+
+
+	--- РЕЖИМЫ ГЕНЕРАЦИИ ---
+ = Txt2img:
+- Суть:
+чистая генерация из шума
+seed + prompt + sampler = воспроизводимость
+best для идей и финальных вариантов
+
+
+ = Img2img:
+- Strength:
+strength 0.2-0.4		# лёгкая стилизация
+strength 0.5-0.7		# заметная переработка
+strength 0.8+			# почти txt2img с намёком на исходник
+# важно: размер init_image должен соответствовать target width/height
+
+
+ = Inpaint:
+- Маска:
+mask white = перерисовать, mask black = сохранить
+mask blur/padding помогает скрыть швы
+prompt должен описывать только вставку, не всю сцену
+лучше использовать inpaint-модель, а не обычный checkpoint
+
+
+ = Outpaint:
+- Расширение кадра:
+обычно через inpaint с большой маской или специальные pipeline
+края требуют feathering и умеренного strength
+часто нужно генерировать с запасом по размеру, потом обрезать
+
+
+ = ControlNet:
+- Типы карт:
+canny							# края/линии
+depth							# глубина/объём
+openpose						# поза человека
+mlsd							# прямые линии/архитектура
+lineart							# чистые линии скетча
+seg								# семантическая маска
+normal							# нормали поверхности
+tile							# текстуры/детализация без строгой структуры
+controlnet_conditioning_scale	# 0.5 слабее, 1.0 сильнее, выше 1.0 может ломать детали
+
+
+ = IP-Adapter:
+- Референс по изображению:
+image prompt			# референс по стилю/объекту/персонажу
+weight 0.4-0.8			# слишком высоко копирует референс
+хорош для передачи палитры и узнаваемости
+не заменяет ControlNet, если нужна точная геометрия
+
+
+
+	--- ЭКОНОМИЯ РЕСУРСОВ ---
+ = Слабый GPU/CPU:
+- Что снижать первым:
+модель				# SD 1.5 вместо SDXL; LCM/Turbo вместо обычных
+размер				# 512x512 или 512x768; не гнаться за 2K нативно
+шаги				# 15-25 для DPM++, 4-8 для LCM/Turbo
+CFG					# 5-7; высокий CFG иногда требует больше шагов
+precision			# fp16 на CUDA; bf16 на новых GPU; float32 на CPU
+offload				# enable_model_cpu_offload / sequential_cpu_offload
+slicing				# enable_attention_slicing, enable_vae_slicing
+tiling				# enable_vae_tiling для больших изображений
+quantization		# GGUF для stable-diffusion.cpp; 4-bit UNet если поддерживается
+
+
+ = Diffusers low VRAM:
+- Минимальный набор:
+pipe.enable_model_cpu_offload()
+pipe.enable_attention_slicing()
+pipe.enable_vae_slicing()
+pipe.enable_vae_tiling()
+# Ещё меньше VRAM, но медленнее:
+# pipe.enable_sequential_cpu_offload()
+
+
+ = CPU-only:
+- Запуск:
+pipe = StableDiffusionPipeline.from_pretrained(
+    "runwayml/stable-diffusion-v1-5",
+    torch_dtype=torch.float32,
+)
+pipe.to("cpu")
+# очень медленно; лучше GGUF/small model/LCM
+
+
+ = AMD / старое железо:
+- Практические варианты:
+ROCm					# поддерживаются не все AMD GPU; старые APU часто недоступры
+DirectML / ONNX			# альтернатива на Windows/AMD, но меньше совместимости
+GGUF / sd.cpp			# практичнее для слабого железа
+fp32					# стабильнее, если fp16 даёт чёрные/битые изображения
+# для старых Radeon/iGPU: уменьшай resolution, шаги, batch; отключай предпросмотр;
+# при зависаниях/ошибках ring переводи тяжёлые части на CPU или используй GGUF
+
+
+ = Стабильность и повторимость:
+- Правила:
+seed фиксировать при итерациях промпта
+менять один параметр за раз
+сохранять parameters/info из ответа UI/API
+для серий использовать batch_size/n_iter, но не слишком большой batch
+generator device должен совпадать с device pipeline
+разные GPU/CPU могут дать чуть разные пиксели даже с одним seed
+
+
+
+	--- ТРЕЙБЛШУТИНГ ---
+ = Серое/выцветшее изображение:
+- Причины и лечение:
+плохой VAE				# подключить исправленный VAE или штатный VAE модели
+fp16 issue				# попробовать float32
+scheduler mismatch		# сменить scheduler/sampler
+VAE tiling/slicing		# иногда помогает при больших размерах
+
+
+ = Чёрное изображение:
+- Причины и лечение:
+overflow fp16				# использовать float32 или --fp32 в sd.cpp
+повреждённый checkpoint		# проверить файл/загрузку
+несовместимый VAE			# использовать VAE от той же модели
+
+
+ = Розовые/зелёные артефакты:
+- Причины и лечение:
+битый checkpoint/VAE
+неподходящий sampler для модели
+слишком высокий CFG + мало шагов
+попробовать DPM++ 2M Karras, 28-35 шагов, CFG 6-8
+
+
+ = Размытие:
+- Причины и лечение:
+мало шагов				# увеличить 25-35
+низкий CFG				# поднять 6-8
+слишком большой размер	# генерировать в нативном разрешении, потом upscale
+плохой промпт			# добавить sharp focus, detailed, lighting
+анцестровый sampler		# Euler a может быть мягче; попробуй DPM++/UniPC
+
+
+ = Деформации:
+- Причины и лечение:
+extra limbs/faces		# negative prompt, lower CFG, ControlNet/openpose
+bad hands				# inpaint рук, hand refiner, ControlNet depth/canny
+too many objects		# упростить промпт, разбить на части
+face collapse			# clip_skip 1-2, уменьшить CFG, добавить lighting/texture
+
+
+ = Ошибки установки/загрузки:
+- Частые:
+CUDA out of memory		# cpu_offload, slicing, smaller resolution, fp16
+xformers error			# uninstall или не использовать на CPU/ROCm
+safetensors error		# обновить safetensors, проверить файл
+pickle/ckpt warning		# предпочитать .safetensors
+model not found			# проверь имя repo/path и интернет/кэш
+accelerate missing		# pip install accelerate
+tokenizer error			# обновить transformers/diffusers
+
+
+ = Воспроизводимость:
+- Контроль:
+torch.manual_seed(seed)	# глобально, но лучше generator
+generator device		# должен совпадать с device pipeline
+sampler/scheduler		# меняй только вместе с seed для сравнения
+metadata в PNG			# сохраняй prompt/seed/model/sampler/steps
+
+
+
+	--- ЛИЦЕНЗИИ И ЭТИКА ---
+ = Проверять перед использованием:
+- Юридическое и этическое:
+license checkpoint			# CreativeML OpenRAIL-M, SDXL license, custom license
+license LoRA/ControlNet		# некоторые запрещают коммерцию/NSFW/deepfake
+consent for real people		# не генерировать обнажёнку/дипфейки без согласия
+local logs					# храни prompt/seed/model для аудита, но без лишних персональных данных
+redistribution				# не выкладывать чужие LoRA/checkpoint без разрешения автора
